@@ -116,7 +116,7 @@ f072bda7-4b57-4231-8a4b-99380bf6142e,Cadeira extensora,pernas,,extensora,1,iso,t
 486b3c44-b77e-44fd-9690-6f9aacd4f35a,FLEXÃO CADEIRA,pernas,,flexora,1,iso,treino,false,35,,joelho,Execute o movimento de flexão mantendo o tronco ereto
 67212069-539d-4365-97f9-ecbdfa4e6fe9,FLEXÃO MESA,pernas,,flexora,1,iso,treino,false,35,,joelho,Flexione o joelho contraindo o posterior da coxa até o fim do curso
 6d8ca608-8522-460b-99d8-50e0ade715bf,Frog pose (sapo),pernas,,,1,iso,mobilidade,false,30,,joelho,Mantenha os joelhos alinhados ao abrir os quadris
-214c534d-6881-477a-9270-b21a9ff2f7dc,GLÚTEO MÁQUINA,pernas,,gluteo-mq,1,iso,treino,false,35,,joelho,Pressione o calcanhar e contraia o glúteo ao empurrar
+214c534d-6881-477a-9270-b21a9ff2f7dc,GLÚTEO MÁQUINA,gluteos,,gluteo-mq,1,iso,treino,false,35,,joelho,Pressione o calcanhar e contraia o glúteo ao empurrar
 ead435fe-8b92-44e9-9e3e-9f76e57944ea,Goblet squat,pernas,,kettlebell,2,squat,treino,true,45,,joelho|lombar,Segure o kettlebell próximo ao peito e agache mantendo a coluna reta
 7fb1f1d4-3165-489f-9ca8-a20a8d5f9b40,GÊMEOS PÊNDULO,pernas,,panturrilha,1,iso,treino,false,30,,,Balance o peso e mova o tornozelo suavemente
 5159d02b-9310-4846-b3a0-5d691e0715b3,Hack squat,pernas,,hack,2,squat,treino,true,45,,joelho|lombar,Desça controlado e empurre com os calcanhares
@@ -219,13 +219,13 @@ e3430aa8-ae4d-43a3-a9bc-7e42616e0ec3,Mobilidade torácica em quatro apoios,core,
 0eca5118-eb32-4099-bb5d-c984d4f7eaeb,Mountain climber,core,pernas,,2,cardio,treino,true,0,30,joelho|ombro|punho|lombar,Leva o joelho ao peito alternando rapidamente
 30520f2a-9a6b-4cd2-bb36-5a9a35fb57f6,Roll out / rolinho de coluna,core,,,2,iso,mobilidade,false,30,,lombar,Rola a coluna mantendo tronco firme
 c2415fb3-f242-445f-808e-20a8fb70f905,Seated forward fold,core,pernas,,1,iso,mobilidade,false,30,,lombar,Inclina o tronco à frente alcançando os pés
-bfb4086c-eb84-4ed0-a35d-10079c11be58,Snatch,ombros,pernas|core|gluteos,barra,3,pull-h,treino,true,45,,lombar|joelho|ombro|punho,Eleva a barra acima da cabeça em um movimento explosivo
+bfb4086c-eb84-4ed0-a35d-10079c11be58,Snatch,ombros,pernas|core|gluteos,barra,3,pull-v,treino,true,45,,lombar|joelho|ombro|punho,Eleva a barra acima da cabeça em um movimento explosivo
 03225c1b-22de-43a0-ab05-2aabf5b5121a,Standing forward fold,core,pernas,,1,core,mobilidade,false,30,,lombar,Mantém a coluna reta e inclina o tronco à frente
 023b4b5a-edc8-438a-8432-1c0767245941,Standing side bend,core,,,1,core,mobilidade,false,30,,lombar,Inclina o tronco para o lado mantendo o quadril estável
 101ece1b-9f46-4bd7-9969-73bbf0b7b847,Turkish get-up,core,ombros|pernas|gluteos,kettlebell,3,core,treino,true,45,,ombro|joelho|lombar|punho,Mantém a kettlebell acima enquanto levanta o corpo passo a passo
 45e045ec-4714-4d57-9dc9-653d9ac61811,World's greatest stretch,core,pernas|ombros,,1,iso,mobilidade,false,30,,joelho|ombro|punho,Avança o joelho e gira o tronco mantendo a postura
 a8fd61d3-51e4-4ea8-bd37-51f8807b36f8,Alongamento de trapézio superior,ombros,,,1,iso,mobilidade,false,30,,ombro|cervical,Puxe o braço para baixo sentindo alongamento
-88ff50d1-54ff-49ca-a301-b39b2ee1c2ef,Arnold press (halteres),ombros,,halter,2,push-h,treino,true,30,,ombro|punho|lombar,Gire os halteres ao subir mantendo ombros estáveis
+88ff50d1-54ff-49ca-a301-b39b2ee1c2ef,Arnold press (halteres),ombros,,halter,2,push-v,treino,true,30,,ombro|punho|lombar,Gire os halteres ao subir mantendo ombros estáveis
 f6d3bba8-3faa-4aaf-80f5-e427760ed82a,Cross-body shoulder stretch,ombros,,,1,iso,mobilidade,false,30,,ombro,Leve o braço cruzado sobre o peito mantendo a postura
 976ba7c1-f6af-4e52-99fa-7c5b95384762,Desenvolvimento (barra),ombros,triceps|core,barra|banco,2,push-v,treino,true,30,,ombro|lombar,Empurre a barra para cima mantendo o tronco firme
 a200a12e-6a46-455a-b7d8-8997ad771aaf,Desenvolvimento (halteres),ombros,triceps|core,halter|banco,2,push-v,treino,true,30,,ombro|lombar,Eleve os halteres acima da cabeça sem arquear a lombar
