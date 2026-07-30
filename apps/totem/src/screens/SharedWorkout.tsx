@@ -53,7 +53,7 @@ export function SharedWorkout({ id }: { id: string }) {
               </span>
             </div>
             <p className="mt-1 text-sm text-dim">
-              {e.cue ?? e.equipment.join(' · ') ?? 'peso corporal'}
+              {e.cue ?? (e.equipment.length > 0 ? e.equipment.join(' · ') : 'peso corporal')}
             </p>
           </li>
         ))}
