@@ -663,8 +663,36 @@ inexistente ou `avg_sec_per_set` fora de 10–60.
 | 3 | Painel do gestor: equipamentos, tema, CREF | segunda academia (com uma, você configura via Supabase Studio) |
 | 4 | Estatísticas | quando houver dado suficiente para o gráfico não ser vazio |
 | 5 | Multi-idioma, white-label de rede, comodato de totem | conversa com rede grande |
+| 6 | **Treino prescrito pelo professor, consultado por código** | depois do painel, e só se academia pedir — ver análise abaixo |
 
 Na demo, a configuração da academia é feita por você direto no Supabase Studio.
+
+### Item 6 — o que muda ao consultar treino prescrito (levantado pelo Robson, jul/2026)
+
+A ideia: o responsável da academia cadastra alunos e os treinos deles (A, B, C); o aluno chega, digita um código de acesso e escolhe qual treino vai fazer hoje.
+
+**Isso é uma mudança de produto, não uma feature.** Três consequências que precisam de decisão antes de qualquer linha de código:
+
+**1. É o modelo do concorrente.** A §1 posiciona o QuickFit contra o totem da Tecnofit exatamente porque o deles faz *consulta* de treino já existente e exige acoplamento com ERP. Fazer as duas coisas é defensável — provavelmente é o que academia paga, porque professor quer a prescrição dele respeitada — mas muda a venda de "instala e funciona no mesmo dia" para "alguém cadastra todos os alunos antes". O gerador é o que torna o produto demonstrável em 30 segundos com zero dado. Se o cadastro virar pré-requisito, esse argumento morre.
+
+**2. Os 6 primeiros dígitos do CPF não servem como chave.** Espaço de 10⁶. Probabilidade de alguma colisão, por número de alunos na unidade:
+
+| alunos | P(colisão) |
+|---|---|
+| 500 | 11,7% |
+| 1.000 | 39,3% |
+| 2.000 | 86,5% |
+| 3.000 | 98,9% |
+
+E isso assumindo distribuição uniforme, que o CPF não tem: os primeiros dígitos são sequenciais por época de emissão e o nono indica a região fiscal, então alunos da mesma cidade com idades parecidas **agrupam**. Na prática é pior.
+
+Pior que a colisão: não é segredo. Quem sabe o CPF de outro aluno vê o treino dele.
+
+**Alternativa que preserva o "sem app":** código atribuído pela academia — 6 caracteres alfanuméricos (36⁶ ≈ 2,2 bilhões), gerado com restrição de unicidade no banco, impresso na carteirinha. Sem colisão por construção, revogável se vazar, e não derivado de dado pessoal.
+
+**3. Transforma um produto sem PII num produto com PII.** Hoje o totem não guarda nada pessoal, e é por isso que o RLS da §5 é simples: role `anon`, `get_workout(id)` como `SECURITY DEFINER`, `generated_workouts` não listável. Guardar alunos e fragmento de documento traz LGPD — base legal, retenção, direito de exclusão — e o código de acesso passa a ser credencial que identifica pessoa. É superfície de compliance, não mudança de schema.
+
+**Por que entra depois do painel (item 3):** alguém tem que cadastrar. Sem painel, não há onde. E deixar para depois do painel significa decidir isso já sabendo se academia paga.
 
 ---
 
