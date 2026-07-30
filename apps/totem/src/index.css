@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --qf-bg: #07080B;
+  --qf-surface: #12141A;
+  --qf-raised: #1A1D25;
+  --qf-border: #1F232B;
+  --qf-text: #F4F5F7;
+  --qf-dim: #A1A6B2;
+  --qf-accent: #39FF14;
+  --qf-on-accent: #07080B;
+  --qf-violet: #8B5CF6;
+  --qf-accent-glow: rgba(57, 255, 20, 0.22);
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--qf-bg);
+  color: var(--qf-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  user-select: none;            /* totem: ninguém seleciona texto com o dedo */
+  -webkit-tap-highlight-color: transparent;
+}

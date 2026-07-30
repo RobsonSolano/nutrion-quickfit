@@ -40,3 +40,6 @@ supabase/.temp/
 !.vscode/extensions.json
 *.swp
 *~
+
+# scratch do SDD
+.superpowers/
