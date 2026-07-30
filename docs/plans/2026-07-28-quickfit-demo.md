@@ -1170,6 +1170,13 @@ describe('weightedPick', () => {
   it('devolve o único item quando a lista tem tamanho 1', () => {
     expect(weightedPick([{ item: 'só', score: 0 }], mulberry32(1))).toBe('só');
   });
+
+  it('lança em lista vazia em vez de devolver undefined', () => {
+    // O `generateWorkout` já garante `candidates.length > 0` antes de chamar,
+    // então isto nunca deveria acontecer — mas devolver `undefined` como se
+    // fosse um exercício colocaria lixo na ficha em silêncio. Falhar alto.
+    expect(() => weightedPick([], mulberry32(1))).toThrow(/vazia/i);
+  });
 });
 ```
 
@@ -1689,20 +1696,40 @@ import { generateWorkout } from './generate';
 import { MAX_EX, MAX_PER_GROUP } from './constants';
 import { mulberry32 } from './rng';
 import { CATALOG, ALL_EQUIPMENT } from './__fixtures__/catalog';
-import type { Contra, Goal, Input, Level, MuscleGroup } from './types';
+import type { Contra, Goal, Input, Level, Minutes, MuscleGroup } from './types';
 
 const GOALS: Goal[] = ['hipertrofia', 'emagrecimento', 'resistencia', 'mobilidade', 'forca'];
 const MINUTES: Minutes[] = [20, 30, 40, 45, 50, 60, 90];
+/**
+ * Os 9 grupos, de propósito — inclusive `ombros` e `gluteos`, que o CATALOG
+ * de teste não cobre. Um input pedindo só `ombros` produz pool vazio, e é
+ * justamente esse caminho degenerado que precisa ser varrido: o motor tem de
+ * devolver treino vazio sem lançar. Não "conserte" removendo os dois.
+ */
 const GROUPS: MuscleGroup[] = ['peito', 'costas', 'ombros', 'biceps', 'triceps', 'pernas', 'gluteos', 'core', 'cardio'];
 const CONTRAS: Contra[] = ['joelho', 'lombar', 'ombro', 'punho', 'cervical'];
 
 /** Gera um Input aleatório mas determinístico a partir de uma seed. */
 function randomInput(rng: () => number): Input {
   const pick = <T,>(arr: T[]): T => arr[Math.floor(rng() * arr.length)];
+
+  /**
+   * Fisher-Yates, não `sort(() => rng() - 0.5)`.
+   *
+   * O sort com comparador inconsistente é um embaralhamento enviesado — não
+   * amostra o espaço uniformemente — e consome uma quantidade de `rng()` que
+   * depende do algoritmo de ordenação da engine. Num property test isso é
+   * duplamente ruim: enviesa a cobertura E amarra o resultado à versão do V8.
+   * Fisher-Yates consome exatamente `arr.length - 1` números, sempre.
+   */
   const subset = <T,>(arr: T[], max: number): T[] => {
     const n = 1 + Math.floor(rng() * max);
-    const shuffled = [...arr].sort(() => rng() - 0.5);
-    return shuffled.slice(0, n);
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [a[i], a[j]] = [a[j]!, a[i]!];
+    }
+    return a.slice(0, n);
   };
 
   return {
@@ -1830,7 +1857,7 @@ O CSV é a fonte de autoria (D3). Se ele puder entrar inválido, o motor recebe 
 - Create: `catalog/equipment.csv`
 - Create: `catalog/exercises.csv` (com 3 linhas de exemplo, para o teste ter o que ler)
 - Test: `packages/core/src/catalog/schema.test.ts`
-- Modify: `package.json` (script `validate:catalog`)
+- Create: `scripts/validate-catalog.ts`
 
 **Interfaces:**
 - Consumes: tipos `Exercise`, `Contra`, `MuscleGroup`, `Pattern` de `../engine/types`
@@ -1966,6 +1993,14 @@ describe('parseExercisesCsv', () => {
   it('rejeita contraindicação fora do vocabulário', () => {
     const bad = exCsv + 'x,X,peito,,barra,1,iso,false,20,,dedao,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/contraindic/i);
+  });
+
+  it('rejeita id de exercício duplicado', () => {
+    // O parser tem essa guarda; sem teste ela podia ser removida num refactor
+    // sem ninguém notar. Um id duplicado no catálogo faria o motor tratar dois
+    // exercícios diferentes como o mesmo na deduplicação do `generateWorkout`.
+    const bad = exCsv + 'supino-reto,Outro supino,peito,,barra,1,iso,false,30,,,\n';
+    expect(() => parseExercisesCsv(bad, known())).toThrow(/duplicado/i);
   });
 
   it('aponta o número da linha no erro', () => {
@@ -2174,19 +2209,18 @@ try {
 }
 ```
 
-Instale o runner de TS e registre o script:
+**Nada a instalar nem registrar.** O `tsx` já é devDependency da raiz e o script
+`"validate:catalog": "tsx scripts/validate-catalog.ts"` já existe no
+`package.json` — ambos entraram na task 1. Confira e siga:
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm install -D tsx
+npm pkg get scripts.validate:catalog   # deve imprimir o comando acima
 ```
 
-`package.json` — adicione em `scripts`:
-
-```json
-"validate:catalog": "tsx scripts/validate-catalog.ts"
-```
+Se imprimir `{}`, aí sim registre. Não rode `npm install` sem necessidade —
+mexer no `package-lock.json` sem motivo suja o diff da review.
 
 - [ ] **Step 7: Rodar a validação**
 
