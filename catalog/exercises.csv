@@ -92,7 +92,7 @@ fc3d84ff-fe8e-4f4e-8843-a27dea026ff3,Thruster,pernas,ombros|core,barra,3,push-h,
 9189bae4-381f-4f81-80f2-972a748daf5c,Wall ball,pernas,ombros|core,medicine-ball,2,push-h,treino,true,35,,joelho|ombro|lombar,Agacha e lança a bola para o alto usando força das pernas
 e34866d5-eddc-4af2-abc9-05a9d0c38a38,ABDUÇÃO,pernas,gluteos,abdutora,1,iso,treino,false,30,,,Eleva a perna lateralmente mantendo o tronco firme
 7c3dd636-5659-4b51-a88f-1424ebe2156d,ADUÇÃO,pernas,gluteos,adutora,1,iso,treino,false,30,,,Aproxima a perna ao centro mantendo o tronco estável
-5709a9f1-69d9-4b3d-b54a-1686d4a173f4,AGACHAMENTO PÊNDULO,pernas,core|gluteos,,2,squat,treino,false,40,,joelho|lombar,Desce em agachamento e balança o tronco sem perder postura
+5709a9f1-69d9-4b3d-b54a-1686d4a173f4,AGACHAMENTO PÊNDULO,pernas,core|gluteos,hack,2,squat,treino,false,40,,joelho|lombar,Desce em agachamento e balança o tronco sem perder postura
 83369c02-d162-49ab-a1d7-aa707433139c,Afundo (halteres),pernas,gluteos|core,halter,2,lunge,treino,true,35,,joelho|lombar,Dá um passo à frente e baixa até o joelho quase tocar o chão
 65d7cd4a-fa73-488b-8800-3314371b3606,Afundo (peso corporal),pernas,gluteos|core,,1,lunge,treino,true,30,,joelho|lombar,Avança com o pé e flexiona o joelho mantendo o tronco ereto
 c762901b-fd84-4b3e-99f7-46880c8cabdf,Afundo com salto,pernas,gluteos|core,,2,lunge,treino,true,30,,joelho|lombar,Salta e troca as pernas no ar aterrissando em afundo
@@ -120,11 +120,11 @@ f072bda7-4b57-4231-8a4b-99380bf6142e,Cadeira extensora,pernas,,extensora,1,iso,t
 4e3c7624-66db-4f69-9643-6503495bbdab,Cadeira flexora,pernas,,flexora,1,iso,treino,false,35,,joelho,Flexione o joelho trazendo o calcanhar próximo ao glúteo
 4aea9083-b850-4b59-a5e0-d8ec42773741,EXTENSÃO,pernas,,extensora,1,iso,treino,false,35,,joelho,Realize a extensão completa do joelho sem travar
 486b3c44-b77e-44fd-9690-6f9aacd4f35a,FLEXÃO CADEIRA,pernas,,flexora,1,iso,treino,false,35,,joelho,Execute o movimento de flexão mantendo o tronco ereto
-67212069-539d-4365-97f9-ecbdfa4e6fe9,FLEXÃO MESA,pernas,,leg-press,2,squat,treino,false,45,,joelho|lombar,Empurre a plataforma sem bloquear os joelhos no topo
+67212069-539d-4365-97f9-ecbdfa4e6fe9,FLEXÃO MESA,pernas,,flexora,1,iso,treino,false,35,,joelho,Flexione o joelho contraindo o posterior da coxa até o fim do curso
 6d8ca608-8522-460b-99d8-50e0ade715bf,Frog pose (sapo),pernas,,,1,iso,mobilidade,false,30,,joelho,Mantenha os joelhos alinhados ao abrir os quadris
 214c534d-6881-477a-9270-b21a9ff2f7dc,GLÚTEO MÁQUINA,pernas,,gluteo-mq,1,iso,treino,false,35,,joelho,Pressione o calcanhar e contraia o glúteo ao empurrar
 ead435fe-8b92-44e9-9e3e-9f76e57944ea,Goblet squat,pernas,,kettlebell,2,squat,treino,true,45,,joelho|lombar,Segure o kettlebell próximo ao peito e agache mantendo a coluna reta
-7fb1f1d4-3165-489f-9ca8-a20a8d5f9b40,GÊMEOS PÊNDULO,pernas,,,1,iso,treino,false,30,,joelho,Balance o peso e mova o tornozelo suavemente
+7fb1f1d4-3165-489f-9ca8-a20a8d5f9b40,GÊMEOS PÊNDULO,pernas,,panturrilha,1,iso,treino,false,30,,joelho,Balance o peso e mova o tornozelo suavemente
 5159d02b-9310-4846-b3a0-5d691e0715b3,Hack squat,pernas,,hack,2,squat,treino,true,45,,joelho|lombar,Desça controlado e empurre com os calcanhares
 8e68b865-2306-4a6c-9a8c-c76d2e7a0acd,Hip flexor lunge stretch,pernas,,,1,iso,mobilidade,false,30,,joelho,Alongue o quadril mantendo o joelho levemente flexionado
 eacfb37d-7efc-45b6-b70d-f5e980f2b6d9,Leg press 45°,pernas,,leg-press,1,squat,treino,true,30,,joelho|lombar,Empurre a plataforma mantendo as costas firmes
