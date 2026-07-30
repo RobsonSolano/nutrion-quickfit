@@ -56,7 +56,17 @@ export function App() {
   useEffect(() => {
     if (state.screen !== 'result' || !state.workout) return;
     setFlair(null);
-    embellish(state.workout, state.goal, state.groups).then(setFlair);
+    // Guarda contra corrida: "gerar outro" duas vezes rápido pode fazer o
+    // enfeite do treino ANTERIOR chegar depois do efeito já ter trocado de
+    // treino, e sobrescrever o título certo com o de um treino que não está
+    // mais na tela.
+    let stale = false;
+    embellish(state.workout, state.goal, state.groups).then((f) => {
+      if (!stale) setFlair(f);
+    });
+    return () => {
+      stale = true;
+    };
   }, [state.screen, state.workout, state.goal, state.groups]);
 
   useIdleTimeout(() => dispatch({ type: 'RESET' }), state.screen !== 'attract');
