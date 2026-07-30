@@ -16,6 +16,7 @@ import { Goal } from './screens/Goal';
 import { Groups } from './screens/Groups';
 import { Time } from './screens/Time';
 import { Level } from './screens/Level';
+import { Avoid } from './screens/Avoid';
 import { Result } from './screens/Result';
 import { Ficha } from './screens/Ficha';
 import { groupsLabel, LEVEL_OPTIONS } from './screens/labels';
@@ -162,6 +163,14 @@ export function App() {
               {state.screen === 'level' && (
                 <Level
                   onPick={(level) => dispatch({ type: 'PICK_LEVEL', level })}
+                  onBack={() => dispatch({ type: 'BACK' })}
+                />
+              )}
+              {state.screen === 'avoid' && (
+                <Avoid
+                  selected={state.avoid}
+                  onToggle={(tag) => dispatch({ type: 'TOGGLE_AVOID', tag })}
+                  onConfirm={() => dispatch({ type: 'CONFIRM_AVOID' })}
                   onBack={() => dispatch({ type: 'BACK' })}
                 />
               )}

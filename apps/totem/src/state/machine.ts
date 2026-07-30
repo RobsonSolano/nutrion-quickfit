@@ -2,7 +2,7 @@ import type { Contra, Goal, Input, Level, Minutes, MuscleGroup, Workout } from '
 
 export type Screen =
   | 'attract' | 'parq' | 'blocked' | 'home'
-  | 'goal' | 'groups' | 'time' | 'level'
+  | 'goal' | 'groups' | 'time' | 'level' | 'avoid'
   | 'generating' | 'result' | 'thin' | 'ficha';
 
 export type Shortcut = {
@@ -85,6 +85,7 @@ export type Action =
   | { type: 'PICK_TIME'; minutes: Minutes }
   | { type: 'PICK_LEVEL'; level: Level }
   | { type: 'TOGGLE_AVOID'; tag: Contra }
+  | { type: 'CONFIRM_AVOID' }
   | { type: 'GENERATED'; workout: Workout }
   | { type: 'WORKOUT_SAVED'; id: string }
   | { type: 'REGENERATE' }
@@ -100,6 +101,7 @@ const BACK_TO: Partial<Record<Screen, Screen>> = {
   goal: 'home',
   groups: 'goal',
   level: 'time',
+  avoid: 'level',
   ficha: 'result',
 };
 
@@ -168,7 +170,7 @@ export function reducer(state: MachineState, action: Action): MachineState {
       });
 
     case 'PICK_LEVEL':
-      return tap({ ...state, level: action.level, screen: 'generating' });
+      return tap({ ...state, level: action.level, screen: 'avoid' });
 
     case 'TOGGLE_AVOID': {
       const avoid = state.avoid.includes(action.tag)
@@ -176,6 +178,9 @@ export function reducer(state: MachineState, action: Action): MachineState {
         : [...state.avoid, action.tag];
       return tap({ ...state, avoid });
     }
+
+    case 'CONFIRM_AVOID':
+      return tap({ ...state, screen: 'generating' });
 
     case 'GENERATED':
       return {

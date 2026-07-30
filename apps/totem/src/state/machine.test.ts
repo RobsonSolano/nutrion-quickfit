@@ -27,7 +27,7 @@ describe('fluxo de atalho — 3 toques', () => {
     expect(s.goal).toBe(SHORTCUTS[0].goal);
   });
 
-  it('atalho nunca popula `avoid` — só o passo 6 do caminho completo faz isso', () => {
+  it('atalho nunca popula `avoid` — só o passo 5 do caminho completo faz isso', () => {
     const s = run([
       { type: 'TOUCH_ATTRACT' },
       { type: 'PARQ_NONE' },
@@ -109,7 +109,23 @@ describe('triagem PAR-Q', () => {
 });
 
 describe('caminho completo', () => {
-  it('percorre os 4 passos e chega a generating', () => {
+  it('percorre os 5 passos e chega a generating', () => {
+    const s = run([
+      { type: 'TOUCH_ATTRACT' },
+      { type: 'PARQ_NONE' },
+      { type: 'OPEN_CUSTOM' },
+      { type: 'PICK_GOAL', goal: 'hipertrofia' },
+      { type: 'TOGGLE_GROUP', group: 'peito' },
+      { type: 'CONFIRM_GROUPS' },
+      { type: 'PICK_TIME', minutes: 45 },
+      { type: 'PICK_LEVEL', level: 2 },
+      { type: 'CONFIRM_AVOID' },
+    ]);
+    expect(s.screen).toBe('generating');
+    expect(s.path).toBe('completo');
+  });
+
+  it('PICK_LEVEL leva ao passo de contraindicações, não direto a generating', () => {
     const s = run([
       { type: 'TOUCH_ATTRACT' },
       { type: 'PARQ_NONE' },
@@ -120,8 +136,30 @@ describe('caminho completo', () => {
       { type: 'PICK_TIME', minutes: 45 },
       { type: 'PICK_LEVEL', level: 2 },
     ]);
+    expect(s.screen).toBe('avoid');
+  });
+
+  it('alterna contraindicação dentro e fora da seleção', () => {
+    let s: MachineState = { ...initialState, screen: 'avoid' };
+    s = reducer(s, { type: 'TOGGLE_AVOID', tag: 'joelho' });
+    s = reducer(s, { type: 'TOGGLE_AVOID', tag: 'lombar' });
+    expect(s.avoid).toEqual(['joelho', 'lombar']);
+    s = reducer(s, { type: 'TOGGLE_AVOID', tag: 'joelho' });
+    expect(s.avoid).toEqual(['lombar']);
+  });
+
+  it('CONFIRM_AVOID gera mesmo sem nenhuma contraindicação marcada — zero é resposta válida', () => {
+    const s = reducer({ ...initialState, screen: 'avoid', avoid: [] }, { type: 'CONFIRM_AVOID' });
     expect(s.screen).toBe('generating');
-    expect(s.path).toBe('completo');
+  });
+
+  it('BACK do passo de contraindicações volta para o nível, sem perder a seleção', () => {
+    const s = reducer(
+      { ...initialState, screen: 'avoid', avoid: ['ombro'] },
+      { type: 'BACK' },
+    );
+    expect(s.screen).toBe('level');
+    expect(s.avoid).toEqual(['ombro']);
   });
 
   it('não deixa confirmar grupos sem escolher nenhum', () => {

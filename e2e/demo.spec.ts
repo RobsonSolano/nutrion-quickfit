@@ -66,6 +66,7 @@ test('montar do zero com 90 min não passa de 9 exercícios', async ({ page }) =
   await page.getByRole('button', { name: /continuar com 6 grupos/i }).click();
   await page.getByRole('button', { name: '90 min' }).click();
   await page.getByRole('button', { name: /^Avançado/ }).click();
+  await page.getByRole('button', { name: /continuar sem restrições/i }).click();
 
   await expect(page.getByRole('button', { name: /imprimir ficha/i })).toBeVisible({ timeout: 10_000 });
   const linhas = await page.locator('[class*="border-l-4"]').count();

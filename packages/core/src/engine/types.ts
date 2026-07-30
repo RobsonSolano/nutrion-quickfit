@@ -11,7 +11,7 @@ export type Goal =
 
 export type Level = 1 | 2 | 3;
 
-/** Tags de contraindicação. O aluno escolhe estas no passo 6 do fluxo completo. */
+/** Tags de contraindicação. O aluno escolhe estas no passo 5 do fluxo completo. */
 export type Contra = 'joelho' | 'lombar' | 'ombro' | 'punho' | 'cervical';
 
 /**
@@ -61,7 +61,7 @@ export type Input = {
   availableEquipment: string[];
   /**
    * Contraindicações a evitar. SEMPRE `[]` no caminho de atalho — só o
-   * passo 6 do "Montar do zero" popula este campo.
+   * passo 5 do "Montar do zero" popula este campo.
    */
   avoid: Contra[];
   /** é isto que faz o treino variar entre gerações */

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  GROUP_LABEL, GOAL_OPTIONS, LEVEL_OPTIONS,
+  GROUP_LABEL, GOAL_OPTIONS, LEVEL_OPTIONS, CONTRA_OPTIONS,
   TIME_OPTIONS_FULL, TIME_OPTIONS_QUICK, describeWorkout,
 } from './labels';
 import { TARGET_EX } from '@quickfit/core/engine';
@@ -39,6 +39,14 @@ describe('rótulos', () => {
   it('o atalho rápido oferece só tempos curtos', () => {
     expect(TIME_OPTIONS_QUICK).toEqual([20, 30, 40, 50]);
     expect(Math.max(...TIME_OPTIONS_QUICK)).toBeLessThan(60);
+  });
+
+  it('toda contraindicação tem rótulo, e as 5 tags do motor estão cobertas', () => {
+    const tags = ['joelho', 'lombar', 'ombro', 'punho', 'cervical'] as const;
+    expect(CONTRA_OPTIONS.map((o) => o.tag).sort()).toEqual([...tags].sort());
+    for (const o of CONTRA_OPTIONS) {
+      expect(o.label).toBeTruthy();
+    }
   });
 
   it('nenhuma tela oferece dois tempos com o mesmo alvo de exercícios', () => {

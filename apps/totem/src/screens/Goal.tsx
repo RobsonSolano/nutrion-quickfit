@@ -19,7 +19,7 @@ export function Goal({ onPick, onBack }: Props) {
 export function StepShell({
   step, title, hint, onBack, children, footer,
 }: {
-  /** Omitido no fluxo de atalho: lá não há "passo 3 de 4". */
+  /** Omitido no fluxo de atalho: lá não há "passo 3 de 5". */
   step?: number;
   title: string;
   hint?: string;
@@ -31,7 +31,7 @@ export function StepShell({
     <div className="flex h-full flex-col gap-5">
       <div className="flex flex-none items-center justify-between">
         <span className="text-[18px] uppercase tracking-[0.1em] text-dim">
-          {step ? `Passo ${step} de 4` : ''}
+          {step ? `Passo ${step} de 5` : ''}
         </span>
         <button
           type="button"
