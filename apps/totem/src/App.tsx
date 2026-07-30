@@ -12,6 +12,12 @@ import { Generating } from './screens/Generating';
 import { Thin } from './screens/Thin';
 import { Unavailable } from './screens/Unavailable';
 import { Boundary } from './components/Boundary';
+import { Goal } from './screens/Goal';
+import { Groups } from './screens/Groups';
+import { Time } from './screens/Time';
+import { Level } from './screens/Level';
+import { Result } from './screens/Result';
+import { groupsLabel, LEVEL_OPTIONS } from './screens/labels';
 
 export function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -81,7 +87,45 @@ export function App() {
                   onReset={() => dispatch({ type: 'RESET' })}
                 />
               )}
-              {/* result, ficha e o caminho completo entram nas tasks 15 e 16 */}
+              {state.screen === 'goal' && (
+                <Goal
+                  onPick={(goal) => dispatch({ type: 'PICK_GOAL', goal })}
+                  onBack={() => dispatch({ type: 'BACK' })}
+                />
+              )}
+              {state.screen === 'groups' && (
+                <Groups
+                  selected={state.groups}
+                  onToggle={(group) => dispatch({ type: 'TOGGLE_GROUP', group })}
+                  onConfirm={() => dispatch({ type: 'CONFIRM_GROUPS' })}
+                  onBack={() => dispatch({ type: 'BACK' })}
+                />
+              )}
+              {state.screen === 'time' && (
+                <Time
+                  variant={state.path}
+                  onPick={(minutes) => dispatch({ type: 'PICK_TIME', minutes })}
+                  onBack={() => dispatch({ type: 'BACK' })}
+                />
+              )}
+              {state.screen === 'level' && (
+                <Level
+                  onPick={(level) => dispatch({ type: 'PICK_LEVEL', level })}
+                  onBack={() => dispatch({ type: 'BACK' })}
+                />
+              )}
+              {state.screen === 'result' && state.workout && (
+                <Result
+                  workout={state.workout}
+                  groupsTitle={groupsLabel(state.groups)}
+                  levelLabel={LEVEL_OPTIONS.find((o) => o.level === state.level)!.sub}
+                  embellishTitle={null}
+                  onPrint={() => dispatch({ type: 'OPEN_FICHA' })}
+                  onRegenerate={() => dispatch({ type: 'REGENERATE' })}
+                  onExit={() => dispatch({ type: 'RESET' })}
+                />
+              )}
+              {/* ficha entra na task 16 */}
             </div>
           </div>
         )}
