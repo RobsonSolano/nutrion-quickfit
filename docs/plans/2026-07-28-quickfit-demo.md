@@ -33,7 +33,7 @@
 - **`packages/core/src/engine/` tem ZERO dependências.** Sem React, sem Supabase, sem lib externa. É o que torna os testes instantâneos e o motor portável para o servidor no piloto.
 - **Filtro de equipamento usa `every`, nunca `some`.** Um exercício só é elegível se **todos** os seus equipamentos existem na unidade.
 - **Copy em pt-BR**, tratamento na segunda pessoa ("você"), sem jargão de academia que aluno iniciante não entenda.
-- **Alvo de toque mínimo: 96px de altura.** Não 44px.
+- **Alvo de toque: 96px para ação primária, 64px para navegação secundária.** Não 44px em nenhum caso. A distinção é deliberada: 96px para o que o aluno está escolhendo (objetivo, grupo, tempo, atalho), porque dedo em totem de parede é menos preciso que polegar em celular e o aluno pode estar suado; 64px para `← Voltar` e `✕ Sair`, porque acertar "Sair" por acidente no meio do fluxo perde o progresso — aqui o alvo menor é a proteção, não o descuido.
 - **Nenhuma fonte por CDN.** Sora e Inter auto-hospedadas em `woff2` dentro de `public/fonts/`.
 - **Cores só via CSS custom properties `--qf-*`.** Nunca hex literal em componente — quebra o white-label.
 - **Segredos só em `.env.local`, que está no `.gitignore`.** O `service_role` nunca vai para o cliente nem para o git.
