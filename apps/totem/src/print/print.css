@@ -8,7 +8,13 @@
      A4 (tabela de 4 colunas, ~53) ->  NÃO cabe em cupom, estoura 19 caracteres
 
    Então a ficha é uma coluna estreita. Em A4 ela sai centralizada, com cara de
-   cupom numa folha — que é exatamente o que a academia vai entregar ao aluno. */
+   cupom numa folha — que é exatamente o que a academia vai entregar ao aluno.
+
+   EXCEÇÃO ACEITA à regra "cores só via --qf-*, nunca hex literal": todo #fff/
+   #000 aqui dentro é deliberado, não esquecimento. Papel térmico é 1 bit —
+   não existe cor nem cinza no hardware, então nenhum valor de white-label
+   chegaria ao papel de qualquer forma. Mesma categoria do --qf-warn em
+   index.css: fora da paleta de tema por natureza, não por descuido. */
 
 :root {
   /* 72mm é a área imprimível de uma bobina de 80mm. Em tela usamos px para a

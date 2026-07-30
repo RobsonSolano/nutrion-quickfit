@@ -23,6 +23,11 @@ type Props = {
  *
  * Então uma coluna estreita, sem tabela. Em A4 sai centralizada, com cara de
  * cupom numa folha — que é o que a academia entrega ao aluno.
+ *
+ * EXCEÇÃO ACEITA à regra "cores só via --qf-*": bg-white/text-black/
+ * border-black abaixo são deliberados, não hex esquecido. Papel térmico é
+ * 1 bit — nenhum tema de academia chegaria ao cupom mesmo que os tokens
+ * fossem usados. Mesma exceção documentada em print.css e qr.ts.
  */
 export function Ficha({ workout, gym, groupsTitle, workoutId, onBack }: Props) {
   const [qr, setQr] = useState<string | null>(null);
@@ -40,9 +45,10 @@ export function Ficha({ workout, gym, groupsTitle, workoutId, onBack }: Props) {
 
   return (
     <div className="qf-ficha flex h-full flex-col items-center gap-5 bg-raised p-6">
-      {/* 78mm ~= a bobina de 80mm com folga. A pré-visualização usa a MESMA
-          largura da impressão, para o que aparece na tela ser o que sai. */}
-      <div className="qf-sheet flex min-h-0 w-[78mm] flex-1 flex-col gap-3 bg-white p-5 font-mono text-[13px] leading-snug text-black shadow-2xl">
+      {/* 72mm = --qf-cupom, a mesma variável que o print.css usa para a
+          largura real do papel. A pré-visualização usa a MESMA largura da
+          impressão, para o que aparece na tela ser o que sai. */}
+      <div className="qf-sheet flex min-h-0 w-[72mm] flex-1 flex-col gap-3 bg-white p-5 font-mono text-[13px] leading-snug text-black shadow-2xl">
         <div className="flex-none text-center">
           <div className="gym text-[17px] font-bold uppercase leading-tight">{gym.name}</div>
           <div className="tag text-[11px] uppercase tracking-wide">QuickFit · {hoje}</div>

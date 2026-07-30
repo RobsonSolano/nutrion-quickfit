@@ -14,7 +14,13 @@ export function workoutUrl(
   return `${base.replace(/\/$/, '')}/w/${id}`;
 }
 
-/** Gerado no cliente — não depende de serviço externo, funciona offline. */
+/**
+ * Gerado no cliente — não depende de serviço externo, funciona offline.
+ *
+ * EXCEÇÃO ACEITA à regra "cores só via --qf-*": a lib `qrcode` rasteriza um
+ * PNG e só aceita string hex, nunca lê custom property de CSS. Hex fixo aqui
+ * não é descuido — é a única forma de passar cor para esta API.
+ */
 export async function qrDataUrl(text: string): Promise<string> {
   return QRCode.toDataURL(text, {
     errorCorrectionLevel: 'M',
