@@ -1,6 +1,6 @@
 # NutriOn QuickFit
 
-Totem de autoatendimento que gera treino personalizado em 3 toques, imprime ficha A4 e funciona sem internet.
+Totem de autoatendimento que gera treino personalizado em 3 toques, imprime ficha em cupom e funciona sem internet.
 
 - **Spec:** [`docs/specs/2026-07-28-quickfit-design.md`](docs/specs/2026-07-28-quickfit-design.md) — as 8 decisões travadas, o motor, o schema, as regras de impressão
 - **Plano:** [`docs/plans/2026-07-28-quickfit-demo.md`](docs/plans/2026-07-28-quickfit-demo.md) — 18 tarefas da fase 1
@@ -40,7 +40,7 @@ O prefixo de PATH não é opcional: o node padrão do shell pode estar desatuali
 | `npm run dev` | totem em desenvolvimento |
 | `npm run dev:painel` | painel em desenvolvimento (fase 3) |
 | `npm test` | motor, catálogo, tema, máquina de estados, IA |
-| `npm run e2e` | smoke do fluxo de 3 toques + ficha em 1 página A4 |
+| `npm run e2e` | smoke do fluxo de 3 toques + ficha completa impressa |
 | `npm run typecheck` | `tsc --build` em todos os pacotes |
 | `npm run validate:catalog` | valida os CSVs — quebra o build se houver dado inválido |
 | `npm run export:raw` | exporta exercícios do Persona Fit → CSV cru |

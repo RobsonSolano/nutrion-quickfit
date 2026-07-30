@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --build --force",
     "e2e": "playwright test",
+    "preview": "npm run preview --workspace @quickfit/totem",
     "validate:catalog": "tsx scripts/validate-catalog.ts",
     "export:raw": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/export-from-app.ts",
     "classify": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/classify.ts",

@@ -20,8 +20,13 @@ import { Result } from './screens/Result';
 import { Ficha } from './screens/Ficha';
 import { groupsLabel, LEVEL_OPTIONS } from './screens/labels';
 import { embellish, type Embellishment } from './ai/embellish';
+import { SharedWorkout } from './screens/SharedWorkout';
+import { saveWorkout } from './data/saveWorkout';
 
 export function App() {
+  const shared = window.location.pathname.match(/^\/w\/([0-9a-z]{6,20})$/);
+  if (shared) return <SharedWorkout id={shared[1]} />;
+
   const [state, dispatch] = useReducer(reducer, initialState);
   const [bundle, setBundle] = useState<CatalogBundle | null>(null);
   const [failed, setFailed] = useState(false);
@@ -46,9 +51,20 @@ export function App() {
     const t = window.setTimeout(() => {
       const workout = generateWorkout(toInput(state, bundle.availableEquipment), bundle.exercises);
       dispatch({ type: 'GENERATED', workout });
+      saveWorkout(bundle.gym.id, toInput(state, bundle.availableEquipment), workout)
+        .then((id) => { if (id) dispatch({ type: 'WORKOUT_SAVED', id }); });
     }, 820);
     return () => window.clearTimeout(t);
   }, [state.screen, state.seed, bundle]);
+
+  // Registra o bloqueio do PAR-Q para o gestor ver nas estatísticas (spec
+  // §8) — não gera treino, só telemetria de encaminhamento.
+  useEffect(() => {
+    if (state.screen !== 'blocked' || !bundle) return;
+    const vazio = { items: [], scheme: { sets: 0, reps: '', rest: 0, target: 0 },
+      poolSize: 0, budgetSec: 0, usedSec: 0, cap: 0, minItems: 0, extraSets: 0 };
+    void saveWorkout(bundle.gym.id, toInput(state, bundle.availableEquipment), vazio as never, true);
+  }, [state.screen, bundle]);
 
   // O enfeite de IA chega depois do treino já estar na tela (D5). Não há
   // await no caminho da UI: se falhar, der timeout ou não houver internet,
