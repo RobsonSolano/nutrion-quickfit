@@ -34,9 +34,17 @@ function restLadder(baseRest: number): number[] {
 }
 
 /**
- * Escolhe séries e descanso que fazem o ALVO de exercícios caber no tempo.
+ * Escolhe séries e descanso MIRANDO no alvo de exercícios do tempo pedido.
  * Sessão curta legitimamente usa menos série — é o que um professor faz com
  * quem tem 20 minutos.
+ *
+ * Mira, não garante. Existe combinação onde nem o degrau mais apertado faz o
+ * alvo caber: força em 20 min quer 4 exercícios e o mínimo (2 séries × 68s)
+ * custa 1024s contra 900s de orçamento. Nesse caso devolve o mínimo mesmo
+ * assim, e quem faz o orçamento fechar é o `generateWorkout`, que para de
+ * escolher quando nada mais cabe em `remaining` — força em 20 min sai com 3
+ * exercícios, não 4, e `usedSec <= budgetSec`. O alvo é aspiração; o teto de
+ * tempo é do gerador.
  */
 export function schemeFor(input: Input): Scheme {
   const target = Math.min(TARGET_EX[input.minutes], MAX_EX[input.goal]);
@@ -57,9 +65,12 @@ export function schemeFor(input: Input): Scheme {
     }
   }
 
-  // Não deveria acontecer com os 35 pares (tempo × objetivo) de hoje, mas se
-  // algum alvo novo não couber, devolve o mínimo e deixa a duração honesta
-  // aparecer na ficha em vez de mentir sobre o tempo.
+  // Este caminho É alcançado hoje, por exatamente um dos 35 pares: força em
+  // 20 min. Nem o degrau mais apertado (2 × 68s = 1024s) cabe nos 900s. Não é
+  // defensivo — é o caso real de "o aluno pediu força numa janela curta".
+  // Devolve o mínimo e deixa o `generateWorkout` cortar exercício até fechar
+  // o orçamento, em vez de encurtar o descanso abaixo do que a política
+  // escolhida permite.
   return { sets: MIN_SETS, reps, rest: ladder[ladder.length - 1]!, target };
 }
 

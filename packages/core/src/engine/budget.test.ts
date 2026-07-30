@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { schemeFor, costOf } from './budget';
-import { REST } from './constants';
+import { REST, SETS_REPS } from './constants';
 import type { Exercise, Goal, Input, Minutes } from './types';
 
 /** Em ordem crescente — três testes dependem disso para varrer a escada. */
@@ -73,15 +73,47 @@ describe('schemeFor', () => {
     }
   });
 
-  it('o descanso nunca desce abaixo do piso do objetivo', () => {
+  it('o descanso fica entre o piso e o descanso base do objetivo', () => {
     // Política escolhida: descanso íntegro, menos série. Um descanso curto
     // demais é o defeito que esta política existe para impedir — o totem não
     // tem professor ao lado para corrigir execução.
+    //
+    // O limite SUPERIOR é o que tranca a regressão de verdade. Só o piso
+    // (`rest >= min(35, base)`) não trancava nada para mobilidade: se o piso
+    // virasse `REST_FLOOR` fixo, `restLadder(30)` devolveria `[35]` em vez de
+    // `[30]` — e `35 >= 30` passa. O treino de mobilidade ganharia 5s de
+    // descanso por série em toda sessão, silenciosamente. Com o teto, falha.
     for (const goal of GOALS) {
-      const piso = Math.min(35, REST[goal]);
+      const base = REST[goal];
+      const piso = Math.min(35, base);
       for (const minutes of ALL_MINUTES) {
-        expect(schemeFor(input({ minutes, goal })).rest).toBeGreaterThanOrEqual(piso);
+        const { rest } = schemeFor(input({ minutes, goal }));
+        expect(rest).toBeGreaterThanOrEqual(piso);
+        expect(rest).toBeLessThanOrEqual(base);
       }
+    }
+  });
+
+  it('devolve o mínimo quando nem o degrau mais apertado cabe', () => {
+    // Força em 20 min é o único par dos 35 que esgota a escada. Documentado
+    // como teste porque o comportamento é intencional e não óbvio: o esquema
+    // NÃO cabe no orçamento, e é o `generateWorkout` que fecha a conta
+    // cortando exercício. Se algum dia isto passar a caber, o comentário do
+    // fallback fica errado — e este teste avisa.
+    const sc = schemeFor(input({ minutes: 20, goal: 'forca' }));
+    expect(sc.sets).toBe(2);
+    expect(sc.rest).toBe(68);
+    expect(sc.target).toBe(4);
+    const cabe = sc.target * (sc.sets * (30 + sc.rest) + 60);
+    expect(cabe).toBeGreaterThan(20 * 60 - 300);
+  });
+
+  it('todo objetivo começa com séries suficientes para o laço rodar', () => {
+    // Se um objetivo novo entrar com `sets: 1`, o laço interno
+    // (`sets = baseSets; sets >= MIN_SETS`) não executa nenhuma iteração em
+    // NENHUM degrau, e todo tempo cai no fallback sem aviso. Guarda barata.
+    for (const goal of GOALS) {
+      expect(SETS_REPS[goal].sets).toBeGreaterThanOrEqual(2);
     }
   });
 });
