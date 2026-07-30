@@ -6234,9 +6234,20 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 16: Ficha A4, impressão e QR
+### Task 16: Ficha em cupom, impressão e QR
 
 `overflow: auto` na pré-visualização **corta conteúdo no papel**. É o defeito mais perigoso do produto porque a tela mostra certo.
+
+**Formato cupom, não A4.** Decisão do Robson (jul/2026): impressão térmica em cupom é prática consolidada em academia — a própria §1 registra isso da referência do NextFit. E a compatibilidade entre os formatos é de **mão única**, medido:
+
+```
+cupom (80mm, ~34 caracteres por linha)  ->  imprime aceitável em A4
+A4 (tabela de 4 colunas, ~53)           ->  NÃO cabe em cupom, estoura 19
+```
+
+Então a ficha é **uma coluna estreita, sem tabela**. Em A4 ela sai centralizada, com cara de cupom numa folha — que é exatamente o que a academia vai entregar ao aluno. Um layout serve os dois formatos, e o piloto com impressora térmica não vai exigir redesenho.
+
+O que se perde: espaço generoso para anotar carga à mão, e papel térmico desbota em semanas. A ficha do NextFit dura 4–6 semanas com carga anotada; um cupom não. Se isso virar problema no piloto, a saída é oferecer os dois — mas a §10 item 1 já prevê o agente térmico, e desenhar A4 primeiro seria construir o formato que a academia não imprime.
 
 **Files:**
 - Create: `apps/totem/src/print/print.css`
@@ -6345,10 +6356,28 @@ Esperado: PASS, 4 testes.
 `apps/totem/src/print/print.css`:
 
 ```css
-/* Cada regra aqui nasceu de defeito real medido no protótipo, não de teoria.
-   Ver spec §7. */
+/* Cada regra aqui nasceu de defeito real medido, não de teoria. Ver spec §7.
+
+   LAYOUT DE CUPOM, não de A4. Decisão do Robson (jul/2026): impressão térmica
+   em formato cupom é prática consolidada em academia, e a compatibilidade entre
+   os formatos é de MÃO ÚNICA — medido:
+
+     cupom (80mm, ~34 caracteres)  ->  imprime aceitável em A4
+     A4 (tabela de 4 colunas, ~53) ->  NÃO cabe em cupom, estoura 19 caracteres
+
+   Então a ficha é uma coluna estreita. Em A4 ela sai centralizada, com cara de
+   cupom numa folha — que é exatamente o que a academia vai entregar ao aluno. */
+
+:root {
+  /* 72mm é a área imprimível de uma bobina de 80mm. Em tela usamos px para a
+     pré-visualização ter a mesma proporção do papel. */
+  --qf-cupom: 72mm;
+}
+
 @media print {
-  @page { size: A4 portrait; margin: 14mm; }
+  /* `auto` na altura deixa a bobina cortar onde o conteúdo acaba, sem forçar
+     folha inteira. Em impressora A4 o navegador usa a folha e centraliza. */
+  @page { size: auto; margin: 6mm; }
 
   /* 1. Nenhum controle de tela vai pro papel. Sem isto, os botões
         "Imprimir" e "Voltar" saem impressos na ficha. */
@@ -6357,7 +6386,7 @@ Esperado: PASS, 4 testes.
   /* 2. Fundo branco em toda a cadeia de ancestrais, senão o cinza da
         interface vaza como um bloco no meio da folha. */
   html, body, #root, .qf-shell, .qf-ficha { background: #fff !important; }
-  body { color: #14170f !important; }
+  body { color: #000 !important; }
 
   /* 3. O ponto de tudo: a pré-visualização rola para caber na tela do totem.
         Se o overflow vazar para a impressão, EXERCÍCIO DESAPARECE DO PAPEL
@@ -6376,38 +6405,65 @@ Esperado: PASS, 4 testes.
     display: block !important;
   }
 
+  /* 4. A largura do cupom manda, em qualquer impressora. Numa térmica isso é a
+        bobina inteira; numa A4 é uma coluna estreita centralizada. */
   .qf-sheet {
     box-shadow: none !important;
-    max-width: none !important;
-    width: auto !important;
+    width: var(--qf-cupom) !important;
+    max-width: var(--qf-cupom) !important;
+    margin: 0 auto !important;
     padding: 0 !important;
-    font-size: 10pt !important;
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace !important;
+    font-size: 9pt !important;
+    line-height: 1.35 !important;
+    color: #000 !important;
   }
 
-  /* 4. Cabeçalho da tabela repete em cada página impressa. */
-  .qf-sheet thead { display: table-header-group; }
+  /* 5. Térmica é 1 bit: não existe cinza. Cinza claro vira branco (invisível)
+        ou preto (borrão), dependendo do driver. Tudo preto, e a hierarquia sai
+        de peso e caixa alta em vez de cor. */
+  .qf-sheet * { color: #000 !important; }
+  .qf-sheet .dim { font-weight: 400 !important; }
+  .qf-sheet .gym { font-size: 11pt !important; font-weight: 700 !important; }
+  .qf-sheet .tag { font-size: 8pt !important; text-transform: uppercase; }
 
-  /* 5. Nenhum exercício parte no meio entre páginas. */
-  .qf-sheet tr { break-inside: avoid; page-break-inside: avoid; }
+  /* 6. Nenhum exercício parte no meio. Numa bobina não existe "próxima
+        página", mas o corte pode cair em cima da linha. */
+  .qf-sheet .ex { break-inside: avoid; page-break-inside: avoid; }
 
-  /* 6. O rodapé de homologação CREF repete em TODA página. Não pode existir
-        folha impressa sem ele — é o que sustenta a ficha juridicamente. */
+  /* 7. O rodapé de homologação CREF é o que sustenta a ficha juridicamente e
+        não pode faltar. Em cupom ele é o ÚLTIMO bloco no fluxo, não `fixed`:
+        `position: fixed` numa bobina de altura automática se comporta de forma
+        imprevisível entre drivers, e o que a A4 ganhava (repetir em toda
+        página) o cupom não precisa, porque é uma tira contínua. */
   .qf-sheet-footer {
-    position: fixed !important;
-    left: 0; right: 0; bottom: 0;
-    background: #fff !important;
-    border-top: .8pt solid #c8ccc3 !important;
-    padding-top: 5pt !important;
+    position: static !important;
+    margin-top: 6pt !important;
+    border-top: 1pt dashed #000 !important;
+    padding-top: 4pt !important;
     font-size: 7.5pt !important;
   }
 
-  .qf-sheet .gym  { font-size: 16pt !important; }
-  .qf-sheet .tag  { font-size: 7.5pt !important; }
-  .qf-sheet table { font-size: 9.5pt !important; width: 100%; border-collapse: collapse; }
-  .qf-sheet th    { font-size: 7pt !important; padding: 4pt 2pt !important; }
-  .qf-sheet td    { padding: 6pt 2pt !important; }
-  .qf-sheet .eqp  { font-size: 8pt !important; }
-  .qf-sheet img.qr { width: 54pt !important; height: 54pt !important; }
+  /* 8. Separadores tracejados em vez de linhas finas: térmica de 203dpi
+        borra hairline, e tracejado sobrevive. */
+  .qf-sheet .rule { border-top: 1pt dashed #000 !important; }
+
+  /* 9. O QR precisa ter módulo grande o suficiente para câmera ruim sob luz de
+        galpão. 40mm em cupom de 72mm é quase metade da largura, de propósito —
+        é o elemento que leva o aluno para a página do treino. */
+  .qf-sheet img.qr {
+    width: 40mm !important;
+    height: 40mm !important;
+    image-rendering: pixelated;
+  }
+
+  /* 10. A linha de anotar carga tem que sobreviver a caneta. Sublinhado sólido
+         e não borda de célula, porque célula estreita em térmica some. */
+  .qf-sheet .carga {
+    border-bottom: 1pt solid #000 !important;
+    display: inline-block;
+    min-width: 22mm;
+  }
 }
 ```
 
@@ -6437,6 +6493,17 @@ type Props = {
   onBack: () => void;
 };
 
+/**
+ * Ficha em formato CUPOM, não A4. Decisão do Robson (jul/2026): impressão
+ * térmica em cupom é prática consolidada em academia, e a compatibilidade entre
+ * os formatos é de mão única — medido:
+ *
+ *   cupom (80mm, ~34 caracteres)  ->  imprime aceitável em A4
+ *   A4 (tabela de 4 colunas, ~53) ->  NÃO cabe em cupom, estoura 19 caracteres
+ *
+ * Então uma coluna estreita, sem tabela. Em A4 sai centralizada, com cara de
+ * cupom numa folha — que é o que a academia entrega ao aluno.
+ */
 export function Ficha({ workout, gym, groupsTitle, workoutId, onBack }: Props) {
   const [qr, setQr] = useState<string | null>(null);
   const d = describeWorkout(workout);
@@ -6452,102 +6519,80 @@ export function Ficha({ workout, gym, groupsTitle, workoutId, onBack }: Props) {
   }).format(new Date());
 
   return (
-    <div className="qf-ficha flex h-full flex-col items-center gap-5 bg-[#3a3d36] p-6">
-      <div className="qf-sheet flex min-h-0 w-full max-w-[820px] flex-1 flex-col gap-4 bg-white p-10 text-[#14170f] shadow-2xl">
-        <div className="flex flex-none items-start justify-between border-b border-[#14170f] pb-3">
-          <div>
-            <div className="gym font-display text-[30px] font-extrabold tracking-tight">
-              {gym.name}
-            </div>
-            <div className="tag text-[13px] uppercase tracking-[0.12em] text-[#5c6356]">
-              Ficha gerada no QuickFit · {hoje}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="tag text-[13px] uppercase tracking-[0.12em] text-[#5c6356]">Treino A</div>
-            <div className="text-[20px] font-extrabold">{groupsTitle}</div>
-          </div>
+    <div className="qf-ficha flex h-full flex-col items-center gap-5 bg-raised p-6">
+      {/* 78mm ~= a bobina de 80mm com folga. A pré-visualização usa a MESMA
+          largura da impressão, para o que aparece na tela ser o que sai. */}
+      <div className="qf-sheet flex min-h-0 w-[78mm] flex-1 flex-col gap-3 bg-white p-5 font-mono text-[13px] leading-snug text-black shadow-2xl">
+        <div className="flex-none text-center">
+          <div className="gym text-[17px] font-bold uppercase leading-tight">{gym.name}</div>
+          <div className="tag text-[11px] uppercase tracking-wide">QuickFit · {hoje}</div>
         </div>
 
-        <div className="tag flex-none text-[13px] uppercase tracking-[0.12em] text-[#5c6356]">
-          Aquecimento 5 min · duração estimada {d.minutos} min · descanso {workout.scheme.rest}s entre séries
+        <div className="rule flex-none border-t border-dashed border-black" />
+
+        <div className="flex-none text-center">
+          <div className="text-[15px] font-bold">{groupsTitle}</div>
+          <div className="text-[11px]">
+            {d.minutos} min · descanso {workout.scheme.rest}s
+          </div>
+          <div className="text-[11px]">aquecimento 5 min antes</div>
         </div>
 
-        {/* Rola na TELA; na impressão o print.css zera o overflow. */}
+        <div className="rule flex-none border-t border-dashed border-black" />
+
+        {/* Rola na TELA; o print.css zera o overflow na impressão, senão
+            exercício desaparece do papel sem aviso. */}
         <div className="qf-sheet-body min-h-0 flex-1 overflow-y-auto">
-          <table className="w-full border-collapse text-[15px]">
-            <thead>
-              <tr>
-                <th className="w-8 border-b border-[#c8ccc3] px-1 py-2 text-left text-[11px] font-bold uppercase tracking-[0.1em] text-[#5c6356]"></th>
-                <th className="border-b border-[#c8ccc3] px-1 py-2 text-left text-[11px] font-bold uppercase tracking-[0.1em] text-[#5c6356]">Exercício</th>
-                <th className="border-b border-[#c8ccc3] px-1 py-2 text-left text-[11px] font-bold uppercase tracking-[0.1em] text-[#5c6356]">Séries</th>
-                <th className="border-b border-[#c8ccc3] px-1 py-2 text-left text-[11px] font-bold uppercase tracking-[0.1em] text-[#5c6356]">Carga usada</th>
-              </tr>
-            </thead>
-            <tbody>
-              {workout.items.map((it, i) => (
-                <tr key={it.exercise.id} className="border-b border-[#e6e9e2]">
-                  <td className="px-1 py-3 align-top text-[#8b9284]">{i + 1}</td>
-                  <td className="px-1 py-3 align-top">
-                    <span className="font-bold">{it.exercise.name}</span>
-                    <br />
-                    <span className="eqp text-[13px] text-[#5c6356]">
-                      {it.exercise.equipment.join(' · ') || 'peso corporal'}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-1 py-3 align-top font-extrabold tabular-nums">
-                    {it.exercise.pattern === 'cardio' ? it.reps : `${it.sets}×${it.reps}`}
-                  </td>
-                  <td className="whitespace-nowrap px-1 py-3 align-top tracking-[0.1em] text-[#8b9284]">
-                    {it.exercise.pattern === 'cardio'
-                      ? '—'
-                      : Array(it.sets).fill('____').join(' ')}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Espaço em branco numa ficha de papel tem uso real. */}
-          <div className="mt-8">
-            <div className="tag text-[13px] uppercase tracking-[0.12em] text-[#5c6356]">Anotações</div>
-            <div className="mt-4 flex flex-col gap-7">
-              {[0, 1, 2, 3].map((i) => (
-                <span key={i} className="block border-b border-[#d8dcd4]" />
-              ))}
+          {workout.items.map((it, i) => (
+            <div key={it.exercise.id} className="ex mb-3 last:mb-0">
+              <div className="font-bold">
+                {i + 1}. {it.exercise.name}
+              </div>
+              <div className="flex items-baseline justify-between gap-2">
+                <span>
+                  {it.sets} x {it.reps}
+                </span>
+                <span className="text-[11px]">
+                  carga <span className="carga inline-block min-w-[18mm] border-b border-black" />
+                </span>
+              </div>
+              {it.exercise.cue ? (
+                <div className="dim text-[11px] leading-tight">{it.exercise.cue}</div>
+              ) : null}
+              {it.exercise.equipment.length > 0 ? (
+                <div className="eqp text-[10px] uppercase tracking-wide">
+                  {it.exercise.equipment.join(' + ')}
+                </div>
+              ) : (
+                <div className="eqp text-[10px] uppercase tracking-wide">peso corporal</div>
+              )}
             </div>
-          </div>
+          ))}
         </div>
 
-        <div className="qf-sheet-footer mt-auto flex flex-none items-end gap-6 border-t border-[#c8ccc3] pt-3 text-[13px] text-[#5c6356]">
-          <div className="flex-1">
-            <p className="mb-1">
-              <b className="text-[#14170f]">Use carga que deixe 2 repetições de reserva</b> na última série.
-            </p>
-            {gym.trainerName && gym.trainerCref && (
-              <p className="mb-1">
-                Sugestão de treino homologada por{' '}
-                <b className="text-[#14170f]">{gym.trainerName} — {gym.trainerCref}</b>.
-              </p>
-            )}
-            <p>Sentiu dor, tontura ou falta de ar? Interrompa e procure a recepção.</p>
-          </div>
+        <div className="qf-sheet-footer flex-none border-t border-dashed border-black pt-2">
           {qr ? (
-            <div className="text-center">
-              <img src={qr} alt="QR do treino" className="qr h-24 w-24" />
-              <div className="tag mt-1 text-[11px] uppercase tracking-[0.1em]">vídeos e cronômetro</div>
+            <div className="mb-2 flex flex-col items-center gap-1">
+              <img src={qr} alt="QR do treino" className="qr h-[34mm] w-[34mm]" />
+              <div className="text-[10px]">aponte a câmera para abrir no celular</div>
             </div>
-          ) : (
-            <div className="max-w-[22ch] text-right text-[12px]">
-              QR indisponível — leve a ficha impressa.
+          ) : null}
+          <div className="text-center text-[10px] leading-tight">
+            {gym.trainerName ? <div>{gym.trainerName}</div> : null}
+            {gym.trainerCref ? <div>{gym.trainerCref}</div> : null}
+            <div className="mt-1">
+              Prescrição homologada por profissional de educação física.
             </div>
-          )}
+            <div>Sinta dor ou tontura, pare e procure a equipe.</div>
+          </div>
         </div>
       </div>
 
-      <div className="no-print flex w-full max-w-[820px] flex-none gap-4">
-        <Cta onClick={() => window.print()}>🖨 &nbsp;Imprimir agora</Cta>
-        <Cta variant="ghost" onClick={onBack}>← Voltar ao treino</Cta>
+      <div className="no-print flex flex-none gap-4">
+        <Cta onClick={() => window.print()}>🖨 &nbsp;Imprimir</Cta>
+        <Cta variant="ghost" onClick={onBack}>
+          ← Voltar
+        </Cta>
       </div>
     </div>
   );
@@ -6592,14 +6637,17 @@ npm run dev
 
 Gere um treino de 9 exercícios (Montar do zero → Emagrecer → 6 grupos → 90 min → Avançado), abra a ficha, e aperte **Ctrl+P**. Na pré-visualização do Chrome, confirme:
 
-1. **1 página** — não 2, não 3
-2. **Todos os 9 exercícios** presentes, nenhum cortado
-3. **Rodapé com CREF visível** e o aviso de segurança
-4. **Nenhum botão** ("Imprimir agora", "Voltar ao treino") impresso
-5. **Nenhum bloco cinza** no meio da folha
-6. Área de "Anotações" com as linhas
+1. **Todos os 9 exercícios presentes, nenhum cortado.** É a checagem que vale a task. Se faltar exercício, o `overflow` vazou — confira que `.qf-sheet-body` está recebendo `overflow: visible !important` no `@media print`.
+2. **Largura de cupom**, uma coluna estreita centralizada — não a folha inteira.
+3. **Linha de `carga ____` em cada exercício**, com sublinhado que sobrevive a caneta.
+4. **Rodapé com CREF** e o aviso de segurança, no fim do fluxo.
+5. **QR presente e nítido**, com módulo grande — 34mm em cupom de 78mm é quase metade da largura, de propósito.
+6. **Nenhum botão** ("Imprimir", "Voltar") impresso.
+7. **Nenhum bloco cinza** no meio da folha.
 
-Se algum exercício faltar, o `overflow` vazou — confira que `.qf-sheet-body` está recebendo `overflow: visible !important` no `@media print`.
+**Não conte páginas.** Numa impressora A4 um cupom de 9 exercícios pode ocupar duas folhas, e isso não é defeito: numa bobina térmica é uma tira contínua que corta onde o conteúdo acaba. O `@page { size: auto }` é o que permite os dois comportamentos. A checagem que substitui a contagem de páginas é a de número 1 — conteúdo completo.
+
+Um alerta se você for automatizar isto com Playwright: `page.emulateMedia({media:'screen'})` **sobrepõe** o print media do `page.pdf()`, e o PDF sai com a folha de tela. Isso já custou um diagnóstico falso de "3 páginas" neste projeto. Use `emulateMedia({media: null})` antes do `pdf()`.
 
 - [ ] **Step 9: Rodar tudo e commitar**
 
