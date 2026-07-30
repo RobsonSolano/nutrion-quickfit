@@ -866,7 +866,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```ts
 import { describe, it, expect } from 'vitest';
 import { schemeFor, costOf } from './budget';
-import { REST } from './constants';
+import { REST, SETS_REPS } from './constants';
 import type { Exercise, Goal, Input, Minutes } from './types';
 
 /** Em ordem crescente — três testes dependem disso para varrer a escada. */
@@ -939,15 +939,47 @@ describe('schemeFor', () => {
     }
   });
 
-  it('o descanso nunca desce abaixo do piso do objetivo', () => {
+  it('o descanso fica entre o piso e o descanso base do objetivo', () => {
     // Política escolhida: descanso íntegro, menos série. Um descanso curto
     // demais é o defeito que esta política existe para impedir — o totem não
     // tem professor ao lado para corrigir execução.
+    //
+    // O limite SUPERIOR é o que tranca a regressão de verdade. Só o piso
+    // (`rest >= min(35, base)`) não trancava nada para mobilidade: se o piso
+    // virasse `REST_FLOOR` fixo, `restLadder(30)` devolveria `[35]` em vez de
+    // `[30]` — e `35 >= 30` passa. O treino de mobilidade ganharia 5s de
+    // descanso por série em toda sessão, silenciosamente. Com o teto, falha.
     for (const goal of GOALS) {
-      const piso = Math.min(35, REST[goal]);
+      const base = REST[goal];
+      const piso = Math.min(35, base);
       for (const minutes of ALL_MINUTES) {
-        expect(schemeFor(input({ minutes, goal })).rest).toBeGreaterThanOrEqual(piso);
+        const { rest } = schemeFor(input({ minutes, goal }));
+        expect(rest).toBeGreaterThanOrEqual(piso);
+        expect(rest).toBeLessThanOrEqual(base);
       }
+    }
+  });
+
+  it('devolve o mínimo quando nem o degrau mais apertado cabe', () => {
+    // Força em 20 min é o único par dos 35 que esgota a escada. Documentado
+    // como teste porque o comportamento é intencional e não óbvio: o esquema
+    // NÃO cabe no orçamento, e é o `generateWorkout` que fecha a conta
+    // cortando exercício. Se algum dia isto passar a caber, o comentário do
+    // fallback fica errado — e este teste avisa.
+    const sc = schemeFor(input({ minutes: 20, goal: 'forca' }));
+    expect(sc.sets).toBe(2);
+    expect(sc.rest).toBe(68);
+    expect(sc.target).toBe(4);
+    const cabe = sc.target * (sc.sets * (30 + sc.rest) + 60);
+    expect(cabe).toBeGreaterThan(20 * 60 - 300);
+  });
+
+  it('todo objetivo começa com séries suficientes para o laço rodar', () => {
+    // Se um objetivo novo entrar com `sets: 1`, o laço interno
+    // (`sets = baseSets; sets >= MIN_SETS`) não executa nenhuma iteração em
+    // NENHUM degrau, e todo tempo cai no fallback sem aviso. Guarda barata.
+    for (const goal of GOALS) {
+      expect(SETS_REPS[goal].sets).toBeGreaterThanOrEqual(2);
     }
   });
 });
@@ -1025,9 +1057,17 @@ function restLadder(baseRest: number): number[] {
 }
 
 /**
- * Escolhe séries e descanso que fazem o ALVO de exercícios caber no tempo.
+ * Escolhe séries e descanso MIRANDO no alvo de exercícios do tempo pedido.
  * Sessão curta legitimamente usa menos série — é o que um professor faz com
  * quem tem 20 minutos.
+ *
+ * Mira, não garante. Existe combinação onde nem o degrau mais apertado faz o
+ * alvo caber: força em 20 min quer 4 exercícios e o mínimo (2 séries × 68s)
+ * custa 1024s contra 900s de orçamento. Nesse caso devolve o mínimo mesmo
+ * assim, e quem faz o orçamento fechar é o `generateWorkout`, que para de
+ * escolher quando nada mais cabe em `remaining` — força em 20 min sai com 3
+ * exercícios, não 4, e `usedSec <= budgetSec`. O alvo é aspiração; o teto de
+ * tempo é do gerador.
  */
 export function schemeFor(input: Input): Scheme {
   const target = Math.min(TARGET_EX[input.minutes], MAX_EX[input.goal]);
@@ -1048,9 +1088,12 @@ export function schemeFor(input: Input): Scheme {
     }
   }
 
-  // Não deveria acontecer com os 35 pares (tempo × objetivo) de hoje, mas se
-  // algum alvo novo não couber, devolve o mínimo e deixa a duração honesta
-  // aparecer na ficha em vez de mentir sobre o tempo.
+  // Este caminho É alcançado hoje, por exatamente um dos 35 pares: força em
+  // 20 min. Nem o degrau mais apertado (2 × 68s = 1024s) cabe nos 900s. Não é
+  // defensivo — é o caso real de "o aluno pediu força numa janela curta".
+  // Devolve o mínimo e deixa o `generateWorkout` cortar exercício até fechar
+  // o orçamento, em vez de encurtar o descanso abaixo do que a política
+  // escolhida permite.
   return { sets: MIN_SETS, reps, rest: ladder[ladder.length - 1]!, target };
 }
 
@@ -1070,7 +1113,7 @@ cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 npm test -- packages/core/src/engine/budget.test.ts
 ```
 
-Esperado: PASS, 10 testes.
+Esperado: PASS, 12 testes.
 
 - [ ] **Step 5: Commit**
 
