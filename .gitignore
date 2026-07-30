@@ -43,3 +43,5 @@ supabase/.temp/
 
 # scratch do SDD
 .superpowers/
+.vercel
+.env*

@@ -1,4 +1,7 @@
 {
+  "buildCommand": "npm run build --workspace @quickfit/totem",
+  "outputDirectory": "apps/totem/dist",
+  "installCommand": "npm install",
   "rewrites": [{ "source": "/w/(.*)", "destination": "/index.html" }],
   "headers": [
     {

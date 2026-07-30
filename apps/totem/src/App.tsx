@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { generateWorkout } from '@quickfit/core/engine';
 import { loadCatalog, type CatalogBundle } from './data/loadCatalog';
 import { applyTheme } from '@quickfit/core/theme';
@@ -46,25 +46,28 @@ export function App() {
 
   // Gera assim que a tela `generating` aparece. O motor é sincronizado; o
   // delay é só para a animação não piscar.
+  //
+  // O `genToken` NÃO pode ser um `stale` flag comum (`let stale=false` +
+  // `stale=true` no cleanup): o próprio `dispatch({type:'GENERATED'})` abaixo
+  // muda `state.screen`, que é dependência deste efeito — isso faz o React
+  // rodar o cleanup da MESMA geração antes do saveWorkout responder, e o
+  // WORKOUT_SAVED nunca dispararia (medido em produção: o POST em
+  // generated_workouts completava, mas o QR nunca aparecia). O token só
+  // avança quando uma geração NOVA de verdade começa (screen volta a
+  // 'generating' com seed diferente), nunca pela própria transição desta.
+  const genToken = useRef(0);
   useEffect(() => {
     if (state.screen !== 'generating' || !bundle) return;
-    // Guarda contra corrida: mesma classe do stale flag do enfeite de IA
-    // abaixo. "Gerar outro" antes do saveWorkout anterior responder podia
-    // fazer o WORKOUT_SAVED do treino VELHO chegar depois e amarrar o QR
-    // impresso a um treino que não é mais o da tela.
-    let stale = false;
+    const myToken = ++genToken.current;
     const input = toInput(state, bundle.availableEquipment);
     const t = window.setTimeout(() => {
       const workout = generateWorkout(input, bundle.exercises);
       dispatch({ type: 'GENERATED', workout });
       saveWorkout(bundle.gym.id, input, workout).then((id) => {
-        if (id && !stale) dispatch({ type: 'WORKOUT_SAVED', id });
+        if (id && genToken.current === myToken) dispatch({ type: 'WORKOUT_SAVED', id });
       });
     }, 820);
-    return () => {
-      stale = true;
-      window.clearTimeout(t);
-    };
+    return () => window.clearTimeout(t);
   }, [state.screen, state.seed, bundle]);
 
   // Registra o bloqueio do PAR-Q para o gestor ver nas estatísticas (spec
