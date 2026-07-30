@@ -9,13 +9,14 @@ type Props = {
   groupsTitle: string;
   levelLabel: string;
   embellishTitle: string | null;
+  cues?: Record<string, string>;
   onPrint: () => void;
   onRegenerate: () => void;
   onExit: () => void;
 };
 
 export function Result({
-  workout, groupsTitle, levelLabel, embellishTitle, onPrint, onRegenerate, onExit,
+  workout, groupsTitle, levelLabel, embellishTitle, cues, onPrint, onRegenerate, onExit,
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const { hasMore, below } = useHasMore(listRef);
@@ -76,7 +77,7 @@ export function Result({
                   {it.exercise.name}
                 </span>
                 <span className="block truncate text-[17px] text-dim">
-                  {it.exercise.cue ?? it.exercise.equipment.join(' · ')}
+                  {cues?.[it.exercise.id] ?? it.exercise.cue ?? it.exercise.equipment.join(' · ')}
                 </span>
               </span>
               <span className={`flex-none font-display font-extrabold tabular-nums ${dense ? 'text-[24px]' : 'text-[30px]'}`}>

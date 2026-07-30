@@ -19,11 +19,13 @@ import { Level } from './screens/Level';
 import { Result } from './screens/Result';
 import { Ficha } from './screens/Ficha';
 import { groupsLabel, LEVEL_OPTIONS } from './screens/labels';
+import { embellish, type Embellishment } from './ai/embellish';
 
 export function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [bundle, setBundle] = useState<CatalogBundle | null>(null);
   const [failed, setFailed] = useState(false);
+  const [flair, setFlair] = useState<Embellishment | null>(null);
 
   useEffect(() => {
     loadCatalog()
@@ -47,6 +49,15 @@ export function App() {
     }, 820);
     return () => window.clearTimeout(t);
   }, [state.screen, state.seed, bundle]);
+
+  // O enfeite de IA chega depois do treino já estar na tela (D5). Não há
+  // await no caminho da UI: se falhar, der timeout ou não houver internet,
+  // o aluno não vê diferença além do título genérico.
+  useEffect(() => {
+    if (state.screen !== 'result' || !state.workout) return;
+    setFlair(null);
+    embellish(state.workout, state.goal, state.groups).then(setFlair);
+  }, [state.screen, state.workout, state.goal, state.groups]);
 
   useIdleTimeout(() => dispatch({ type: 'RESET' }), state.screen !== 'attract');
 
@@ -120,7 +131,8 @@ export function App() {
                   workout={state.workout}
                   groupsTitle={groupsLabel(state.groups)}
                   levelLabel={LEVEL_OPTIONS.find((o) => o.level === state.level)!.sub}
-                  embellishTitle={null}
+                  embellishTitle={flair?.title ?? null}
+                  cues={flair?.cues}
                   onPrint={() => dispatch({ type: 'OPEN_FICHA' })}
                   onRegenerate={() => dispatch({ type: 'REGENERATE' })}
                   onExit={() => dispatch({ type: 'RESET' })}
