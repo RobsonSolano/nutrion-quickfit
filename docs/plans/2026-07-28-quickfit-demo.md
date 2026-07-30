@@ -2502,275 +2502,442 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 9: Classificação assistida por Claude + revisão humana em duas ondas
+### Task 9: Classificação assistida por LLM + revisão humana em duas ondas
 
 O trabalho mais pesado do projeto e o mais crítico: `contraindications` é campo de segurança. O script propõe, **você decide**.
 
 **Files:**
 - Create: `scripts/classify.ts`
+- Create: `catalog/exercises.classified.csv` (gerado, gitignored)
 - Modify: `catalog/exercises.csv` (saída revisada)
-- Modify: `package.json` (script `classify`)
 
 **Interfaces:**
-- Consumes: `catalog/exercises.raw.csv` (task 8); `catalog/equipment.csv` (task 7); `ANTHROPIC_API_KEY` no `.env.local`
+- Consumes: `catalog/exercises.raw.csv` (269 linhas, já no repositório); `catalog/equipment.csv` (30 aparelhos); `GROQ_API_KEY` no `.env.local`
 - Produces: `catalog/exercises.csv` no formato exato que `parseExercisesCsv` aceita (task 7)
 
-- [ ] **Step 1: Instalar o SDK da Anthropic**
+#### Por que Groq e não Anthropic
 
-```bash
-export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
-cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm install -D @anthropic-ai/sdk
+Decisão do Robson (jul/2026): projeto de teste, sem faturamento, e ele não vai abrir conta paga. Os números que sustentaram a escolha:
+
+| | custo do job | cartão |
+|---|---|---|
+| Anthropic Haiku 4.5 | US$ 0,22 | mínimo US$ 5 de depósito |
+| Groq, tier gratuito | US$ 0 | não precisa |
+
+O job roda **uma vez** — depois o CSV está no git e a chave nunca mais é necessária. Mas o obstáculo não eram os 22 centavos: era o depósito mínimo.
+
+Groq tem tier gratuito sem cartão, expõe `/chat/completions` compatível com OpenAI e suporta `response_format` com JSON schema. E o plano **já usava Groq** na task 17, então é uma chave e um provedor só.
+
+Testado antes de escolher, com a chave real: `"Agachamento livre com barra"` → `pernas`, composto, contraindicações `[joelho, lombar]`. Exatamente o que o fixture do motor tem. A qualidade serve.
+
+Limites do tier gratuito, **medidos batendo neles**, não lidos na documentação:
+
+| limite | valor | aperta? |
+|---|---|---|
+| requisições por minuto | 30 | não — o job são 13 |
+| requisições por dia | 1.000 | não |
+| tokens por dia | ~100 mil | não — o job usa ~57 mil |
+| **tokens por MINUTO** | **8.000** | **sim, é o gargalo** |
+
+O TPM é o que manda, e a Groq conta o `max_tokens` **reservado** contra ele: um pedido com 2.251 de entrada e `max_tokens: 8000` conta como 10.251 e volta `HTTP 413`. Foi assim que descobri o limite.
+
+O teto de saída e o tamanho do lote são um par, e os dois somados têm que caber nos 8.000. Medido batendo nos dois lados:
+
+```
+lote 20 + max_tokens 8000  ->  HTTP 413: 2.251 + 8.000 = 10.251 > 8.000
+lote 20 + max_tokens 4000  ->  truncou em 16 de 20 itens
+lote 15 + max_tokens 5000  ->  ~1.600 + 5.000 = 6.600, cabe
 ```
 
-É `devDependency` de propósito: o SDK nunca entra no bundle do cliente. Só o script offline usa.
+Daí `BATCH = 15` e 50s de espera entre lotes: 18 requisições, ~15 minutos para os 258. Se você vir `413`, reduza `CLASSIFY_BATCH`; se vir `lote sem resposta para n=X`, o `max_tokens` está apertado para o lote.
 
-- [ ] **Step 2: Escrever o script de classificação**
+**Não instale `@anthropic-ai/sdk`.** Ele está nas devDependencies desde a task 1 e ficou órfão nesta decisão — remova ao final, no Step 9.
+
+#### O que o LLM decide, e o que já está decidido
+
+Esta é a parte que economiza a maior parte do trabalho, e ela vem de medir os 269 em vez de supor. **Não peça ao LLM o que já é determinístico.**
+
+Grupos vêm em inglês do Persona Fit e oito dos nove mapeiam 1:1:
+
+| origem | destino | quantos |
+|---|---|---|
+| `legs` | `pernas` | 50 |
+| `core` | `core` | 37 |
+| `cardio` | `cardio` | 35 |
+| `back` | `costas` | 32 |
+| `chest` | `peito` | 25 |
+| `shoulders` | `ombros` | 23 |
+| `biceps` | `biceps` | 14 |
+| `triceps` | `triceps` | 13 |
+| `full_body` | **o LLM decide** | 40 |
+
+Duas notas sobre grupo: o QuickFit tem `gluteos` e o Persona Fit não tem grupo equivalente — glúteo está dentro de `legs`, então o LLM deve usar `gluteos` como `primary` quando o exercício for claramente de glúteo (elevação pélvica, coice) e como `secondary` nos agachamentos e stiffs. E `full_body` não existe no `MuscleGroup`: o LLM escolhe o grupo dominante (burpee → `cardio`; box jump → `pernas`; alongamento de panturrilha → `pernas`).
+
+Equipamento é texto livre e muito mais grosso que os 30 ids. Doze valores mapeiam direto:
+
+```
+peso corporal   -> []                (43% do catálogo, SEMPRE elegível)
+barra           -> ['barra']
+halter          -> ['halter']
+kettlebell      -> ['kettlebell']
+corda           -> ['corda']
+banco           -> ['banco']
+bike            -> ['bike']
+rolo            -> ['rolo']
+caixa           -> ['caixa']
+medicine ball   -> ['medicine-ball']
+cano/elástico   -> ['elastico']
+bola suíça      -> ['bola-suica']
+```
+
+Três valores são vagos e **o LLM infere do nome**, que quase sempre resolve:
+
+```
+máquina      (39)  "REMADA BAIXA ABERTA"        -> mq-remada
+cabo         (15)  "Puxada frontal (pulley)"    -> polia-alta
+equipamento  (10)  depende inteiramente do nome
+```
+
+Seis valores não têm equivalente e os exercícios **são descartados**, decisão do Robson:
+
+```
+pista/rua (4), rua (2)  -> treino de corrida; totem de academia não manda correr na rua
+argolas (2)             -> equipamento de box de crossfit
+remo (1), ski erg (1)   -> o catálogo já tem esteira, bike e elíptico
+sled (1)                -> box de crossfit
+```
+
+Onze exercícios saem, 258 ficam.
+
+**Equipamento é assimétrico, e errar o lado custa caro.** O mapeamento
+determinístico é um **piso**, não um teto: se a origem diz `peso corporal` mas o
+LLM propõe equipamento, vale o do LLM. O motivo está na direção do erro.
+
+Exigir equipamento a mais só faz o exercício não ser oferecido numa academia que
+não o tem — perda de variedade. Exigir a menos faz o totem **prescrever aparelho
+que a academia não possui**, que é exatamente o defeito que o `every` do filtro
+existe para impedir.
+
+Isto não é hipotético: a primeira validação deste script devolveu oito exercícios
+com `equipment: []` — seis variações de barra fixa, mais barra australiana e
+muscle-up. A origem classifica todos como `peso corporal`, o que é verdade quanto
+à carga e falso quanto ao aparelho. Sem a assimetria, o totem prescreveria barra
+fixa numa academia sem barra fixa.
+
+Então o script faz **união** entre o determinístico e o proposto, nunca
+substituição.
+
+E `is_compound` **já vem preenchido** do Persona Fit: 96 compostos, 173 isolados. Não peça ao LLM; use o valor de origem e revise por amostragem.
+
+Sobra para o LLM: `pattern`, `avgSecPerSet`, `level`, `contraindications`, `secondary`, `cue`, mais o `primary` dos 40 `full_body` e o equipamento dos 64 vagos.
+
+- [ ] **Step 1: Escrever o script de classificação**
 
 `scripts/classify.ts`:
 
 ```ts
-import Anthropic from '@anthropic-ai/sdk';
-import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
-import { z } from 'zod';
+/**
+ * Classifica os 269 exercícios crus do Persona Fit no formato que o motor
+ * aceita. Roda uma vez; depois o CSV revisado vive no git.
+ *
+ * Escreve em `exercises.classified.csv`, SEPARADO de `exercises.csv`, para que
+ * promover a saída a catálogo oficial seja um passo consciente e não acidente.
+ * Grava a cada lote e retoma de onde parou, porque 13 chamadas de rede vão
+ * falhar em alguma.
+ */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { parseEquipmentCsv } from '../packages/core/src/catalog/schema';
 
-const BATCH = 12;           // saída pequena por chamada = sem risco de truncar
-const MODEL = 'claude-opus-5';
+const KEY = process.env.GROQ_API_KEY;
+if (!KEY) {
+  console.error('Falta GROQ_API_KEY no .env.local');
+  process.exit(1);
+}
 
-const equipment = parseEquipmentCsv(readFileSync('catalog/equipment.csv', 'utf8'));
-const equipmentIds = equipment.map((e) => e.id);
+const MODEL = process.env.CLASSIFY_MODEL ?? 'openai/gpt-oss-120b';
+const BATCH = Number(process.env.CLASSIFY_BATCH ?? 15);
+const LIMIT = process.env.CLASSIFY_LIMIT ? Number(process.env.CLASSIFY_LIMIT) : Infinity;
 
-const Classified = z.object({
-  exercises: z.array(
-    z.object({
-      id: z.string(),
-      primary: z.enum([
-        'peito', 'costas', 'ombros', 'biceps', 'triceps',
-        'pernas', 'gluteos', 'core', 'cardio',
-      ]),
-      secondary: z.array(
-        z.enum([
-          'peito', 'costas', 'ombros', 'biceps', 'triceps',
-          'pernas', 'gluteos', 'core', 'cardio',
-        ]),
-      ),
-      equipment: z.array(z.enum(equipmentIds as [string, ...string[]])),
-      level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
-      pattern: z.enum([
-        'push-h', 'push-v', 'pull-h', 'pull-v',
-        'squat', 'hinge', 'lunge', 'iso', 'core', 'cardio',
-      ]),
-      isCompound: z.boolean(),
-      avgSecPerSet: z.number().int().min(0).max(60),
-      durationSec: z.number().int().min(0),
-      contraindications: z.array(
-        z.enum(['joelho', 'lombar', 'ombro', 'punho', 'cervical']),
-      ),
-      cue: z.string(),
-    }),
-  ),
-});
+const RAW = 'catalog/exercises.raw.csv';
+const OUT = 'catalog/exercises.classified.csv';
 
-const SYSTEM = `Você classifica exercícios de academia para um sistema que prescreve
-treino automaticamente num totem, sem professor presente. Suas classificações vão
-direto para a prescrição de pessoas reais.
+/** Grupos do Persona Fit que mapeiam 1:1. `full_body` fica de fora: o LLM decide. */
+const GROUP: Record<string, string> = {
+  legs: 'pernas', core: 'core', cardio: 'cardio', back: 'costas',
+  chest: 'peito', shoulders: 'ombros', biceps: 'biceps', triceps: 'triceps',
+};
 
-Regras:
+/** Equipamento com equivalente exato. `[]` é peso corporal: sempre elegível. */
+const EQUIP: Record<string, string[]> = {
+  'peso corporal': [], 'barra': ['barra'], 'halter': ['halter'],
+  'kettlebell': ['kettlebell'], 'corda': ['corda'], 'banco': ['banco'],
+  'bike': ['bike'], 'rolo': ['rolo'], 'caixa': ['caixa'],
+  'medicine ball': ['medicine-ball'], 'cano/elástico': ['elastico'],
+  'bola suíça': ['bola-suica'],
+};
 
-- "equipment" lista TODOS os aparelhos necessários simultaneamente. Supino reto com
-  barra precisa de ["barra","banco"], não só ["barra"]. Peso corporal é [].
-  Use exclusivamente ids desta lista: ${equipmentIds.join(', ')}
-- "level": 1 = seguro para quem nunca treinou; 2 = exige alguma técnica;
-  3 = exige técnica consolidada (agachamento livre, levantamento terra, barra fixa).
-- "avgSecPerSet": segundos de execução de UMA série, entre 10 e 60. Isolado leve ~22,
-  composto de membro superior ~32, agachamento pesado ~45. Para cardio, use 0.
-- "durationSec": só para pattern "cardio" — duração total em segundos. 0 caso contrário.
-- "contraindications": este é campo de SEGURANÇA. Marque a articulação que o exercício
-  sobrecarrega de forma que alguém com problema ali deveria evitá-lo. Seja conservador:
-  na dúvida, marque. Vocabulário: joelho, lombar, ombro, punho, cervical.
-- "cue": UMA dica curta de execução em pt-BR, no imperativo, sem ponto final,
-  no máximo 60 caracteres. É o que sai impresso na ficha.
-- "isCompound": true quando envolve mais de uma articulação.
+/** Vago: o nome do exercício resolve. */
+const VAGO = new Set(['máquina', 'cabo', 'equipamento']);
 
-Devolva um item para CADA exercício recebido, com o mesmo "id".`;
+/** Sem equivalente na academia — descartados por decisão do Robson. */
+const DESCARTA = new Set(['pista/rua', 'rua', 'argolas', 'remo', 'ski erg', 'sled']);
 
-type RawRow = { id: string; name: string; group_slug: string; equipment_text: string; is_compound: string; modality: string };
+type Raw = {
+  id: string; name: string; group_slug: string;
+  equipment_text: string; is_compound: string; modality: string;
+};
 
-function readRaw(): RawRow[] {
-  const lines = readFileSync('catalog/exercises.raw.csv', 'utf8').trim().split('\n');
-  return lines.slice(1).map((l) => {
-    const [id, name, group_slug, equipment_text, is_compound, modality] = l.split(',');
-    return { id, name, group_slug, equipment_text, is_compound, modality };
+function lerCsv(texto: string): Raw[] {
+  const linhas = texto.trim().split('\n');
+  const cab = linhas[0].split(',');
+  return linhas.slice(1).map((l) => {
+    const c = l.split(',');
+    return Object.fromEntries(cab.map((h, i) => [h.trim(), (c[i] ?? '').trim()])) as Raw;
   });
 }
 
-const cell = (v: string | undefined) => (v ?? '').replace(/,/g, ';').trim();
+const crus = lerCsv(readFileSync(RAW, 'utf8'));
+const vivos = crus.filter((r) => !DESCARTA.has(r.equipment_text.toLowerCase()));
+console.log(`${crus.length} crus, ${crus.length - vivos.length} descartados, ${vivos.length} a classificar`);
 
-async function main() {
-  const client = new Anthropic();   // lê ANTHROPIC_API_KEY do ambiente
-  const raw = readRaw();
+const equipamentos = lerCsv(readFileSync('catalog/equipment.csv', 'utf8'))
+  .map((e) => (e as unknown as { id: string }).id);
 
-  // Retomada: se já existe saída parcial, não reclassifica o que está pronto.
-  const done = new Map<string, string>();
-  if (existsSync('catalog/exercises.classified.csv')) {
-    const lines = readFileSync('catalog/exercises.classified.csv', 'utf8').trim().split('\n');
-    for (const l of lines.slice(1)) done.set(l.split(',')[0], l);
-    console.log(`Retomando: ${done.size} já classificados`);
+const CABECALHO =
+  'id,name,primary,secondary,equipment,level,pattern,is_compound,avg_sec_per_set,duration_sec,contraindications,cue';
+
+/** Retoma: lê o que já foi gravado e pula esses ids. */
+const feitos = new Set<string>();
+if (existsSync(OUT)) {
+  for (const l of readFileSync(OUT, 'utf8').trim().split('\n').slice(1)) {
+    const id = l.split(',')[0];
+    if (id) feitos.add(id);
   }
-
-  const pending = raw.filter((r) => !done.has(r.id));
-  console.log(`${pending.length} exercícios a classificar em lotes de ${BATCH}`);
-
-  for (let i = 0; i < pending.length; i += BATCH) {
-    const lote = pending.slice(i, i + BATCH);
-    const n = Math.floor(i / BATCH) + 1;
-    const total = Math.ceil(pending.length / BATCH);
-
-    const response = await client.messages.parse({
-      model: MODEL,
-      max_tokens: 16000,
-      system: SYSTEM,
-      output_config: {
-        effort: 'high',
-        format: zodOutputFormat(Classified),
-      },
-      messages: [
-        {
-          role: 'user',
-          content:
-            'Classifique estes exercícios. O campo "grupo" e "equipamento (texto livre)" ' +
-            'vêm do sistema antigo e podem estar imprecisos — use o nome como fonte principal.\n\n' +
-            lote
-              .map(
-                (r) =>
-                  `- id: ${r.id}\n  nome: ${r.name}\n  grupo: ${r.group_slug}\n  ` +
-                  `equipamento (texto livre): ${r.equipment_text}\n  modalidade: ${r.modality}`,
-              )
-              .join('\n'),
-        },
-      ],
-    });
-
-    // Um recusa de classificador aqui indicaria bug no prompt, não caso de
-    // política — mas não trate como sucesso silencioso.
-    if (response.stop_reason === 'refusal') {
-      console.error(`Lote ${n}/${total} recusado (${response.stop_details?.category}). Pulando.`);
-      continue;
-    }
-
-    const parsed = response.parsed_output;
-    if (!parsed) {
-      console.error(`Lote ${n}/${total}: saída não validou contra o schema. Pulando.`);
-      continue;
-    }
-
-    const byId = new Map(lote.map((r) => [r.id, r]));
-    for (const c of parsed.exercises) {
-      const src = byId.get(c.id);
-      if (!src) {
-        console.warn(`  id desconhecido devolvido: ${c.id}`);
-        continue;
-      }
-      done.set(
-        c.id,
-        [
-          c.id,
-          cell(src.name),
-          c.primary,
-          c.secondary.join('|'),
-          c.equipment.join('|'),
-          String(c.level),
-          c.pattern,
-          String(c.isCompound),
-          String(c.pattern === 'cardio' ? 0 : c.avgSecPerSet),
-          c.pattern === 'cardio' ? String(c.durationSec || 600) : '',
-          c.contraindications.join('|'),
-          cell(c.cue),
-        ].join(','),
-      );
-    }
-
-    // Grava a cada lote — se o script morrer, nada é perdido.
-    const header =
-      'id,name,primary,secondary,equipment,level,pattern,is_compound,' +
-      'avg_sec_per_set,duration_sec,contraindications,cue';
-    writeFileSync(
-      'catalog/exercises.classified.csv',
-      [header, ...[...done.values()]].join('\n') + '\n',
-    );
-    console.log(`Lote ${n}/${total} — ${done.size} classificados no total`);
-  }
-
-  console.log('\nPronto: catalog/exercises.classified.csv');
-  console.log('AGORA REVISE. Não copie para exercises.csv sem ler.');
+  console.log(`retomando: ${feitos.size} já classificados`);
+} else {
+  writeFileSync(OUT, CABECALHO + '\n');
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+const SISTEMA = `Você classifica exercícios de academia para um motor que monta treino.
+Responda SOMENTE um objeto json: {"itens":[{...}]}, um item por exercício, na mesma ordem.
+
+(A palavra "json" acima precisa aparecer literalmente: a Groq recusa
+response_format json_object com HTTP 400 se ela não estiver em nenhuma
+mensagem. Descoberto com um 400 durante a validação.)
+
+Campos de cada item:
+- n: repita o número recebido para o exercício
+- primary: um de peito|costas|ombros|biceps|triceps|pernas|gluteos|core|cardio
+- secondary: array dos mesmos valores, sem repetir o primary. [] se não houver.
+- equipment: array de ids EXATAMENTE desta lista: ${equipamentos.join(', ')}
+  Use [] para exercício de peso corporal.
+- level: 1 (qualquer iniciante), 2 (precisa de técnica), 3 (exige experiência)
+- pattern: push-h|push-v|pull-h|pull-v|squat|hinge|lunge|iso|core|cardio
+- avg_sec_per_set: segundos de UMA série, entre 10 e 60. Cardio use 0.
+- duration_sec: só para pattern cardio, duração total em segundos. Senão null.
+- contraindications: array de joelho|lombar|ombro|punho|cervical. [] se nenhuma.
+- cue: uma dica curta de execução, em português, segunda pessoa, até 90 caracteres.
+  Sem vírgula — o CSV de destino tem parser ingênuo e vírgula quebra o build.
+
+REGRAS QUE NÃO PODEM SER VIOLADAS:
+1. contraindications é campo de SEGURANÇA. Marque toda articulação que o
+   movimento carrega sob carga. Agachamento carrega joelho e lombar. Supino
+   carrega ombro. Na dúvida, INCLUA — um humano vai revisar e remover excesso
+   é mais seguro que adicionar o que faltou.
+2. equipment só aceita ids da lista. Se o exercício exige algo fora dela,
+   devolva "equipment": ["__FORA__"] e um humano decide.
+3. Nada de vírgula em nenhum campo de texto.`;
+
+function prompt(lote: Raw[]): string {
+  return lote.map((r, idx) => {
+    const eqTxt = r.equipment_text.toLowerCase();
+    const g = GROUP[r.group_slug];
+    const e = EQUIP[eqTxt];
+    const dicas: string[] = [];
+    if (g) dicas.push(`primary JÁ DECIDIDO: ${g}`);
+    else dicas.push(`grupo de origem: full_body — VOCÊ escolhe o primary dominante`);
+
+    if (eqTxt === 'peso corporal') {
+      // NÃO dizer "equipment JÁ DECIDIDO: []" aqui. A primeira versão dizia, e
+      // o modelo obedecia: barra fixa saía com equipment vazio, o que faria o
+      // totem prescrevê-la numa academia sem barra. "Peso corporal" descreve a
+      // CARGA, não o aparelho.
+      dicas.push(
+        'origem diz "peso corporal", o que descreve a CARGA e não o aparelho. ' +
+          'Se o movimento exige aparelho (barra fixa, paralelas, banco, caixa), LISTE. ' +
+          'Só devolva [] se der para fazer no chão sem nada.',
+      );
+    } else if (e !== undefined) {
+      dicas.push(
+        `equipment MÍNIMO: ${JSON.stringify(e)} — acrescente o que mais for necessário ` +
+          '(supino com barra também precisa de banco)',
+      );
+    } else if (VAGO.has(eqTxt)) {
+      dicas.push(`equipamento de origem vago ("${r.equipment_text}") — INFIRA do nome`);
+    }
+    dicas.push(`is_compound JÁ DECIDIDO: ${r.is_compound.toLowerCase() === 'true'}`);
+    if (r.modality !== 'musculacao') dicas.push(`modalidade: ${r.modality}`);
+    // A chave de eco é o ÍNDICE, não o uuid. Medido: pedir ao modelo que
+    // reproduza 20 uuids de 36 caracteres dentro de um JSON de 12 campos faz
+    // ele errar pelo menos um — a primeira versão deste script morria com
+    // "lote sem resposta para <uuid>". E o eco de uuid custa 2.5x mais tokens
+    // de saída (1633 contra 645 por lote de 20), o que num tier de 100 mil
+    // tokens/dia é a diferença entre caber e não caber.
+    return `n=${idx + 1}\n  nome: ${r.name}\n  ${dicas.join('\n  ')}`;
+  }).join('\n\n');
+}
+
+const lista = (a: unknown): string =>
+  Array.isArray(a) ? a.filter(Boolean).join('|') : '';
+
+const limpa = (s: unknown): string =>
+  String(s ?? '').replace(/[,\n\r]/g, ' ').trim();
+
+async function classificar(lote: Raw[]): Promise<string[]> {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: MODEL,
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      // O teto e o tamanho do lote são um par, e os dois somados têm que caber
+      // no TPM de 8000 do tier gratuito, porque a Groq conta `max_tokens`
+      // RESERVADO contra ele. Medido, batendo nos dois lados:
+      //   lote 20 + max_tokens 8000 -> HTTP 413 (10.251 > 8.000)
+      //   lote 20 + max_tokens 4000 -> truncou em 16 de 20 itens
+      //   lote 15 + max_tokens 5000 -> ~1.600 de entrada + 5.000 = 6.600, cabe
+      max_tokens: 5000,
+      messages: [
+        { role: 'system', content: SISTEMA },
+        { role: 'user', content: prompt(lote) },
+      ],
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Groq ${res.status}: ${(await res.text()).slice(0, 300)}`);
+
+  const json = (await res.json()) as { choices: { message: { content: string } }[] };
+  const itens = (JSON.parse(json.choices[0].message.content) as {
+    itens: Record<string, unknown>[];
+  }).itens;
+
+  const porIndice = new Map(itens.map((i) => [Number(i.n), i]));
+
+  return lote.map((r, idx) => {
+    const i = porIndice.get(idx + 1);
+    if (!i) throw new Error(`lote sem resposta para n=${idx + 1} (${r.name})`);
+
+    // Grupo: o determinístico ganha, porque `legs -> pernas` não tem exceção.
+    const g = GROUP[r.group_slug] ?? limpa(i.primary);
+
+    // Equipamento: UNIÃO, não substituição. O determinístico é piso.
+    // "peso corporal" na origem descreve a CARGA, não o APARELHO — barra fixa
+    // é peso corporal e ainda assim precisa de uma barra. Errar para mais só
+    // tira variedade; errar para menos prescreve aparelho inexistente.
+    const base = EQUIP[r.equipment_text.toLowerCase()] ?? [];
+    const proposto = Array.isArray(i.equipment) ? (i.equipment as string[]) : [];
+    const e = [...new Set([...base, ...proposto])].filter(
+      (id) => id === '__FORA__' || equipamentos.includes(id),
+    );
+    const composto = r.is_compound.toLowerCase() === 'true';
+    const cardio = limpa(i.pattern) === 'cardio';
+
+    return [
+      r.id,
+      limpa(r.name),
+      g,
+      lista(i.secondary),
+      lista(e),
+      String(i.level ?? 1),
+      limpa(i.pattern),
+      String(composto),
+      String(cardio ? 0 : (i.avg_sec_per_set ?? 30)),
+      cardio ? String(i.duration_sec ?? 600) : '',
+      lista(i.contraindications),
+      limpa(i.cue),
+    ].join(',');
+  });
+}
+
+const pendentes = vivos.filter((r) => !feitos.has(r.id)).slice(0, LIMIT);
+console.log(`${pendentes.length} pendentes, lotes de ${BATCH}, modelo ${MODEL}\n`);
+
+for (let i = 0; i < pendentes.length; i += BATCH) {
+  const lote = pendentes.slice(i, i + BATCH);
+  const n = Math.floor(i / BATCH) + 1;
+  const total = Math.ceil(pendentes.length / BATCH);
+  try {
+    const linhas = await classificar(lote);
+    // Grava lote a lote: se a próxima chamada falhar, nada se perde.
+    writeFileSync(OUT, linhas.join('\n') + '\n', { flag: 'a' });
+    console.log(`lote ${n}/${total}: ${linhas.length} classificados`);
+  } catch (err) {
+    console.error(`lote ${n}/${total} FALHOU: ${(err as Error).message}`);
+    console.error('  rode de novo — o script retoma de onde parou');
+    process.exit(1);
+  }
+  // O gargalo NÃO é requisições por minuto (30) nem tokens por dia (100k): é
+  // tokens por MINUTO, 8000. Cada lote reserva ~6.600, então cabe pouco mais
+  // de um por minuto. 50s deixa o job em ~15 min para os 258, sem 429.
+  if (i + BATCH < pendentes.length) await new Promise((r) => setTimeout(r, 50_000));
+}
+
+const fora = readFileSync(OUT, 'utf8').split('\n').filter((l) => l.includes('__FORA__'));
+console.log(`\n${OUT} pronto.`);
+if (fora.length) {
+  console.log(`ATENÇÃO: ${fora.length} exercícios com equipamento fora da lista:`);
+  for (const l of fora) console.log(`  ${l.split(',')[1]}`);
+}
 ```
 
-Três decisões deliberadas no script: escreve num arquivo `.classified.csv` **separado** de `exercises.csv`, para que a revisão seja um passo consciente em vez de acidente; grava a cada lote e retoma de onde parou, porque 23 chamadas de LLM vão falhar em alguma; e usa `messages.parse()` com zod, então formato inválido é rejeitado e refeito pelo SDK em vez de virar CSV quebrado.
+Três decisões deliberadas no script. Escreve num arquivo `.classified.csv` **separado** de `exercises.csv`, para que a revisão seja um passo consciente em vez de acidente — e esse arquivo está no `.gitignore`, porque saída crua de LLM antes da revisão humana é descartável. Grava a cada lote e retoma de onde parou, porque 13 chamadas de rede vão falhar em alguma. E o que já era determinístico **ganha do LLM**: se ele ignorar a dica de `primary` ou `equipment`, o valor de origem prevalece — o script não confia no modelo para o que já foi decidido.
 
-Sobre `fallbacks`: o parâmetro server-side de fallback existe para quando classificadores de política recusam um pedido, e é recomendado em código de produção com `claude-opus-5`. Aqui ele foi omitido porque classificar metadado de exercício não toca nenhuma categoria de política — uma recusa indicaria bug no prompt, e o script já registra e pula o lote em vez de gravar dado errado. Se você vir recusas, é sinal para olhar o prompt, não para adicionar fallback.
+- [ ] **Step 2: Um lote só, para conferir a qualidade antes de gastar a cota do dia**
 
-- [ ] **Step 3: Registrar o script**
-
-`package.json` — em `scripts`:
-
-```json
-"classify": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/classify.ts"
-```
-
-- [ ] **Step 4: Rodar em um lote só, para conferir a qualidade antes de gastar as 23 chamadas**
-
-Reduza `BATCH` para 12 e adicione temporariamente após `const pending = ...`:
-
-```ts
-// TEMPORÁRIO — só o primeiro lote, para inspeção
-pending.length = BATCH;
-```
+O tier gratuito tem ~100 mil tokens/dia e o job usa quase tudo. Errar o prompt e descobrir no lote 13 custa um dia.
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm run classify
-cat catalog/exercises.classified.csv
+rm -f catalog/exercises.classified.csv
+CLASSIFY_LIMIT=20 npm run classify
+column -s, -t < catalog/exercises.classified.csv | head -22
 ```
 
-Leia as 12 linhas. Cheque especificamente: os `equipment` estão completos (supino com `barra|banco`, não só `barra`)? As `contraindications` fazem sentido? Os `cue` estão em pt-BR e curtos?
+Olhe estas quatro coisas, nesta ordem:
 
-Se a qualidade estiver ruim, ajuste o `SYSTEM` e rode de novo — apagando `catalog/exercises.classified.csv` antes, senão a retomada pula tudo.
+1. **`contraindications` dos exercícios de perna.** Agachamento sem `joelho` é o defeito que mata o produto. Se estiver vazio em agachamento ou stiff, o prompt falhou — pare e me diga.
+2. **`equipment` dos que a origem chamou de "peso corporal".** Barra fixa, barra australiana, muscle-up e paralelas são peso corporal **e** precisam de aparelho. Se algum deles saiu com `equipment` vazio, a união com o proposto pelo LLM não funcionou — e o totem prescreveria barra fixa numa academia sem barra. Confira também os que tinham "máquina" ou "cabo": um "Puxada frontal (pulley)" com `equipment` vazio tem o mesmo defeito.
+3. **`primary` dos `full_body`.** Burpee em `peito` seria estranho.
+4. **Vírgula em `cue`.** Se aparecer, o parser da task 7 recusa o CSV inteiro.
 
-- [ ] **Step 5: Remover o limitador e classificar tudo**
-
-Apague a linha `pending.length = BATCH;` e rode:
+- [ ] **Step 3: Classificar tudo**
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+rm -f catalog/exercises.classified.csv
 npm run classify
 ```
 
-Esperado: ~23 lotes, cada um levando de 20 a 60 segundos. Não é rápido e não precisa ser.
+Esperado: 13 lotes, `258 a classificar`, e aviso no fim se algum ficou com `__FORA__`.
 
-- [ ] **Step 6: Onda 1 da revisão — os ~110 que a demo exercita**
+- [ ] **Step 4: Onda 1 da revisão — os grupos que a demo exercita**
 
-Abra `catalog/exercises.classified.csv` numa planilha. Revise **primeiro** os exercícios dos grupos que os 4 atalhos usam: peito, tríceps, costas, bíceps, pernas, glúteos. Isso libera o desenvolvimento das telas (D7).
+Os atalhos usam peito, tríceps, costas, bíceps, pernas e glúteos. Revise esses primeiro; eles liberam a demo. Cardio e core entram na onda 2.
 
-Ordem de prioridade dentro da revisão:
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+head -1 catalog/exercises.classified.csv > catalog/exercises.csv
+grep -E '^[^,]*,[^,]*,(peito|triceps|costas|biceps|pernas|gluteos),' \
+  catalog/exercises.classified.csv >> catalog/exercises.csv
+wc -l catalog/exercises.csv
+```
 
-1. **`contraindications`** — o único campo em que um erro machuca alguém. Não delegue.
-2. **`equipment`** — um erro aqui quebra a promessa central do produto (prescrever aparelho que a academia não tem).
-3. **`level`** — um erro aqui prescreve agachamento livre para iniciante.
-4. `avgSecPerSet`, `pattern`, `cue` — erram sem consequência grave.
+Abra `catalog/exercises.csv` numa planilha e revise. A prioridade é **`contraindications`**: é o único campo onde erro do modelo pode machucar aluno. Os outros erram para pior treino, não para lesão.
 
-Copie as linhas revisadas para `catalog/exercises.csv`, mantendo o header.
-
-- [ ] **Step 7: Validar o catálogo revisado**
+- [ ] **Step 5: Validar o catálogo revisado**
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
@@ -2778,80 +2945,73 @@ cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 npm run validate:catalog
 ```
 
-Esperado: `OK — 25 equipamentos, ~110 exercícios` e nenhum aviso de grupo com menos de 5 exercícios entre os revisados.
+O portão da task 7 recusa equipamento inexistente, `avg_sec_per_set` fora de 10–60, cardio sem `duration_sec`, contraindicação fora do vocabulário, id duplicado e vírgula em célula. Se ele reclamar, o CSV está errado — não o portão.
 
-- [ ] **Step 8: Rodar a suíte para confirmar que o motor aceita o catálogo real**
+- [ ] **Step 6: Confirmar que o motor aceita o catálogo real**
 
-Acrescente um teste de integração leve — o único do motor que lê arquivo, e por isso mora fora de `packages/core/src/engine/`:
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+npm test && npm run typecheck && npm run build
+```
 
-`packages/core/src/catalog/integration.test.ts`:
+O property test da task 6 usa fixture, não o CSV — então ele passar não prova que o catálogo real funciona. Rode também uma geração de verdade:
 
-```ts
-import { describe, it, expect } from 'vitest';
+```bash
+npx tsx -e "
 import { readFileSync } from 'node:fs';
-import { parseEquipmentCsv, parseExercisesCsv } from './schema';
-import { generateWorkout } from '../engine';
-import type { Input, Minutes } from '@quickfit/core/engine';
-
-const equip = parseEquipmentCsv(readFileSync('catalog/equipment.csv', 'utf8'));
-const catalog = parseExercisesCsv(
-  readFileSync('catalog/exercises.csv', 'utf8'),
-  new Set(equip.map((e) => e.id)),
-);
-const allEquipment = equip.map((e) => e.id);
-
-const ATALHOS: Array<{ label: string; groups: Input['groups']; minutes: Minutes }> = [
-  { label: 'Peito + Tríceps', groups: ['peito', 'triceps'], minutes: 45 },
-  { label: 'Costas + Bíceps', groups: ['costas', 'biceps'], minutes: 45 },
-  { label: 'Perna completa',  groups: ['pernas', 'gluteos'], minutes: 60 },
-  { label: 'Treino rápido',   groups: ['peito', 'costas', 'pernas'], minutes: 20 },
-];
-
-describe('catálogo real × motor', () => {
-  it.each(ATALHOS)('atalho "$label" gera treino completo', ({ groups, minutes }) => {
-    const w = generateWorkout(
-      { goal: 'hipertrofia', groups, minutes, level: 2, availableEquipment: allEquipment, avoid: [], seed: 1 },
-      catalog,
-    );
-    expect(w.items.length).toBeGreaterThanOrEqual(w.minItems);
-  });
-
-  it('o gestor testando combinação esquisita ainda recebe treino', () => {
-    // Este é o teste que a spec §12 define como critério de sucesso da demo.
-    const w = generateWorkout(
-      { goal: 'mobilidade', groups: ['ombros'], minutes: 90, level: 3, availableEquipment: allEquipment, avoid: [], seed: 3 },
-      catalog,
-    );
-    expect(w.items.length).toBeGreaterThanOrEqual(3);
-  });
-});
+import { parseEquipmentCsv, parseExercisesCsv } from './packages/core/src/catalog/schema';
+import { generateWorkout } from './packages/core/src/engine';
+const eq = parseEquipmentCsv(readFileSync('catalog/equipment.csv','utf8'));
+const cat = parseExercisesCsv(readFileSync('catalog/exercises.csv','utf8'), new Set(eq.map(e=>e.id)));
+for (const groups of [['peito','triceps'],['costas','biceps'],['pernas','gluteos']]) {
+  const w = generateWorkout({ goal:'hipertrofia', groups: groups as never, minutes:45, level:3,
+    availableEquipment: eq.map(e=>e.id), avoid:[], seed:42 }, cat);
+  console.log(groups.join('+'), '->', w.items.length, 'itens,', Math.round(w.usedSec/60), 'min');
+  for (const it of w.items) console.log('   ', it.exercise.name, it.sets+'x'+it.reps);
+}
+"
 ```
+
+Os três atalhos têm que devolver pelo menos 3 itens cada. Se algum devolver menos, o grupo ficou raso na revisão da onda 1.
+
+- [ ] **Step 7: Semear e ver no navegador**
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test
+npm run seed:catalog
+npm run dev
 ```
 
-Se `combinação esquisita` falhar, o catálogo revisado ainda não tem profundidade em `ombros` e mobilidade — volte ao Step 6 e revise esses exercícios antes de seguir.
+Abra `http://localhost:5173`, toque, passe o PAR-Q e escolha "Peito + Tríceps". Agora tem que sair treino, não "Combinação indisponível".
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 8: Commit, e remover o SDK órfão**
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add catalog scripts/classify.ts packages/core/src/catalog package.json package-lock.json
-git commit -m "feat(catalog): classificação assistida por Claude + onda 1 revisada
+npm uninstall @anthropic-ai/sdk
+git add catalog/exercises.csv scripts/classify.ts package.json package-lock.json
+git commit -m "feat(catalog): 258 exercícios classificados e revisados na onda 1
 
-Script propõe via claude-opus-5 com saída validada por zod; contraindicação,
-equipamento e nível revisados à mão. Onda 1 cobre os grupos dos 4 atalhos.
+Classificação via Groq (tier gratuito), revisão humana em contraindicações.
+Onze exercícios descartados: corrida de rua e equipamento de box de crossfit.
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 10: Onda 2 — a cauda (pode rodar em paralelo com as fases D e E)**
+- [ ] **Step 9: Onda 2 — cardio e core (pode rodar em paralelo com as fases D e E)**
 
-Revise os exercícios restantes de `exercises.classified.csv` e acrescente a `exercises.csv`. Rode `npm run validate:catalog && npm test` e commite separado. **Isto não bloqueia nenhuma tarefa seguinte** — é a mitigação de D7.
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+grep -E '^[^,]*,[^,]*,(cardio|core|ombros)," ' catalog/exercises.classified.csv \
+  >> catalog/exercises.csv
+npm run validate:catalog && npm run seed:catalog
+```
+
+Revise, valide, semeie. A demo já funciona com a onda 1; a onda 2 dá profundidade para o motor variar mais.
 
 ---
 
