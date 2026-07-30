@@ -1473,14 +1473,28 @@ describe('generateWorkout — qualidade da prescrição', () => {
   });
 
   it('não põe composto na segunda metade da sessão', () => {
-    // Com o gate antigo (picked.length < 2), agachamento livre aparecia
-    // como 14º exercício, com a pessoa exausta.
-    const w = generateWorkout(input({ groups: ['pernas', 'costas'], minutes: 60 }), CATALOG);
+    // `peito+triceps` de propósito, NÃO `pernas+costas`. O fixture tem 3
+    // compostos e 5 isolados para peito+triceps, então a regra é expressável.
+    // Para pernas+costas são 7 compostos e 3 isolados: com 8 vagas, no mínimo
+    // 5 compostos entram, e 5 não cabem nas 4 primeiras vagas — o limite
+    // seria matematicamente impossível e o teste estaria medindo a magreza do
+    // fixture, não a regra. Conferido em 200 seeds: com pool folgado o máximo
+    // observado é 1; com pool magro, o mínimo é 2.
+    const w = generateWorkout(input({ groups: ['peito', 'triceps'], minutes: 60 }), CATALOG);
     const metade = Math.ceil(w.items.length / 2);
     const compostosNaSegundaMetade = w.items
       .slice(metade)
       .filter((it) => it.exercise.isCompound).length;
     expect(compostosNaSegundaMetade).toBeLessThanOrEqual(1);
+  });
+
+  it('quando falta isolado, preenche com composto em vez de encurtar o treino', () => {
+    // O risco que a porta dura introduz: se ela zerasse o score de todo
+    // composto tardio sem exceção, o seletor ficaria sem candidato e o treino
+    // sairia curto. `pernas+costas` é justamente o caso de pool magro — tem
+    // que chegar ao teto mesmo tendo que usar composto no fim.
+    const w = generateWorkout(input({ groups: ['pernas', 'costas'], minutes: 60 }), CATALOG);
+    expect(w.items.length).toBe(w.cap);
   });
 
   it('não repete o mesmo exercício', () => {
@@ -1572,7 +1586,7 @@ export function generateWorkout(input: Input, catalog: Exercise[]): Workout {
     if (candidates.length === 0) break;
 
     const chosen = weightedPick(
-      candidates.map((ex) => ({ item: ex, score: scoreOf(ex) })),
+      candidates.map((ex) => ({ item: ex, score: scoreOf(ex, candidates) })),
       rng,
     );
 
@@ -1634,15 +1648,34 @@ export function generateWorkout(input: Input, catalog: Exercise[]): Workout {
     extraSets,
   };
 
-  function scoreOf(ex: Exercise): number {
+  function scoreOf(ex: Exercise, candidates: Exercise[]): number {
     let s = 1;
 
     // Compostos no primeiro TERÇO: o aluno está descansado, então é mais
     // seguro e mais eficaz. Isolados preenchem o final.
     const early = picked.length < Math.max(2, Math.ceil(cap / 3));
-    s *= early
-      ? (ex.isCompound ? 4 : 0.3)
-      : (ex.isCompound ? 0.5 : 1.4);
+
+    if (early) {
+      s *= ex.isCompound ? 4 : 0.3;
+    } else if (ex.isCompound) {
+      // PORTA DURA, não preferência. Decisão do Robson (jul/2026), medida
+      // sobre 1680 gerações: com o multiplicador antigo de 0.5 o composto
+      // tardio era só desfavorecido, e a segunda metade tinha 2 ou mais
+      // compostos em 24% das sessões — agachamento livre caía no fim em 7.9%
+      // delas, com a pessoa exausta e sem professor ao lado. Com a porta,
+      // 68% das sessões terminam com ZERO composto tardio e o agachamento
+      // tardio cai para 2.4%. A variação não sofre: 184 treinos distintos em
+      // 200 contra 187 de antes.
+      //
+      // Não pode travar o seletor: se TODOS os candidatos forem compostos,
+      // `temIsolado` é falso e eles voltam a pontuar. Nunca dá score 0 em
+      // todos ao mesmo tempo, então `weightedPick` nunca recebe total 0.
+      const temIsolado = candidates.some((c) => !c.isCompound);
+      if (temIsolado) return 0;
+      s *= 0.5;
+    } else {
+      s *= 1.4;
+    }
 
     // Cobertura: nenhum grupo dobra antes de todos serem atendidos.
     const untouched = input.groups.filter((g) => !groupCount.has(g));
@@ -1672,9 +1705,11 @@ cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 npm test -- packages/core/src/engine/generate.test.ts
 ```
 
-Esperado: PASS, 18 testes.
+Esperado: PASS, 19 testes.
 
-Se `não põe composto na segunda metade da sessão` falhar com 2 compostos, verifique o multiplicador `0.5` para composto tardio — ele reduz mas não proíbe, e com um pool pequeno de compostos isso é aceitável. Ajuste o teste para `toBeLessThanOrEqual(2)` **somente** se o pool de isolados do grupo estiver esgotado; caso contrário o bug é no `scoreOf`.
+Estes 19 testes foram rodados contra esta implementação exata antes de a tarefa ser despachada — o motor real, com `types`/`constants`/`filter`/`budget`/`rng` do repositório. Passam todos. Se algum falhar aqui, a diferença é sua transcrição, não o plano: compare linha por linha antes de mudar qualquer asserção.
+
+Em particular **não relaxe** `não põe composto na segunda metade da sessão`. O limite de 1 é atingível com `peito+triceps` e foi conferido em 200 seeds. Se ele falhar, a porta dura do `scoreOf` não está no lugar.
 
 - [ ] **Step 6: Exportar a API pública do motor**
 
