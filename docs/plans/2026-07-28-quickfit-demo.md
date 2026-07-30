@@ -1997,6 +1997,10 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { parseEquipmentCsv, parseExercisesCsv, CatalogError } from './schema';
 
+// Caminhos relativos ao CWD, não ao arquivo de teste. Isso só é válido por
+// causa da Global Constraint "npm test roda sempre na RAIZ" — rodar o vitest
+// de dentro de um workspace dá `ENOENT: catalog/equipment.csv`. Se você vir
+// esse erro, o problema é de onde você chamou, não do caminho.
 const equipCsv = readFileSync('catalog/equipment.csv', 'utf8');
 const exCsv = readFileSync('catalog/exercises.csv', 'utf8');
 
