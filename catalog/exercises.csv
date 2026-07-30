@@ -2,8 +2,6 @@ id,name,primary,secondary,equipment,level,pattern,kind,is_compound,avg_sec_per_s
 4dc51e1d-9cfc-4805-9014-6413c7ca28ba,Alongamento de latíssimo (lat stretch),costas,,,1,iso,mobilidade,false,30,,ombro,Mantenha a coluna neutra e alongue o braço acima da cabeça
 97464486-fc4d-4744-b5fe-7c46bb22972d,Alongamento de trapézio,costas,,,1,iso,mobilidade,false,30,,ombro|cervical,Puxe os ombros para baixo e segure a posição
 8db2ff8f-6c21-4af4-a477-76feeb37017c,Barra australiana,costas,,barra-fixa,2,pull-h,treino,true,20,,ombro|lombar,Mantenha o corpo reto e puxe o peito em direção à barra
-e311ef6d-def7-43b1-8b58-62b3fee0c5be,Barra fixa (pronada),costas,,barra-fixa,2,pull-v,treino,true,20,,ombro,Segure a barra com as palmas viradas para frente e puxe
-6024b41b-3514-47e1-b8f0-ec3bffa51324,Barra fixa (supinada),costas,,barra-fixa,2,pull-v,treino,true,20,,ombro,Segure a barra com as palmas viradas para você e puxe
 5ed320f4-75c8-48cb-9f85-9567e42e15aa,Barra fixa fechada,costas,,barra-fixa,2,pull-v,treino,true,20,,ombro,Mantenha as mãos próximas e puxe o peito até a barra
 7aac607d-6556-4dd3-b6c5-6cfcd58d48c6,Barra fixa pegada larga,costas,,barra-fixa,2,pull-v,treino,true,20,,ombro,Abra bem as mãos e puxe usando a largura dos ombros
 2248610d-5290-4c28-b2a8-bfacd31f2c11,Barra fixa pronada,costas,,barra-fixa,2,pull-v,treino,true,20,,ombro,Segure a barra pronada e eleve o corpo até o queixo
@@ -45,7 +43,7 @@ ee7ed537-b597-4181-b736-2af73bdf262b,Rosca direta (halteres),biceps,,halter,2,pu
 2d4d5675-1085-4409-b039-c4bb989c6852,Rosca martelo (halteres),biceps,,halter,2,pull-h,treino,false,45,,punho,Mantém pegada neutra e levanta o halter ao lado do corpo
 97ba757c-6baf-44f1-96be-b8c70088d3e6,Rosca no cabo (pulley),biceps,,polia-baixa,2,pull-h,treino,false,40,,punho,Puxa a alça mantendo os cotovelos fixos ao lado
 521c84a8-d1ca-49d8-bb7f-a14347d8103d,Alongamento de peito no batente,peito,,,1,iso,mobilidade,false,30,,ombro,Estenda os braços contra o batente sentindo alongamento no peito
-927f9975-a129-4319-9db5-f20e81895eb0,Alongamento de peito no chão (cruz),peito,,,1,iso,mobilidade,false,30,,ombro,Deite-se e cruze os braços sobre o peito sentindo o alongamento
+927f9975-a129-4319-9db5-f20e81895eb0,Alongamento de peito no chão (cruz),peito,,,1,iso,mobilidade,false,30,,ombro,Deite-se com os braços abertos em cruz palmas para cima sentindo o alongamento no peito
 ec6cd0e1-492a-40dd-9040-5491a69af5da,Crossover alto (cabos),peito,,crossover,2,push-h,treino,false,30,,ombro,Ajuste a altura e puxe a alça mantendo os cotovelos levemente dobrados
 ea503f84-3f35-487d-ac7f-8817fb3e06bc,Crossover baixo (cabos),peito,,crossover,1,push-h,treino,false,30,,ombro,Mantenha os cotovelos levemente dobrados ao puxar o cabo
 5bf4046e-2cc1-4785-b589-a7c7b0ae7b3b,Crucifixo inclinado (halteres),peito,,halter|banco-incl,1,push-h,treino,false,30,,ombro,Execute o movimento controlado foco no peito
@@ -77,7 +75,6 @@ a4522410-f807-477c-9408-e2bdfcb2950e,Burpee box jump-over,pernas,core|ombros,cai
 2f5ac705-d10d-4963-aac8-1dde03df344e,Butterfly stretch,pernas,core,,1,iso,mobilidade,false,30,,,Mantém as solas dos pés juntas e pressiona os joelhos para baixo
 4ddd0a1b-face-46e6-9454-50a81abf04d0,Clean and jerk (barra),pernas,ombros|core,barra,3,hinge,treino,true,40,,joelho|lombar|ombro|punho,Mantém a barra próxima ao corpo e explode para cima
 8d0ef6dd-7711-4f7f-b8e5-bd66543d4e2b,Farmer walk,pernas,core|ombros,halter,2,lunge,treino,true,45,,lombar|ombro|punho,Mantém a postura ereta e anda com os halteres ao lado
-61ea2316-8aad-4fc3-8004-8f9169e8bbe9,Farmer walk (halteres),pernas,core|ombros,halter,2,lunge,treino,true,45,,lombar|ombro|punho,Mantém a postura ereta e anda com os halteres ao lado
 46a78010-76f4-4cea-afc2-d7781f3e398c,Foam roll adutor,pernas,,rolo,1,iso,mobilidade,false,30,,,Rola a parte interna da coxa lentamente
 a246a9ef-5097-464a-8ee2-c9b4960fd28a,Foam roll glúteo,gluteos,,rolo,1,iso,mobilidade,false,30,,,Rola o glúteo focando na área dolorida
 47b2a81d-6413-4670-b5f9-83015a8d231b,Foam roll panturrilha,pernas,,rolo,1,iso,mobilidade,false,30,,,Rola a panturrilha com o rolo sob a perna
@@ -88,10 +85,7 @@ df74f593-783f-4445-9de8-14825edfe0ae,Mobilidade de quadril (90/90),gluteos,core|
 83797b40-54bc-4fef-bcf7-29d4b1a12369,Power clean,pernas,costas|ombros|core,barra,3,pull-h,treino,true,45,,lombar|joelho|ombro|punho,Explode o barra com extensão completa dos quadris
 24d4aad4-8a6d-4d67-b586-2293f1dd80ad,Subida na corda,costas,ombros|pernas|core,corda,3,pull-v,treino,true,45,,ombro|punho|lombar,Puxa a corda usando braços e pernas sem balançar
 fc3d84ff-fe8e-4f4e-8843-a27dea026ff3,Thruster,pernas,ombros|core,barra,3,push-h,treino,true,40,,joelho|ombro|lombar|punho,Desce em agachamento e explode para cima empurrando a barra
-82fe2a51-6641-4f95-8365-ef2367094017,Thruster (barra),pernas,ombros|core,barra,3,push-h,treino,true,40,,joelho|ombro|lombar|punho,Desce em agachamento e empurra a barra acima da cabeça
 9189bae4-381f-4f81-80f2-972a748daf5c,Wall ball,pernas,ombros|core,medicine-ball,2,push-h,treino,true,35,,joelho|ombro|lombar,Agacha e lança a bola para o alto usando força das pernas
-e34866d5-eddc-4af2-abc9-05a9d0c38a38,ABDUÇÃO,pernas,gluteos,abdutora,1,iso,treino,false,30,,,Eleva a perna lateralmente mantendo o tronco firme
-7c3dd636-5659-4b51-a88f-1424ebe2156d,ADUÇÃO,pernas,gluteos,adutora,1,iso,treino,false,30,,,Aproxima a perna ao centro mantendo o tronco estável
 5709a9f1-69d9-4b3d-b54a-1686d4a173f4,AGACHAMENTO PÊNDULO,pernas,core|gluteos,hack,2,squat,treino,false,40,,joelho|lombar,Desce em agachamento e balança o tronco sem perder postura
 83369c02-d162-49ab-a1d7-aa707433139c,Afundo (halteres),pernas,gluteos|core,halter,2,lunge,treino,true,35,,joelho|lombar,Dá um passo à frente e baixa até o joelho quase tocar o chão
 65d7cd4a-fa73-488b-8800-3314371b3606,Afundo (peso corporal),pernas,gluteos|core,,1,lunge,treino,true,30,,joelho|lombar,Avança com o pé e flexiona o joelho mantendo o tronco ereto
@@ -105,7 +99,7 @@ d72b0cfa-de97-4a89-a2d9-f3fe9a41ff9d,Alongamento IT band em pé,pernas,,,1,iso,m
 c3090f75-9529-4261-b517-2eb5435d2ac7,Alongamento de adutor (borboleta),pernas,,,1,iso,mobilidade,false,30,,,Junte solas dos pés e pressione joelhos para baixo
 d5d6cbac-6cb2-4720-8f89-a77c6c354803,Alongamento de adutor em pé (afastado),pernas,,,1,iso,mobilidade,false,30,,,Afaste perna e incline tronco lateralmente mantendo quadril
 8e009ef5-1b43-402b-9b50-49816d7d6cd1,Alongamento de glúteo deitado (figure 4),pernas,gluteos,,1,iso,mobilidade,false,30,,,Cruze perna sobre joelho oposto e puxe suavemente
-e91bca71-8473-4128-8199-c321d276d2a5,Alongamento de glúteo em pé,pernas,gluteos,,1,iso,mobilidade,false,30,,,Segure tornozelo e puxe calcanhar em direção glúteo
+e91bca71-8473-4128-8199-c321d276d2a5,Alongamento de glúteo em pé,pernas,gluteos,,1,iso,mobilidade,false,30,,,Cruze o tornozelo sobre o joelho oposto e sente para trás sentindo o alongamento no glúteo
 6c1626ab-b61d-4692-b73a-7bdd5356ebf0,Alongamento de isquiotibiais em pé,pernas,,,1,iso,mobilidade,false,30,,,Mantenha perna reta e incline tronco mantendo costas
 2cf692e4-50f3-4c3e-9a15-8586726104b4,Alongamento de isquiotibiais sentado,pernas,,,1,iso,mobilidade,false,30,,lombar,Sente e alcance pé mantendo perna estendida
 8f6006d0-2601-4079-8b9b-586cf1240091,Alongamento de panturrilha contra parede,pernas,,,1,iso,mobilidade,false,30,,,Coloque as mãos na parede e empurre calcanhar ao chão
@@ -130,7 +124,7 @@ ead435fe-8b92-44e9-9e3e-9f76e57944ea,Goblet squat,pernas,,kettlebell,2,squat,tre
 eacfb37d-7efc-45b6-b70d-f5e980f2b6d9,Leg press 45°,pernas,,leg-press,1,squat,treino,true,30,,joelho|lombar,Empurre a plataforma mantendo as costas firmes
 46978a48-622c-4182-9f0a-83af824dfbf0,Leg press horizontal,pernas,,leg-press,1,squat,treino,true,30,,joelho|lombar,Empurre a plataforma mantendo postura ereta
 1ea7f6aa-f8bf-4b9c-9041-41f8ca228782,Lizard pose (lagarto),pernas,,,1,iso,mobilidade,false,30,,joelho,Mantenha o tronco alinhado e estenda a perna
-b6fa15de-41a0-45eb-8907-0ce91ada6bff,Mesa flexora,pernas,,flexora,1,iso,treino,false,30,,joelho,Contraia os glúteos ao levantar o peso
+b6fa15de-41a0-45eb-8907-0ce91ada6bff,Mesa flexora,pernas,,flexora,1,iso,treino,false,30,,joelho,Flexione os joelhos trazendo os calcanhares em direção ao glúteo controlando a descida
 53b97ccc-a2f9-44ab-8359-91bf994802f2,Panturrilha em pé (máquina),pernas,,panturrilha,1,iso,treino,false,30,,,Eleve o calcanhar mantendo o corpo ereto
 d0f340ce-1cf9-4b67-a635-65dd8ec4ebd3,Panturrilha no leg press,pernas,,leg-press,1,iso,treino,false,30,,joelho,Faça a extensão usando a perna no leg press
 3d39ba11-3c49-4cc7-98fd-3c7f62447edb,Panturrilha sentado (máquina),pernas,,panturrilha,1,iso,treino,false,30,,,Eleve o calcanhar sentado mantendo postura
@@ -152,14 +146,13 @@ ae02b169-8a6c-4b5c-89de-15b92dfe2e09,Mergulho em paralelas (calistenia),triceps,
 bc1d9114-e914-4fd1-b346-f0c82f71eb50,Tríceps pulley (barra),triceps,,polia-alta,1,push-v,treino,false,30,,punho,Mantenha cotovelos fixos e empurre a barra para baixo
 c6e010bf-7a02-454a-9b1d-2080f9cdab27,Tríceps testa (barra),triceps,,barra|banco,1,push-h,treino,false,30,,ombro|punho,Mantenha braços estáveis e desça a barra até a testa
 5daae6fa-cfef-4f0a-940b-575bcf61f9da,Tríceps testa (halter),triceps,,halter|banco,1,push-h,treino,false,30,,ombro|punho,Segure halteres deite e leve-os à altura da testa
-598a8af0-5821-4c49-be11-2a58133f01db,Assault bike,cardio,,bike,1,cardio,treino,true,0,600,joelho|lombar|ombro,Pedale com ritmo constante e postura ereta
+598a8af0-5821-4c49-be11-2a58133f01db,Assault bike,cardio,,bike,1,cardio,treino,true,0,600,joelho|lombar|ombro,Empurre e puxe os braços no ritmo das pernas mantendo esforço constante
 fb9f739c-0630-474e-a1f2-8154261d1e7f,Bicicleta (ao ar livre),cardio,,bike,1,cardio,treino,false,0,600,joelho|lombar,Pedale mantendo cadência confortável
 26bcedb0-865e-4835-a491-094cfb8276f1,Bicicleta ergométrica,cardio,,bike,1,cardio,treino,false,0,600,joelho|lombar,Pedale sentado costas retas e pés firmes
 38585107-814d-42d1-8702-164456e4657c,Caminhada (ao ar livre),cardio,,,1,cardio,treino,false,0,600,joelho|lombar,Caminhe mantendo postura ereta e passos curtos
 af4d3c47-a372-4aec-b5f3-9bce6f0c26b2,Corrida (ao ar livre),cardio,,,1,cardio,treino,false,0,600,joelho|lombar,Corra com passada leve e respiração controlada
-f65a3aa3-b4d7-41c5-8d1e-09a6955cb090,Crosstrainer,cardio,,eliptico,1,cardio,treino,false,0,600,joelho|lombar,Movimente os braços sincronizado com as pernas
 26ff8094-f2f3-4234-92cf-42d463a9469d,Double under,cardio,,corda,2,cardio,treino,false,0,600,joelho|lombar|ombro|punho,Gire a corda rápido e mantenha cotovelos próximos
-c267327d-861a-48c1-806e-5b0501b98805,Elíptico,cardio,,eliptico,1,cardio,treino,false,0,600,joelho|lombar,Deslize os pés suavemente mantendo postura ereta
+c267327d-861a-48c1-806e-5b0501b98805,Elíptico,cardio,,eliptico,1,cardio,treino,false,0,600,joelho|lombar,Movimente os braços sincronizado com as pernas
 313afe30-cec9-4651-bc3a-af3e97ee2685,Escada / Stair,cardio,,escada,1,cardio,treino,false,0,600,joelho|lombar,Suba degraus mantendo ritmo constante e postura
 425fb5c6-74fb-4f1e-b2e8-ecbf6e36b8ac,Esteira (caminhada),cardio,,esteira,1,cardio,treino,false,0,600,joelho|lombar,Caminhe na esteira com postura ereta e passos firmes
 8dc317d6-2aa7-4e15-a98e-7e3baf2d6640,Esteira (corrida),cardio,,esteira,1,cardio,treino,false,0,600,joelho|lombar,Corra na esteira mantendo cadência e respiração
@@ -227,7 +220,6 @@ e3430aa8-ae4d-43a3-a9bc-7e42616e0ec3,Mobilidade torácica em quatro apoios,core,
 30520f2a-9a6b-4cd2-bb36-5a9a35fb57f6,Roll out / rolinho de coluna,core,,,2,iso,mobilidade,false,30,,lombar,Rola a coluna mantendo tronco firme
 c2415fb3-f242-445f-808e-20a8fb70f905,Seated forward fold,core,pernas,,1,iso,mobilidade,false,30,,lombar,Inclina o tronco à frente alcançando os pés
 bfb4086c-eb84-4ed0-a35d-10079c11be58,Snatch,ombros,pernas|core|gluteos,barra,3,pull-h,treino,true,45,,lombar|joelho|ombro|punho,Eleva a barra acima da cabeça em um movimento explosivo
-0fac3e93-d067-4927-982a-4626952b7051,Snatch (barra),ombros,pernas|core|gluteos,barra,3,pull-h,treino,true,45,,lombar|joelho|ombro|punho,Eleva a barra acima da cabeça em um movimento explosivo
 03225c1b-22de-43a0-ab05-2aabf5b5121a,Standing forward fold,core,pernas,,1,core,mobilidade,false,30,,lombar,Mantém a coluna reta e inclina o tronco à frente
 023b4b5a-edc8-438a-8432-1c0767245941,Standing side bend,core,,,1,core,mobilidade,false,30,,lombar,Inclina o tronco para o lado mantendo o quadril estável
 101ece1b-9f46-4bd7-9969-73bbf0b7b847,Turkish get-up,core,ombros|pernas|gluteos,kettlebell,3,core,treino,true,45,,ombro|joelho|lombar|punho,Mantém a kettlebell acima enquanto levanta o corpo passo a passo
