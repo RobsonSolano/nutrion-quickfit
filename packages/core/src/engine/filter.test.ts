@@ -1,0 +1,60 @@
+import { describe, it, expect } from 'vitest';
+import { eligible } from './filter';
+import type { Exercise, Input } from './types';
+
+const ex = (over: Partial<Exercise>): Exercise => ({
+  id: 'x', name: 'X', primary: 'peito', secondary: [], equipment: [],
+  level: 1, pattern: 'iso', isCompound: false, avgSecPerSet: 30,
+  contraindications: [], ...over,
+});
+
+const input = (over: Partial<Input> = {}): Input => ({
+  goal: 'hipertrofia', groups: ['peito'], minutes: 45, level: 3,
+  availableEquipment: ['barra', 'banco', 'halter'], avoid: [], seed: 1, ...over,
+});
+
+describe('eligible', () => {
+  it('exige TODOS os equipamentos presentes, não apenas um', () => {
+    const cat = [
+      ex({ id: 'supino', equipment: ['barra', 'banco'] }),
+      ex({ id: 'crucifixo-mq', equipment: ['mq-crucifixo'] }),
+      ex({ id: 'scott', equipment: ['banco-scott', 'barra'] }),
+    ];
+    const out = eligible(cat, input());
+    expect(out.map(e => e.id)).toEqual(['supino']);
+  });
+
+  it('trata equipamento vazio como peso corporal, sempre disponível', () => {
+    const cat = [ex({ id: 'flexao', equipment: [] })];
+    expect(eligible(cat, input({ availableEquipment: [] }))).toHaveLength(1);
+  });
+
+  it('nunca devolve exercício acima do nível declarado', () => {
+    const cat = [
+      ex({ id: 'facil', level: 1 }),
+      ex({ id: 'medio', level: 2 }),
+      ex({ id: 'dificil', level: 3 }),
+    ];
+    const out = eligible(cat, input({ level: 2 }));
+    expect(out.map(e => e.id)).toEqual(['facil', 'medio']);
+  });
+
+  it('remove exercício com contraindicação que o aluno pediu para evitar', () => {
+    const cat = [
+      ex({ id: 'agacho', contraindications: ['joelho', 'lombar'] }),
+      ex({ id: 'leg', contraindications: [] }),
+    ];
+    const out = eligible(cat, input({ avoid: ['joelho'] }));
+    expect(out.map(e => e.id)).toEqual(['leg']);
+  });
+
+  it('aceita exercício cujo grupo SECUNDÁRIO foi pedido', () => {
+    const cat = [ex({ id: 'supino', primary: 'peito', secondary: ['triceps'] })];
+    expect(eligible(cat, input({ groups: ['triceps'] }))).toHaveLength(1);
+  });
+
+  it('descarta exercício que não toca nenhum grupo pedido', () => {
+    const cat = [ex({ id: 'rosca', primary: 'biceps', secondary: [] })];
+    expect(eligible(cat, input({ groups: ['pernas'] }))).toHaveLength(0);
+  });
+});
