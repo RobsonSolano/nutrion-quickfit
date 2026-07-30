@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'node:fs';
 import { parseEquipmentCsv, parseExercisesCsv } from '../packages/core/src/catalog/schema';
+import { DEFAULT_ACCENT } from '../packages/core/src/theme/base';
 
 const url = process.env.VITE_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE;
@@ -84,7 +85,7 @@ const { data: gym, error: gymErr } = await db
     {
       slug: 'demo',
       name: 'Academia Persona',
-      theme: { accent: '#39FF14', mode: 'dark' },
+      theme: { accent: DEFAULT_ACCENT, mode: 'dark' },
       trainer_name: 'Prof. Marina Alves',
       trainer_cref: 'CREF 012345-G/SP',
     },

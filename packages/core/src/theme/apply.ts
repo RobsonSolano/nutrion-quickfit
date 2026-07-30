@@ -1,5 +1,5 @@
 import type { GymTheme } from './types';
-import { DARK_BASE, LIGHT_BASE } from './base';
+import { DARK_BASE, LIGHT_BASE, DEFAULT_ACCENT } from './base';
 import { bestContrast, rgba, validateAccent } from './contrast';
 
 /**
@@ -18,7 +18,7 @@ export function applyTheme(theme: GymTheme): void {
   // ao banco por SQL manual, o totem cai para o accent padrão em vez de
   // exibir um botão ilegível.
   const check = validateAccent(theme.accent, theme.mode);
-  const accent = check.ok ? theme.accent : (check.suggestion ?? '#39FF14');
+  const accent = check.ok ? theme.accent : (check.suggestion ?? DEFAULT_ACCENT);
   if (!check.ok) {
     console.warn(
       `Accent "${theme.accent}" tem contraste ${check.ratio.toFixed(2)}:1 — ` +
@@ -30,4 +30,8 @@ export function applyTheme(theme: GymTheme): void {
   root.setProperty('--qf-on-accent', bestContrast(accent, ['#07080B', '#FFFFFF']));
   root.setProperty('--qf-accent-glow', rgba(accent, 0.22));
   root.setProperty('color-scheme', theme.mode);
+
+  // Sem isto o theme-color ficava fixo no fundo escuro do index.html,
+  // errado pra qualquer academia com tema claro ou accent white-label.
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', base.bg);
 }

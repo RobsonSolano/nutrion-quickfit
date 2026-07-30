@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import type { Contra, Exercise, Kind, MuscleGroup, Pattern } from '@quickfit/core/engine';
-import type { Gym, GymTheme } from '@quickfit/core/theme';
+import { DEFAULT_ACCENT, type Gym, type GymTheme } from '@quickfit/core/theme';
 
 // v2: a v1 não tinha o campo `kind` em Exercise (task 9b). Um cache escrito
 // antes disso hidrataria exercícios com `kind: undefined`, e o filtro de
@@ -115,7 +115,7 @@ export async function loadCatalog(gymSlug = 'demo'): Promise<CatalogBundle> {
         slug: g.slug,
         name: g.name,
         logoUrl: g.logo_url,
-        theme: (g.theme ?? { accent: '#39FF14', mode: 'dark' }) as GymTheme,
+        theme: (g.theme ?? { accent: DEFAULT_ACCENT, mode: 'dark' }) as GymTheme,
         trainerName: g.trainer_name,
         trainerCref: g.trainer_cref,
       },

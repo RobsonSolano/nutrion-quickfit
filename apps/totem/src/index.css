@@ -33,6 +33,10 @@
   --qf-border: #1F232B;
   --qf-text: #F4F5F7;
   --qf-dim: #A1A6B2;
+  /* Só o valor inicial, antes do applyTheme() rodar no boot — a fonte de
+     verdade é DEFAULT_ACCENT em packages/core/src/theme/base.ts. Mudou lá,
+     muda aqui e na migration 20260728000100_gyms.sql também (CSS e SQL não
+     importam constante TS). */
   --qf-accent: #39FF14;
   --qf-on-accent: #07080B;
   --qf-violet: #8B5CF6;

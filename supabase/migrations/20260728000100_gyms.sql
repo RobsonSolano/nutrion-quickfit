@@ -3,6 +3,8 @@ create table if not exists public.gyms (
   slug         text unique not null,
   name         text not null,
   logo_url     text,
+  -- accent aqui é DEFAULT_ACCENT (packages/core/src/theme/base.ts) por
+  -- extenso — SQL não importa constante TS. Mudou lá, muda aqui também.
   theme        jsonb not null default '{"accent":"#39FF14","mode":"dark"}'::jsonb,
   trainer_name text,
   trainer_cref text,

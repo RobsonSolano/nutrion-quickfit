@@ -38,3 +38,13 @@ export const LIGHT_BASE = {
 
 /** Mínimo WCAG AA para texto grande. Abaixo disto o painel recusa a cor. */
 export const MIN_CONTRAST = 4.5;
+
+/**
+ * Verde de marca padrão — usado quando uma academia ainda não tem tema
+ * próprio ou quando o accent salvo reprova o contraste (apply.ts). Fonte
+ * única para o código; `index.css` (`--qf-accent` inicial, antes do JS
+ * rodar) e a migration `20260728000100_gyms.sql` (`theme` default da
+ * coluna) precisam ser atualizados manualmente se este valor mudar — CSS
+ * e SQL não importam constante TS.
+ */
+export const DEFAULT_ACCENT = '#39FF14';
