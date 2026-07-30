@@ -13,8 +13,11 @@ export default {
         accent:   'var(--qf-accent)',
         onAccent: 'var(--qf-on-accent)',
         violet:   'var(--qf-violet)',
-        danger:   '#F43F5E',
-        warn:     '#F59E0B',
+        // `danger` também é token, não hex. Não porque a academia troque a cor
+        // de erro — ela não troca — mas porque no modo claro `#F43F5E` precisa
+        // escurecer para continuar legível, e é o `applyTheme` que decide isso
+        // (task 12). Hex aqui congelaria a cor nos dois modos.
+        danger:   'var(--qf-danger)',
       },
       fontFamily: {
         display: ['Sora', 'system-ui', 'sans-serif'],
