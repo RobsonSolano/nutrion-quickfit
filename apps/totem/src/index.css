@@ -1,3 +1,10 @@
+/* Tem que vir antes de qualquer outra regra: @import só é válido no topo do
+   arquivo (CSS spec). Aqui embaixo, o PostCSS do Vite emite um aviso e
+   DESCARTA a regra em silêncio — o build passa, mas print.css nunca chega ao
+   bundle final. É o mesmo defeito que este arquivo existe para evitar: a
+   tela mostra certo, o papel não. */
+@import './print/print.css';
+
 @font-face {
   font-family: 'Sora'; font-style: normal; font-weight: 600;
   font-display: block; src: url('/fonts/sora-600.woff2') format('woff2');

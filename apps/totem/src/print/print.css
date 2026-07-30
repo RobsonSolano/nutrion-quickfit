@@ -1,0 +1,109 @@
+/* Cada regra aqui nasceu de defeito real medido, não de teoria. Ver spec §7.
+
+   LAYOUT DE CUPOM, não de A4. Decisão do Robson (jul/2026): impressão térmica
+   em formato cupom é prática consolidada em academia, e a compatibilidade entre
+   os formatos é de MÃO ÚNICA — medido:
+
+     cupom (80mm, ~34 caracteres)  ->  imprime aceitável em A4
+     A4 (tabela de 4 colunas, ~53) ->  NÃO cabe em cupom, estoura 19 caracteres
+
+   Então a ficha é uma coluna estreita. Em A4 ela sai centralizada, com cara de
+   cupom numa folha — que é exatamente o que a academia vai entregar ao aluno. */
+
+:root {
+  /* 72mm é a área imprimível de uma bobina de 80mm. Em tela usamos px para a
+     pré-visualização ter a mesma proporção do papel. */
+  --qf-cupom: 72mm;
+}
+
+@media print {
+  /* `auto` na altura deixa a bobina cortar onde o conteúdo acaba, sem forçar
+     folha inteira. Em impressora A4 o navegador usa a folha e centraliza. */
+  @page { size: auto; margin: 6mm; }
+
+  /* 1. Nenhum controle de tela vai pro papel. Sem isto, os botões
+        "Imprimir" e "Voltar" saem impressos na ficha. */
+  .no-print { display: none !important; }
+
+  /* 2. Fundo branco em toda a cadeia de ancestrais, senão o cinza da
+        interface vaza como um bloco no meio da folha. */
+  html, body, #root, .qf-shell, .qf-ficha { background: #fff !important; }
+  body { color: #000 !important; }
+
+  /* 3. O ponto de tudo: a pré-visualização rola para caber na tela do totem.
+        Se o overflow vazar para a impressão, EXERCÍCIO DESAPARECE DO PAPEL
+        sem aviso — o defeito mais perigoso, porque a tela mostra certo. */
+  .qf-sheet, .qf-sheet-body {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    position: static !important;
+  }
+
+  .qf-shell, .qf-ficha {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  /* 4. A largura do cupom manda, em qualquer impressora. Numa térmica isso é a
+        bobina inteira; numa A4 é uma coluna estreita centralizada. */
+  .qf-sheet {
+    box-shadow: none !important;
+    width: var(--qf-cupom) !important;
+    max-width: var(--qf-cupom) !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace !important;
+    font-size: 9pt !important;
+    line-height: 1.35 !important;
+    color: #000 !important;
+  }
+
+  /* 5. Térmica é 1 bit: não existe cinza. Cinza claro vira branco (invisível)
+        ou preto (borrão), dependendo do driver. Tudo preto, e a hierarquia sai
+        de peso e caixa alta em vez de cor. */
+  .qf-sheet * { color: #000 !important; }
+  .qf-sheet .dim { font-weight: 400 !important; }
+  .qf-sheet .gym { font-size: 11pt !important; font-weight: 700 !important; }
+  .qf-sheet .tag { font-size: 8pt !important; text-transform: uppercase; }
+
+  /* 6. Nenhum exercício parte no meio. Numa bobina não existe "próxima
+        página", mas o corte pode cair em cima da linha. */
+  .qf-sheet .ex { break-inside: avoid; page-break-inside: avoid; }
+
+  /* 7. O rodapé de homologação CREF é o que sustenta a ficha juridicamente e
+        não pode faltar. Em cupom ele é o ÚLTIMO bloco no fluxo, não `fixed`:
+        `position: fixed` numa bobina de altura automática se comporta de forma
+        imprevisível entre drivers, e o que a A4 ganhava (repetir em toda
+        página) o cupom não precisa, porque é uma tira contínua. */
+  .qf-sheet-footer {
+    position: static !important;
+    margin-top: 6pt !important;
+    border-top: 1pt dashed #000 !important;
+    padding-top: 4pt !important;
+    font-size: 7.5pt !important;
+  }
+
+  /* 8. Separadores tracejados em vez de linhas finas: térmica de 203dpi
+        borra hairline, e tracejado sobrevive. */
+  .qf-sheet .rule { border-top: 1pt dashed #000 !important; }
+
+  /* 9. O QR precisa ter módulo grande o suficiente para câmera ruim sob luz de
+        galpão. 40mm em cupom de 72mm é quase metade da largura, de propósito —
+        é o elemento que leva o aluno para a página do treino. */
+  .qf-sheet img.qr {
+    width: 40mm !important;
+    height: 40mm !important;
+    image-rendering: pixelated;
+  }
+
+  /* 10. A linha de anotar carga tem que sobreviver a caneta. Sublinhado sólido
+         e não borda de célula, porque célula estreita em térmica some. */
+  .qf-sheet .carga {
+    border-bottom: 1pt solid #000 !important;
+    display: inline-block;
+    min-width: 22mm;
+  }
+}

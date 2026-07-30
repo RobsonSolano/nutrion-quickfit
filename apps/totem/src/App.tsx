@@ -17,6 +17,7 @@ import { Groups } from './screens/Groups';
 import { Time } from './screens/Time';
 import { Level } from './screens/Level';
 import { Result } from './screens/Result';
+import { Ficha } from './screens/Ficha';
 import { groupsLabel, LEVEL_OPTIONS } from './screens/labels';
 
 export function App() {
@@ -63,7 +64,7 @@ export function App() {
 
         {state.screen !== 'attract' && (
           <div className="flex h-full flex-col gap-6 p-10">
-            <Header gymName={gym.name} />
+            <div className="no-print"><Header gymName={gym.name} /></div>
             <div className="min-h-0 flex-1">
               {state.screen === 'parq' && (
                 <Parq
@@ -125,7 +126,15 @@ export function App() {
                   onExit={() => dispatch({ type: 'RESET' })}
                 />
               )}
-              {/* ficha entra na task 16 */}
+              {state.screen === 'ficha' && state.workout && (
+                <Ficha
+                  workout={state.workout}
+                  gym={gym}
+                  groupsTitle={groupsLabel(state.groups)}
+                  workoutId={state.workoutId}
+                  onBack={() => dispatch({ type: 'BACK' })}
+                />
+              )}
             </div>
           </div>
         )}
@@ -135,7 +144,7 @@ export function App() {
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
-  return <main className="h-full w-full overflow-hidden bg-bg text-text">{children}</main>;
+  return <main className="qf-shell h-full w-full overflow-hidden bg-bg text-text">{children}</main>;
 }
 
 function Header({ gymName }: { gymName: string }) {
