@@ -575,10 +575,21 @@ export type Exercise = {
   videoUrl?: string;
 };
 
+/**
+ * Todos os tempos oferecidos em qualquer fluxo. A união é o conjunto, mas
+ * nenhuma tela mostra todos: o atalho "Treino rápido" oferece 20/30/40/50
+ * (quem escolhe "rápido" é limitado por tempo) e o "Montar do zero" oferece
+ * 20/30/45/60/90 (precisa cobrir perna completa e sessão de força).
+ *
+ * 40 e 45 nunca aparecem juntos de propósito: ambos caem em 6 exercícios no
+ * TARGET_EX, então oferecer os dois seria uma escolha sem consequência.
+ */
+export type Minutes = 20 | 30 | 40 | 45 | 50 | 60 | 90;
+
 export type Input = {
   goal: Goal;
   groups: MuscleGroup[];
-  minutes: 20 | 30 | 45 | 60 | 90;
+  minutes: Minutes;
   level: Level;
   /** vem de gym_equipment onde is_available = true */
   availableEquipment: string[];
@@ -627,7 +638,7 @@ export type Workout = {
 `packages/core/src/engine/constants.ts`:
 
 ```ts
-import type { Goal, Input, Scheme } from './types';
+import type { Goal, Minutes, Scheme } from './types';
 
 export const REST: Record<Goal, number> = {
   forca: 150,
@@ -650,8 +661,14 @@ export const SETS_REPS: Record<Goal, Pick<Scheme, 'sets' | 'reps'>> = {
  * NISSO e deriva as séries — não o contrário. Sem isto, 20 min de hipertrofia
  * com 4 séries de 75s de descanso cabia UM exercício só.
  */
-export const TARGET_EX: Record<Input['minutes'], number> = {
-  20: 4, 30: 5, 45: 6, 60: 8, 90: 9,
+export const TARGET_EX: Record<Minutes, number> = {
+  20: 4,
+  30: 5,
+  40: 6,
+  45: 6,   // 40 e 45 caem no mesmo alvo — por isso nunca são oferecidos juntos
+  50: 7,
+  60: 8,
+  90: 9,
 };
 
 /** Teto por objetivo. Ficha real de academia tem 4 a 9 exercícios, nunca 19. */
@@ -858,7 +875,7 @@ describe('schemeFor', () => {
   });
 
   it('nunca desce abaixo de 2 séries', () => {
-    for (const minutes of [20, 30, 45, 60, 90] as const) {
+    for (const minutes of [20, 30, 40, 45, 50, 60, 90] as const) {
       for (const goal of ['forca', 'hipertrofia', 'resistencia', 'emagrecimento', 'mobilidade'] as const) {
         expect(schemeFor(input({ minutes, goal })).sets).toBeGreaterThanOrEqual(2);
       }
@@ -1576,7 +1593,7 @@ import { CATALOG, ALL_EQUIPMENT } from './__fixtures__/catalog';
 import type { Contra, Goal, Input, Level, MuscleGroup } from './types';
 
 const GOALS: Goal[] = ['hipertrofia', 'emagrecimento', 'resistencia', 'mobilidade', 'forca'];
-const MINUTES: Input['minutes'][] = [20, 30, 45, 60, 90];
+const MINUTES: Minutes[] = [20, 30, 40, 45, 50, 60, 90];
 const GROUPS: MuscleGroup[] = ['peito', 'costas', 'ombros', 'biceps', 'triceps', 'pernas', 'gluteos', 'core', 'cardio'];
 const CONTRAS: Contra[] = ['joelho', 'lombar', 'ombro', 'punho', 'cervical'];
 
@@ -2501,7 +2518,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { parseEquipmentCsv, parseExercisesCsv } from './schema';
 import { generateWorkout } from '../engine';
-import type { Input } from '@quickfit/core/engine';
+import type { Input, Minutes } from '@quickfit/core/engine';
 
 const equip = parseEquipmentCsv(readFileSync('catalog/equipment.csv', 'utf8'));
 const catalog = parseExercisesCsv(
@@ -2510,7 +2527,7 @@ const catalog = parseExercisesCsv(
 );
 const allEquipment = equip.map((e) => e.id);
 
-const ATALHOS: Array<{ label: string; groups: Input['groups']; minutes: Input['minutes'] }> = [
+const ATALHOS: Array<{ label: string; groups: Input['groups']; minutes: Minutes }> = [
   { label: 'Peito + Tríceps', groups: ['peito', 'triceps'], minutes: 45 },
   { label: 'Costas + Bíceps', groups: ['costas', 'biceps'], minutes: 45 },
   { label: 'Perna completa',  groups: ['pernas', 'gluteos'], minutes: 60 },
@@ -3718,6 +3735,49 @@ describe('fluxo de atalho — 3 toques', () => {
     ]);
     expect(toInput(s, ['barra']).avoid).toEqual([]);
   });
+
+  it('só o "Treino rápido" tem askTime — os outros três geram direto', () => {
+    const comAskTime = SHORTCUTS.filter((s) => s.askTime);
+    expect(comAskTime).toHaveLength(1);
+    expect(comAskTime[0].label).toBe('Treino rápido');
+  });
+});
+
+describe('atalho "Treino rápido" — pede o tempo antes de gerar', () => {
+  const idx = SHORTCUTS.findIndex((s) => s.askTime);
+
+  const ateOTempo = () =>
+    run([{ type: 'TOUCH_ATTRACT' }, { type: 'PARQ_NONE' }, { type: 'PICK_SHORTCUT', index: idx }]);
+
+  it('vai para a tela de tempo, não direto para a geração', () => {
+    const s = ateOTempo();
+    expect(s.screen).toBe('time');
+    expect(s.path).toBe('atalho');
+  });
+
+  it('escolher o tempo gera na hora — no atalho não há pergunta de nível', () => {
+    const s = reducer(ateOTempo(), { type: 'PICK_TIME', minutes: 40 });
+    expect(s.screen).toBe('generating');
+    expect(s.minutes).toBe(40);
+  });
+
+  it('custa 4 toques, um mais que os outros atalhos', () => {
+    const rapido = reducer(ateOTempo(), { type: 'PICK_TIME', minutes: 30 });
+    const direto = run([
+      { type: 'TOUCH_ATTRACT' },
+      { type: 'PARQ_NONE' },
+      { type: 'PICK_SHORTCUT', index: 0 },
+    ]);
+    expect(rapido.taps).toBe(4);
+    expect(direto.taps).toBe(3);
+  });
+
+  it('BACK da tela de tempo volta para a home, não para os grupos', () => {
+    // A mesma tela `time` volta para `groups` no caminho completo — coberto
+    // pelo teste de BACK em "caminho completo".
+    const s = reducer(ateOTempo(), { type: 'BACK' });
+    expect(s.screen).toBe('home');
+  });
 });
 
 describe('triagem PAR-Q', () => {
@@ -3898,7 +3958,7 @@ Esperado: FAIL — `Failed to resolve import "./machine"`.
 `apps/totem/src/state/machine.ts`:
 
 ```ts
-import type { Contra, Goal, Input, Level, MuscleGroup, Workout } from '@quickfit/core/engine';
+import type { Contra, Goal, Input, Level, Minutes, MuscleGroup, Workout } from '@quickfit/core/engine';
 
 export type Screen =
   | 'attract' | 'parq' | 'blocked' | 'home'
@@ -3907,17 +3967,33 @@ export type Screen =
 
 export type Shortcut = {
   label: string;
+  sub: string;
   groups: MuscleGroup[];
-  minutes: Input['minutes'];
+  /** Tempo assumido. Ignorado quando `askTime` é true. */
+  minutes: Minutes;
   goal: Goal;
+  /**
+   * Quando true, o atalho abre a tela de tempo antes de gerar. Só o "Treino
+   * rápido" usa: quem escolhe "rápido" está limitado por tempo, e assumir 20
+   * min para quem tem 45 entrega menos treino do que a pessoa podia fazer.
+   * Custo: este atalho leva 4 toques, os outros três levam 3.
+   */
+  askTime?: true;
 };
 
-/** Os 4 atalhos da home. D4: 80% dos alunos saem em 3 toques por aqui. */
+/** Os 4 atalhos da home. D4: a maioria dos alunos sai em 3 toques por aqui. */
 export const SHORTCUTS: Shortcut[] = [
-  { label: 'Peito + Tríceps', groups: ['peito', 'triceps'],            minutes: 45, goal: 'hipertrofia' },
-  { label: 'Costas + Bíceps', groups: ['costas', 'biceps'],            minutes: 45, goal: 'hipertrofia' },
-  { label: 'Perna completa',  groups: ['pernas', 'gluteos'],           minutes: 60, goal: 'hipertrofia' },
-  { label: 'Treino rápido',   groups: ['peito', 'costas', 'pernas'],   minutes: 20, goal: 'emagrecimento' },
+  { label: 'Peito + Tríceps', sub: '45 min', groups: ['peito', 'triceps'],  minutes: 45, goal: 'hipertrofia' },
+  { label: 'Costas + Bíceps', sub: '45 min', groups: ['costas', 'biceps'],  minutes: 45, goal: 'hipertrofia' },
+  { label: 'Perna completa',  sub: '60 min', groups: ['pernas', 'gluteos'], minutes: 60, goal: 'hipertrofia' },
+  {
+    label: 'Treino rápido',
+    sub: 'você escolhe o tempo',
+    groups: ['peito', 'costas', 'pernas'],
+    minutes: 20,
+    goal: 'emagrecimento',
+    askTime: true,
+  },
 ];
 
 /** As 3 condições críticas do PAR-Q reduzido (D6). */
@@ -3933,7 +4009,7 @@ export type MachineState = {
   parq: number[];
   goal: Goal;
   groups: MuscleGroup[];
-  minutes: Input['minutes'];
+  minutes: Minutes;
   level: Level;
   avoid: Contra[];
   seed: number;
@@ -3966,7 +4042,7 @@ export type Action =
   | { type: 'PICK_GOAL'; goal: Goal }
   | { type: 'TOGGLE_GROUP'; group: MuscleGroup }
   | { type: 'CONFIRM_GROUPS' }
-  | { type: 'PICK_TIME'; minutes: Input['minutes'] }
+  | { type: 'PICK_TIME'; minutes: Minutes }
   | { type: 'PICK_LEVEL'; level: Level }
   | { type: 'TOGGLE_AVOID'; tag: Contra }
   | { type: 'GENERATED'; workout: Workout }
@@ -3976,14 +4052,21 @@ export type Action =
   | { type: 'BACK' }
   | { type: 'RESET' };
 
-/** De onde cada tela do caminho completo volta. */
+/**
+ * De onde cada tela volta. `time` depende do caminho: no atalho ela veio da
+ * home, no completo veio da seleção de grupos.
+ */
 const BACK_TO: Partial<Record<Screen, Screen>> = {
   goal: 'home',
   groups: 'goal',
-  time: 'groups',
   level: 'time',
   ficha: 'result',
 };
+
+const backFrom = (state: MachineState): Screen | undefined =>
+  state.screen === 'time'
+    ? (state.path === 'atalho' ? 'home' : 'groups')
+    : BACK_TO[state.screen];
 
 export function reducer(state: MachineState, action: Action): MachineState {
   const tap = (s: MachineState): MachineState => ({ ...s, taps: s.taps + 1 });
@@ -4013,7 +4096,8 @@ export function reducer(state: MachineState, action: Action): MachineState {
         groups: sc.groups,
         minutes: sc.minutes,
         avoid: [],          // atalho nunca popula avoid
-        screen: 'generating',
+        // "Treino rápido" pede o tempo antes de gerar; os outros três já o têm.
+        screen: sc.askTime ? 'time' : 'generating',
       });
     }
 
@@ -4035,7 +4119,13 @@ export function reducer(state: MachineState, action: Action): MachineState {
       return tap({ ...state, screen: 'time' });
 
     case 'PICK_TIME':
-      return tap({ ...state, minutes: action.minutes, screen: 'level' });
+      // No atalho o tempo é a última pergunta; no caminho completo ainda falta
+      // o nível.
+      return tap({
+        ...state,
+        minutes: action.minutes,
+        screen: state.path === 'atalho' ? 'generating' : 'level',
+      });
 
     case 'PICK_LEVEL':
       return tap({ ...state, level: action.level, screen: 'generating' });
@@ -4065,7 +4155,7 @@ export function reducer(state: MachineState, action: Action): MachineState {
       return tap({ ...state, screen: 'ficha' });
 
     case 'BACK': {
-      const to = BACK_TO[state.screen];
+      const to = backFrom(state);
       return to ? tap({ ...state, screen: to }) : state;
     }
 
@@ -4475,7 +4565,7 @@ export function Home({ onShortcut, onCustom }: Props) {
           <BigButton
             key={sc.label}
             title={sc.label}
-            sub={`${sc.minutes} min`}
+            sub={sc.sub}
             onClick={() => onShortcut(i)}
           />
         ))}
@@ -4832,7 +4922,7 @@ O scroll da lista não é detalhe: com 9 exercícios a lista estoura a dobra, e 
 **Interfaces:**
 - Consumes: `Action`, `MachineState` de `../state/machine`; `Workout` do motor
 - Produces:
-  - `GROUP_LABEL: Record<MuscleGroup, string>`, `GOAL_OPTIONS`, `LEVEL_OPTIONS`, `TIME_OPTIONS`
+  - `GROUP_LABEL`, `GOAL_OPTIONS`, `LEVEL_OPTIONS`, `TIME_OPTIONS_FULL`, `TIME_OPTIONS_QUICK`
   - `describeWorkout(w: Workout): { exercicios: number; series: number; minutos: number }`
   - `useHasMore(ref: RefObject<HTMLElement>): { hasMore: boolean; below: number }`
 
@@ -4842,7 +4932,11 @@ O scroll da lista não é detalhe: com 9 exercícios a lista estoura a dobra, e 
 
 ```ts
 import { describe, it, expect } from 'vitest';
-import { GROUP_LABEL, GOAL_OPTIONS, LEVEL_OPTIONS, TIME_OPTIONS, describeWorkout } from './labels';
+import {
+  GROUP_LABEL, GOAL_OPTIONS, LEVEL_OPTIONS,
+  TIME_OPTIONS_FULL, TIME_OPTIONS_QUICK, describeWorkout,
+} from './labels';
+import { TARGET_EX } from '@quickfit/core/engine';
 import type { Workout } from '@quickfit/core/engine';
 
 describe('rótulos', () => {
@@ -4871,8 +4965,22 @@ describe('rótulos', () => {
     }
   });
 
-  it('os tempos são exatamente os 5 da spec', () => {
-    expect(TIME_OPTIONS).toEqual([20, 30, 45, 60, 90]);
+  it('o caminho completo cobre perna longa e sessão de força', () => {
+    expect(TIME_OPTIONS_FULL).toEqual([20, 30, 45, 60, 90]);
+  });
+
+  it('o atalho rápido oferece só tempos curtos', () => {
+    expect(TIME_OPTIONS_QUICK).toEqual([20, 30, 40, 50]);
+    expect(Math.max(...TIME_OPTIONS_QUICK)).toBeLessThan(60);
+  });
+
+  it('nenhuma tela oferece dois tempos com o mesmo alvo de exercícios', () => {
+    // 40 e 45 caem ambos em 6. Oferecer os dois na mesma tela seria uma
+    // escolha sem consequência para o aluno.
+    for (const escada of [TIME_OPTIONS_FULL, TIME_OPTIONS_QUICK]) {
+      const alvos = escada.map((m) => TARGET_EX[m]);
+      expect(new Set(alvos).size).toBe(alvos.length);
+    }
   });
 });
 
@@ -4908,7 +5016,7 @@ Esperado: FAIL — `Failed to resolve import "./labels"`.
 `apps/totem/src/screens/labels.ts`:
 
 ```ts
-import type { Goal, Input, Level, MuscleGroup, Workout } from '@quickfit/core/engine';
+import type { Goal, Level, Minutes, MuscleGroup, Workout } from '@quickfit/core/engine';
 
 /** Nunca mostre o id ao aluno. "core" é jargão; "Abdômen" é português. */
 export const GROUP_LABEL: Record<MuscleGroup, string> = {
@@ -4932,7 +5040,8 @@ export const GOAL_OPTIONS: Array<{ goal: Goal; label: string; sub: string }> = [
   { goal: 'hipertrofia',   label: 'Não sei',         sub: 'a gente decide para você' },
 ];
 
-export const TIME_OPTIONS: Input['minutes'][] = [20, 30, 45, 60, 90];
+export const TIME_OPTIONS_FULL: Minutes[] = [20, 30, 45, 60, 90];
+export const TIME_OPTIONS_QUICK: Minutes[] = [20, 30, 40, 50];
 
 export const LEVEL_OPTIONS: Array<{ level: Level; label: string; sub: string }> = [
   { level: 1, label: 'Iniciante',     sub: 'até 6 meses treinando' },
@@ -4996,7 +5105,8 @@ export function Goal({ onPick, onBack }: Props) {
 export function StepShell({
   step, title, hint, onBack, children, footer,
 }: {
-  step: number;
+  /** Omitido no fluxo de atalho: lá não há "passo 3 de 4". */
+  step?: number;
   title: string;
   hint?: string;
   onBack: () => void;
@@ -5007,7 +5117,7 @@ export function StepShell({
     <div className="flex h-full flex-col gap-5">
       <div className="flex flex-none items-center justify-between">
         <span className="text-[18px] uppercase tracking-[0.1em] text-dim">
-          Passo {step} de 4
+          {step ? `Passo ${step} de 4` : ''}
         </span>
         <button
           type="button"
@@ -5078,16 +5188,29 @@ export function Groups({ selected, onToggle, onConfirm, onBack }: Props) {
 ```tsx
 import { BigButton } from '../components/BigButton';
 import { StepShell } from './Goal';
-import { TIME_OPTIONS } from './labels';
-import type { Input } from '@quickfit/core/engine';
+import { TIME_OPTIONS_FULL, TIME_OPTIONS_QUICK } from './labels';
+import type { Minutes } from '@quickfit/core/engine';
 
-type Props = { onPick: (m: Input['minutes']) => void; onBack: () => void };
+type Props = {
+  onPick: (m: Minutes) => void;
+  onBack: () => void;
+  /** 'atalho' mostra a escada curta e não numera o passo. */
+  variant: 'atalho' | 'completo';
+};
 
-export function Time({ onPick, onBack }: Props) {
+export function Time({ onPick, onBack, variant }: Props) {
+  const quick = variant === 'atalho';
+  const options = quick ? TIME_OPTIONS_QUICK : TIME_OPTIONS_FULL;
+
   return (
-    <StepShell step={3} title="Quanto tempo você tem?" onBack={onBack}>
-      <div className="grid grid-cols-3 content-start gap-4">
-        {TIME_OPTIONS.map((m) => (
+    <StepShell
+      step={quick ? undefined : 3}
+      title="Quanto tempo você tem?"
+      hint={quick ? 'A gente monta um treino de corpo inteiro nesse tempo.' : undefined}
+      onBack={onBack}
+    >
+      <div className="grid grid-cols-2 content-start gap-4">
+        {options.map((m) => (
           <BigButton key={m} title={`${m} min`} onClick={() => onPick(m)} />
         ))}
       </div>
@@ -5319,6 +5442,7 @@ import { groupsLabel, LEVEL_OPTIONS } from './screens/labels';
 )}
 {state.screen === 'time' && (
   <Time
+    variant={state.path}
     onPick={(minutes) => dispatch({ type: 'PICK_TIME', minutes })}
     onBack={() => dispatch({ type: 'BACK' })}
   />
@@ -6540,6 +6664,24 @@ test('caminho felizeu: 3 toques até o treino, e a ficha imprime em 1 página', 
 
   expect(linhasTela).toBeGreaterThanOrEqual(3);
   expect(paginas).toBe(1);
+});
+
+test('"Treino rápido" pede o tempo: 4 toques, escada curta, sem pergunta de nível', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Toque para começar' }).click();
+  await page.getByRole('button', { name: /nenhuma das anteriores/i }).click();
+  await page.getByRole('button', { name: /treino rápido/i }).click();
+
+  // Escada curta: 20/30/40/50, e nada de 60 ou 90 — ninguém chama isso de rápido
+  await expect(page.getByRole('button', { name: '40 min' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '60 min' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '90 min' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: '40 min' }).click();
+
+  // Vai direto para o treino: no atalho não há passo de nível
+  await expect(page.getByRole('button', { name: /^Iniciante/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /imprimir ficha/i })).toBeVisible({ timeout: 10_000 });
 });
 
 test('PAR-Q reprovado encaminha ao professor e NÃO gera treino', async ({ page }) => {
