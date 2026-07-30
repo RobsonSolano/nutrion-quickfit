@@ -84,8 +84,16 @@ function TotemApp() {
 
   // Registra o bloqueio do PAR-Q para o gestor ver nas estatísticas (spec
   // §8) — não gera treino, só telemetria de encaminhamento.
+  //
+  // parqReported evita duplicar linha: o aluno pode marcar/desmarcar
+  // condições várias vezes (blocked -> parq -> blocked de novo) antes de
+  // decidir, e cada entrada em 'blocked' reexecutava este efeito. Conta
+  // UMA vez por visita; só reseta quando a tela volta pro attract (RESET).
+  const parqReported = useRef(false);
   useEffect(() => {
-    if (state.screen !== 'blocked' || !bundle) return;
+    if (state.screen === 'attract') parqReported.current = false;
+    if (state.screen !== 'blocked' || !bundle || parqReported.current) return;
+    parqReported.current = true;
     const vazio = { items: [], scheme: { sets: 0, reps: '', rest: 0, target: 0 },
       poolSize: 0, budgetSec: 0, usedSec: 0, cap: 0, minItems: 0, extraSets: 0 };
     void saveWorkout(bundle.gym.id, toInput(state, bundle.availableEquipment), vazio as never, true);

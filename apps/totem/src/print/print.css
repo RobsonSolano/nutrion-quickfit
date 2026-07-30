@@ -74,6 +74,7 @@
   .qf-sheet .dim { font-weight: 400 !important; }
   .qf-sheet .gym { font-size: 11pt !important; font-weight: 700 !important; }
   .qf-sheet .tag { font-size: 8pt !important; text-transform: uppercase; }
+  .qf-sheet .eqp { font-size: 7pt !important; text-transform: uppercase; }
 
   /* 6. Nenhum exercício parte no meio. Numa bobina não existe "próxima
         página", mas o corte pode cair em cima da linha. */
