@@ -1,4 +1,154 @@
 id,name,primary,secondary,equipment,level,pattern,is_compound,avg_sec_per_set,duration_sec,contraindications,cue
-supino-reto,Supino reto com barra,peito,triceps|ombros,barra|banco,2,push-h,true,35,,ombro,Escápulas retraídas; barra na linha do mamilo
-leg-press,Leg Press 45°,pernas,gluteos,leg-press,1,squat,true,38,,joelho,Não deixe a lombar sair do apoio
-esteira-moderada,Esteira — ritmo moderado,cardio,,esteira,1,cardio,false,0,600,,Mantenha um ritmo em que consiga conversar
+4dc51e1d-9cfc-4805-9014-6413c7ca28ba,Alongamento de latíssimo (lat stretch),costas,,,1,iso,false,30,,ombro,Mantenha a coluna neutra e alongue o braço acima da cabeça
+97464486-fc4d-4744-b5fe-7c46bb22972d,Alongamento de trapézio,costas,,,1,iso,false,30,,ombro,Puxe os ombros para baixo e segure a posição
+8db2ff8f-6c21-4af4-a477-76feeb37017c,Barra australiana,costas,,barra-fixa,2,pull-h,true,20,,ombro|lombar,Mantenha o corpo reto e puxe o peito em direção à barra
+e311ef6d-def7-43b1-8b58-62b3fee0c5be,Barra fixa (pronada),costas,,barra-fixa,2,pull-v,true,20,,ombro,Segure a barra com as palmas viradas para frente e puxe
+6024b41b-3514-47e1-b8f0-ec3bffa51324,Barra fixa (supinada),costas,,barra-fixa,2,pull-v,true,20,,ombro,Segure a barra com as palmas viradas para você e puxe
+5ed320f4-75c8-48cb-9f85-9567e42e15aa,Barra fixa fechada,costas,,barra-fixa,2,pull-v,true,20,,ombro,Mantenha as mãos próximas e puxe o peito até a barra
+7aac607d-6556-4dd3-b6c5-6cfcd58d48c6,Barra fixa pegada larga,costas,,barra-fixa,2,pull-v,true,20,,ombro,Abra bem as mãos e puxe usando a largura dos ombros
+2248610d-5290-4c28-b2a8-bfacd31f2c11,Barra fixa pronada,costas,,barra-fixa,2,pull-v,true,20,,ombro,Segure a barra pronada e eleve o corpo até o queixo
+91eb3dd3-0d68-40fa-b608-2b2d708ffd4d,Barra fixa supinada,costas,,barra-fixa,2,pull-v,true,20,,ombro,Segure a barra supinada e eleve o corpo até o peito
+1067599f-8754-4e6c-8156-2044ef142d33,Child's pose,costas,,,1,iso,false,30,,lombar,Apoie os joelhos no chão e estenda os braços à frente
+fe9db795-997c-42d2-82b2-b669ad4e9f6f,Cobra (alongamento),costas,,,1,iso,false,30,,lombar,Eleve o peito mantendo as mãos no chão e respire fundo
+0e835e76-ee1d-4c9b-87d5-91fcd51c825d,Deadlift (CrossFit),costas,,barra,3,hinge,true,30,,lombar|joelho,Mantenha a barra próxima ao corpo e levante com quadris
+ecdf45cd-c58e-4aec-89e7-6c12411c7dc6,Foam roll lombar,costas,,rolo,1,iso,false,30,,,Role a lombar lentamente e respire de forma controlada
+8a6997bd-f1f2-4e2e-a944-f13b299f9e8b,Levantamento terra (barra),costas,,barra,3,hinge,true,30,,lombar|joelho,Abaixe o tronco mantendo a coluna reta e segure a barra
+165305f0-bebb-4651-b702-0ea2c9d4bfbd,Muscle-up,costas,,barra-fixa,3,pull-v,true,20,,ombro|lombar,Puxe explosivamente e transite para a posição de dip acima da barra
+81b5bf7a-de72-4de4-a5b7-501196f01a41,Pull-down (pulley),costas,biceps,polia-alta,1,pull-v,false,30,,ombro|lombar,Puxe a barra até o peito mantendo as costas retas
+74fee36e-70c4-4620-a9d9-5b867ea16f4d,Puxada atrás (pulley),costas,biceps,polia-alta,2,pull-v,true,30,,ombro|cervical|lombar,Puxe a barra por trás da cabeça sem curvar a coluna
+e8db89fd-138c-4cfa-a44a-dd430a11dcdf,Puxada frontal (pulley),costas,biceps,polia-alta,2,pull-v,true,30,,ombro|lombar,Puxe a barra à frente mantendo peito aberto
+54096b2b-0d3c-407f-bb6e-9bd195ebb8c3,Puxada triângulo (pulley),costas,biceps,polia-alta,2,pull-v,true,30,,ombro|lombar,Puxe a corda em forma de triângulo até a altura dos ombros
+4d01713b-3b01-4ebe-922c-aad62024c35b,REMADA BAIXA ABERTA,costas,biceps,mq-remada,1,pull-h,false,30,,lombar|ombro,Puxe a alavanca em direção ao abdômen mantendo costas firmes
+de4a9988-978a-4d40-bc17-3a3855baa299,REMADA CURVADA PRON.,costas,biceps,mq-remada,2,pull-h,false,30,,lombar|ombro,Puxe a barra da máquina com pegada pronada mantendo tronco estável
+565aef44-3008-4751-9bb0-6c50032ded5e,Remada baixa (pulley),costas,biceps,polia-baixa,1,pull-h,true,30,,lombar|ombro,Puxe a barra para o tronco mantendo ombros retraídos
+10ceb375-2807-43b5-8f8e-97707ae526c4,Remada cavalinho,costas,biceps,barra,2,pull-h,true,30,,lombar|ombro,Erga a barra em T mantendo tronco inclinado
+916f5a08-b458-4bd0-8928-3f89554b7114,Remada curvada (barra),costas,biceps,barra,2,pull-h,true,30,,lombar|ombro,Puxe a barra até o umbigo mantendo costas paralelas ao chão
+e4c4687c-a104-44ac-879b-b43d2640fcc5,Remada curvada (halteres),costas,biceps,halter,2,pull-h,true,30,,lombar|ombro,Puxe o haltere até o quadril mantendo tronco firme
+a8d8939a-b26e-4c4a-9b22-443a33a6eb21,Remada máquina,costas,biceps,mq-remada,1,pull-h,true,30,,lombar|ombro,Puxe a alavanca até o peito mantendo postura ereta
+5f525f4c-533e-43f9-ad99-52a6a3e91957,Remada unilateral (halter),costas,biceps,halter|banco,2,pull-h,true,30,,lombar|ombro,Puxe o haltere com um braço apoiado no banco
+4004783e-3364-4078-a7b9-44a314a082e6,Spinal twist deitado,costas,core,,1,core,false,20,,lombar|cervical,Gire o tronco deitado mantendo ombros no chão
+4097b6d4-1973-40f3-96bb-1f518ced7066,Spinal twist sentado,costas,core,,1,core,false,20,,lombar|cervical,Gire o tronco sentado mantendo coluna ereta
+ae0672c4-cf04-41f5-8217-b97861c530a5,Sumô deadlift high pull,costas,pernas|gluteos|core,barra,3,hinge,true,35,,joelho|lombar|ombro,Levante a barra com pernas afastadas e puxe até a altura dos ombros
+0562ee41-978a-401d-b85f-1989a434bf40,Thread the needle,costas,,,1,iso,false,30,,ombro|lombar,Desliza o braço entre as pernas mantendo o tronco firme
+7eba45bd-2a4d-462d-b232-c120822d23b5,Alongamento de antebraço (extensor),biceps,,,1,iso,false,20,,punho,Estende o braço e puxa os dedos para baixo
+8bc054ab-3020-4014-ae76-819038f04248,Alongamento de antebraço (flexor),biceps,,,1,iso,false,20,,punho,Flexiona o cotovelo e puxa a mão em direção ao antebraço
+147c62bf-0f75-4602-a81a-3adc48504eeb,Alongamento de bíceps na parede,biceps,,,1,iso,false,25,,ombro,Apoia a palma na parede e gira o corpo afastando o braço
+06870368-7b0f-47ef-9fbc-f009505f6f62,ROSCA DIRETA POLIA,biceps,,polia-baixa,2,pull-h,false,40,,ombro|punho,Mantém os cotovelos fixos e puxa a barra em direção ao peito
+fbb00793-d53d-48b3-bf24-79e7fadcbfea,Rosca 21 (barra),biceps,,barra,2,pull-h,false,45,,ombro|punho,Executa 7 repes de 0‑30° 7 de 30‑60° 7 de 60‑90°
+09c2e932-5972-4a50-b6dc-ea64c37fa68d,Rosca Scott (barra),biceps,,barra|banco-scott,2,pull-h,false,40,,ombro|punho,Apoia os braços no apoio e eleva a barra sem balançar
+8cc0b11b-2038-49d9-9bae-9c937fd4ec89,Rosca Scott (halter),biceps,,halter|banco-scott,2,pull-h,false,40,,ombro|punho,Segura o halter com pegada neutra e levanta controlado
+8879c535-21e5-4464-ab37-6a6f6decac40,Rosca alternada (halteres),biceps,,halter,2,pull-h,false,45,,ombro|punho,Alterna os braços mantendo o tronco estável
+c310721e-2893-4c18-81e1-898f6ed274d2,Rosca concentrada (halter),biceps,,halter|banco,2,pull-h,false,40,,ombro|punho,Apoia o braço na coxa e levanta o halter lentamente
+217a670f-1b8a-41c7-b054-c0aff1466065,Rosca direta (W),biceps,,barra,2,pull-h,false,45,,ombro|punho,Segura a barra em pegada supinada e eleva sem balançar
+24b0b894-3d42-427f-b900-9bc821004b15,Rosca direta (barra),biceps,,barra,2,pull-h,false,45,,ombro|punho,Segura a barra em pegada supinada e eleva sem balançar
+ee7ed537-b597-4181-b736-2af73bdf262b,Rosca direta (halteres),biceps,,halter,2,pull-h,false,45,,ombro|punho,Segura o halter com pegada supinada e eleva controlado
+2d4d5675-1085-4409-b039-c4bb989c6852,Rosca martelo (halteres),biceps,,halter,2,pull-h,false,45,,ombro|punho,Mantém pegada neutra e levanta o halter ao lado do corpo
+97ba757c-6baf-44f1-96be-b8c70088d3e6,Rosca no cabo (pulley),biceps,,polia-baixa,2,pull-h,false,40,,ombro|punho,Puxa a alça mantendo os cotovelos fixos ao lado
+521c84a8-d1ca-49d8-bb7f-a14347d8103d,Alongamento de peito no batente,peito,,,1,iso,false,30,,ombro,Estenda os braços contra o batente sentindo alongamento no peito
+927f9975-a129-4319-9db5-f20e81895eb0,Alongamento de peito no chão (cruz),peito,,,1,iso,false,30,,ombro,Deite-se e cruze os braços sobre o peito sentindo o alongamento
+ec6cd0e1-492a-40dd-9040-5491a69af5da,Crossover alto (cabos),peito,,crossover,2,push-h,false,30,,ombro,Ajuste a altura e puxe a alça mantendo os cotovelos levemente dobrados
+ea503f84-3f35-487d-ac7f-8817fb3e06bc,Crossover baixo (cabos),peito,,crossover,1,push-h,false,30,,ombro,Mantenha os cotovelos levemente dobrados ao puxar o cabo
+5bf4046e-2cc1-4785-b589-a7c7b0ae7b3b,Crucifixo inclinado (halteres),peito,,halter|banco-incl,1,push-h,false,30,,ombro,Execute o movimento controlado foco no peito
+43070d06-d058-4b6a-805a-5136f2e8b565,Crucifixo reto (halteres),peito,,halter|banco,1,push-h,false,30,,ombro,Abra os braços até sentir alongamento e volte controlado
+e27823f7-a7ab-46b2-aafe-d69d12c9c584,Doorway pec stretch,peito,,,1,iso,false,20,,ombro,Segure a porta e empurre suavemente para abrir o peito
+86cfefb4-a972-403c-a898-22762fa4641d,Flexão arqueira,peito,,,2,push-h,true,30,,ombro|punho,Desloque o peso para um lado e volte mantendo o tronco firme
+dcb1cff7-d86e-4fef-823a-9a01f9d29c2a,Flexão de braço,peito,,,2,push-h,true,30,,ombro|punho,Mantenha o corpo alinhado e desça até o peito quase tocar o chão
+7d340931-ef70-4367-af44-b22b6ddebbdf,Flexão declinada,peito,,banco,2,push-h,true,30,,ombro|punho,Coloque os pés no banco e faça a flexão mantendo o tronco reto
+ae97da67-24ce-4285-8ca0-68e96bea494d,Flexão diamante,peito,,,2,push-h,true,30,,ombro|punho,Junte as mãos formando um diamante e faça a flexão
+58ae08af-6f79-47ea-85e1-991e3cc073ff,Flexão explosiva,peito,,,2,push-h,true,30,,ombro|punho,Exploda ao subir impulsione o corpo para o ar
+029ad3e3-4e46-4255-a3a4-9c61bae3920b,Flexão inclinada,peito,,banco,2,push-h,true,30,,ombro|punho,Coloque as mãos no banco e faça a flexão mantendo o corpo reto
+8618db44-b444-45ae-9551-6ec20f8be6e0,Flexão pegada larga,peito,,,2,push-h,true,30,,ombro|punho,Abra bem as mãos e faça a flexão mantendo o peito aberto
+a9ad08ae-75ce-4181-8989-d2f85f74ad57,Mergulho em paralelas,peito,,paralelas,2,push-v,true,30,,ombro|punho,Desça até os cotovelos formarem ângulo de 90 graus e suba
+05a4dd59-1da6-4ac4-a6b5-a9dd980576c3,Peck deck (máquina),peito,,mq-crucifixo,1,iso,false,20,,ombro,Ajuste o assento segure as alças e una os braços contra a resistência
+2ad95840-e854-4fa4-ac6c-a52716ecf92b,Pullover (halter),peito,,halter|banco,1,pull-h,false,30,,ombro|lombar,Deite no banco segure o halter e leve-o atrás da cabeça
+4882657a-5801-4676-b9c2-46f11f03b9be,Supino declinado (barra),peito,,barra|banco,2,push-h,true,30,,ombro,Deite no banco declinado segure a barra e empurre para cima
+0e41ebd2-4328-4700-b0aa-2ea369e7c64f,Supino inclinado (barra),peito,triceps|ombros,barra|banco-incl,1,push-h,true,30,,ombro,Desça a barra até o peito e empurre explosivamente
+4dcc05e6-50c5-4536-b3ad-9f3dee9821dd,Supino inclinado (halteres),peito,triceps|ombros,halter|banco-incl,1,push-h,true,30,,ombro,Segure os halteres desça e empurre acima do peito
+e1e069de-b950-4ccb-b0f0-a4ee278a589c,Supino inclinado (máquina),peito,triceps|ombros,mq-supino,1,push-h,true,30,,ombro,Ajuste o assento e empurre a barra da máquina
+4b81e3e3-7cca-479f-8d44-06ef839ca12a,Supino reto (barra),peito,triceps|ombros,barra|banco,1,push-h,true,30,,ombro,Deite no banco e empurre a barra para cima
+0d149281-09a8-4525-8dcc-df085acbfd31,Supino reto (halteres),peito,triceps|ombros,halter|banco,1,push-h,true,30,,ombro,Segure halteres e empurre acima do peito no banco
+9a23be4c-d820-46a6-9ea0-264e98ce7256,Supino reto (máquina),peito,triceps|ombros,mq-supino,1,push-h,true,30,,ombro,Use a máquina de supino e empurre a alavanca
+c86a5d71-72ae-4dfb-b577-baaab469ae60,Wall chest stretch,peito,,,1,iso,false,20,,ombro,Encoste o peito na parede e abra os braços
+e86190b8-3500-4585-ae2a-4e68f3632267,Alongamento de panturrilha em pé,pernas,,,1,iso,false,30,,,Incline o tronco à frente  pressione o calcanhar contra a parede
+2c962fd7-4f8a-4572-92de-c9b3c208a803,Alongamento de posterior em pé,pernas,core,,1,iso,false,30,,lombar,Mantém a coluna reta e inclina o tronco à frente
+cf50599a-0121-4110-9ed8-2b7c4d47329b,Box jump,pernas,core,caixa,2,squat,true,15,,joelho|lombar,Desce em meio agachamento e explode para cima
+1944a071-6b96-40b3-b70b-72fe405edbda,Burpee,pernas,core|ombros,,2,push-h,true,30,,joelho|lombar|ombro|punho,Desce ao chão faz flexão e salta ao final
+a4522410-f807-477c-9408-e2bdfcb2950e,Burpee box jump-over,pernas,core|ombros,caixa,3,push-h,true,30,,joelho|lombar|ombro|punho,Faz burpee e salta sobre a caixa sem pausa
+2f5ac705-d10d-4963-aac8-1dde03df344e,Butterfly stretch,pernas,core,,1,iso,false,30,,,Mantém as solas dos pés juntas e pressiona os joelhos para baixo
+4ddd0a1b-face-46e6-9454-50a81abf04d0,Clean and jerk (barra),pernas,ombros|core,barra,3,hinge,true,40,,joelho|lombar|ombro|punho,Mantém a barra próxima ao corpo e explode para cima
+8d0ef6dd-7711-4f7f-b8e5-bd66543d4e2b,Farmer walk,pernas,core|ombros,halter,2,lunge,true,45,,lombar|ombro|punho,Mantém a postura ereta e anda com os halteres ao lado
+61ea2316-8aad-4fc3-8004-8f9169e8bbe9,Farmer walk (halteres),pernas,core|ombros,halter,2,lunge,true,45,,lombar|ombro|punho,Mantém a postura ereta e anda com os halteres ao lado
+46a78010-76f4-4cea-afc2-d7781f3e398c,Foam roll adutor,pernas,,rolo,1,iso,false,30,,,Rola a parte interna da coxa lentamente
+a246a9ef-5097-464a-8ee2-c9b4960fd28a,Foam roll glúteo,gluteos,,rolo,1,iso,false,30,,lombar,Rola o glúteo focando na área dolorida
+47b2a81d-6413-4670-b5f9-83015a8d231b,Foam roll panturrilha,pernas,,rolo,1,iso,false,30,,,Rola a panturrilha com o rolo sob a perna
+9b940540-5666-4820-9228-7915137cc803,Foam roll quadríceps,pernas,,rolo,1,iso,false,30,,,Rola o quadríceps com pressão moderada
+0d17c700-a0b1-4d61-a23a-6d8eafcc3323,Kettlebell swing,gluteos,core|pernas,kettlebell,2,hinge,true,40,,lombar|ombro,Impulsiona o kettlebell usando o quadril
+30b0a5dc-e94c-4f6d-ac70-bcf1b9098acc,Kettlebell swing russo,gluteos,core|pernas,kettlebell,2,hinge,true,40,,lombar|ombro,Mantém o kettlebell entre as pernas e impulsiona com o quadril
+df74f593-783f-4445-9de8-14825edfe0ae,Mobilidade de quadril (90/90),gluteos,core|pernas,,1,iso,false,30,,joelho|lombar,Mantém a posição 90/90 sentada sentindo alongamento nos quadris
+83797b40-54bc-4fef-bcf7-29d4b1a12369,Power clean,pernas,costas|ombros|core,barra,3,pull-h,true,45,,lombar|joelho|ombro|punho,Explode o barra com extensão completa dos quadris
+24d4aad4-8a6d-4d67-b586-2293f1dd80ad,Subida na corda,costas,ombros|pernas|core,corda,3,pull-v,true,45,,ombro|punho|lombar,Puxa a corda usando braços e pernas sem balançar
+fc3d84ff-fe8e-4f4e-8843-a27dea026ff3,Thruster,pernas,ombros|core,barra,3,push-h,true,40,,joelho|ombro|lombar,Desce em agachamento e explode para cima empurrando a barra
+82fe2a51-6641-4f95-8365-ef2367094017,Thruster (barra),pernas,ombros|core,barra,3,push-h,true,40,,joelho|ombro|lombar,Desce em agachamento e empurra a barra acima da cabeça
+9189bae4-381f-4f81-80f2-972a748daf5c,Wall ball,pernas,ombros|core,medicine-ball,2,push-h,true,35,,joelho|ombro|lombar,Agacha e lança a bola para o alto usando força das pernas
+e34866d5-eddc-4af2-abc9-05a9d0c38a38,ABDUÇÃO,pernas,gluteos,abdutora,1,iso,false,30,,,Eleva a perna lateralmente mantendo o tronco firme
+7c3dd636-5659-4b51-a88f-1424ebe2156d,ADUÇÃO,pernas,gluteos,adutora,1,iso,false,30,,,Aproxima a perna ao centro mantendo o tronco estável
+5709a9f1-69d9-4b3d-b54a-1686d4a173f4,AGACHAMENTO PÊNDULO,pernas,core|gluteos,,2,squat,false,40,,joelho|lombar,Desce em agachamento e balança o tronco sem perder postura
+83369c02-d162-49ab-a1d7-aa707433139c,Afundo (halteres),pernas,gluteos|core,halter,2,lunge,true,35,,joelho|lombar,Dá um passo à frente e baixa até o joelho quase tocar o chão
+65d7cd4a-fa73-488b-8800-3314371b3606,Afundo (peso corporal),pernas,gluteos|core,,1,lunge,true,30,,joelho|lombar,Avança com o pé e flexiona o joelho mantendo o tronco ereto
+c762901b-fd84-4b3e-99f7-46880c8cabdf,Afundo com salto,pernas,gluteos|core,,2,lunge,true,30,,joelho|lombar,Salta e troca as pernas no ar aterrissando em afundo
+39805ff6-bdf4-4860-8720-f61389682d2d,Agachamento búlgaro (halteres),pernas,gluteos|core,halter|banco,2,squat,true,35,,joelho|lombar,Coloca o pé traseiro no banco e agacha mantendo o tronco ereto
+58e9a3c4-5eb9-4ba4-86b2-c21ccb9326a2,Agachamento com salto,pernas,gluteos|core,,1,squat,true,30,,joelho|lombar,Desça rápido e explode para cima mantendo postura
+13eea8a8-3ad3-4112-bb1e-0c4ace681544,Agachamento frontal (barra),pernas,gluteos|core,barra|banco,2,squat,true,30,,joelho|lombar|ombro,Mantenha peito erguido e barra alinhada sobre ombros
+c556316d-5fbe-483e-b769-dfba8720376b,Agachamento livre (barra),pernas,gluteos|core,barra|banco,2,squat,true,30,,joelho|lombar|ombro,Desça até coxa paralela mantendo coluna neutra
+19d1ecb7-9a74-41aa-b934-29d8b54f281e,Agachamento livre (peso corporal),pernas,gluteos|core,,1,squat,true,30,,joelho|lombar,Desça controlado até coxa paralela e volte
+d72b0cfa-de97-4a89-a2d9-f3fe9a41ff9d,Alongamento IT band em pé,pernas,,,1,iso,false,30,,,Cruze perna atrás e incline tronco mantendo quadril alinhado
+c3090f75-9529-4261-b517-2eb5435d2ac7,Alongamento de adutor (borboleta),pernas,,,1,iso,false,30,,,Junte solas dos pés e pressione joelhos para baixo
+d5d6cbac-6cb2-4720-8f89-a77c6c354803,Alongamento de adutor em pé (afastado),pernas,,,1,iso,false,30,,,Afaste perna e incline tronco lateralmente mantendo quadril
+8e009ef5-1b43-402b-9b50-49816d7d6cd1,Alongamento de glúteo deitado (figure 4),pernas,gluteos,,1,iso,false,30,,,Cruze perna sobre joelho oposto e puxe suavemente
+e91bca71-8473-4128-8199-c321d276d2a5,Alongamento de glúteo em pé,pernas,gluteos,,1,iso,false,30,,,Segure tornozelo e puxe calcanhar em direção glúteo
+6c1626ab-b61d-4692-b73a-7bdd5356ebf0,Alongamento de isquiotibiais em pé,pernas,,,1,iso,false,30,,,Mantenha perna reta e incline tronco mantendo costas
+2cf692e4-50f3-4c3e-9a15-8586726104b4,Alongamento de isquiotibiais sentado,pernas,,,1,iso,false,30,,,Sente e alcance pé mantendo perna estendida
+8f6006d0-2601-4079-8b9b-586cf1240091,Alongamento de panturrilha contra parede,pernas,,,1,iso,false,30,,,Coloque as mãos na parede e empurre calcanhar ao chão
+39672f81-bc19-41af-8611-d8cf7b555a9c,Alongamento de panturrilha no step,pernas,,caixa,1,iso,false,30,,,Fique na borda do step e deixe calcanhar cair
+48d692da-87f6-4be6-a1ae-61d4ccfd35e7,Alongamento de quadríceps deitado,pernas,,,1,iso,false,30,,,Deite de lado e puxe tornozelo em direção glúteo
+6212ea1f-9785-4796-b541-f4f60f54743e,Alongamento de quadríceps em pé,pernas,,,1,iso,false,30,,,Segure tornozelo e traga calcanhar ao glúteo mantendo equilíbrio
+3f3ac620-c7ba-459b-b999-bef6250da4bb,Alongamento piriforme,pernas,,,1,iso,false,30,,joelho,Mantenha a coluna neutra e alongue suavemente
+479c8738-3416-400f-a156-b95fc5ff499e,Avanço (barra),pernas,,barra,2,lunge,true,45,,joelho|lombar,Desça até o joelho formar ângulo de 90 graus
+87f4d04c-1467-4256-add6-36a3dd4d61de,Cadeira abdutora,pernas,,abdutora,1,iso,false,35,,joelho,Empurre a perna contra a resistência mantendo o tronco firme
+40527315-505c-4f26-8ffc-0ed27f413faa,Cadeira adutora,pernas,,adutora,1,iso,false,35,,joelho,Aperte a perna interna contra a máquina sem balançar
+f072bda7-4b57-4231-8a4b-99380bf6142e,Cadeira extensora,pernas,,extensora,1,iso,false,35,,joelho,Estenda totalmente o joelho controlando o retorno
+4e3c7624-66db-4f69-9643-6503495bbdab,Cadeira flexora,pernas,,flexora,1,iso,false,35,,joelho,Flexione o joelho trazendo o calcanhar próximo ao glúteo
+4aea9083-b850-4b59-a5e0-d8ec42773741,EXTENSÃO,pernas,,extensora,1,iso,false,35,,joelho,Realize a extensão completa do joelho sem travar
+486b3c44-b77e-44fd-9690-6f9aacd4f35a,FLEXÃO CADEIRA,pernas,,flexora,1,iso,false,35,,joelho,Execute o movimento de flexão mantendo o tronco ereto
+67212069-539d-4365-97f9-ecbdfa4e6fe9,FLEXÃO MESA,pernas,,leg-press,2,squat,false,45,,joelho|lombar,Empurre a plataforma sem bloquear os joelhos no topo
+6d8ca608-8522-460b-99d8-50e0ade715bf,Frog pose (sapo),pernas,,,1,iso,false,30,,joelho,Mantenha os joelhos alinhados ao abrir os quadris
+214c534d-6881-477a-9270-b21a9ff2f7dc,GLÚTEO MÁQUINA,pernas,,gluteo-mq,1,iso,false,35,,joelho,Pressione o calcanhar e contraia o glúteo ao empurrar
+ead435fe-8b92-44e9-9e3e-9f76e57944ea,Goblet squat,pernas,,kettlebell,2,squat,true,45,,joelho|lombar,Segure o kettlebell próximo ao peito e agache mantendo a coluna reta
+7fb1f1d4-3165-489f-9ca8-a20a8d5f9b40,GÊMEOS PÊNDULO,pernas,,,1,iso,false,30,,joelho,Balance o peso e mova o tornozelo suavemente
+5159d02b-9310-4846-b3a0-5d691e0715b3,Hack squat,pernas,,hack,2,squat,true,45,,joelho|lombar,Desça controlado e empurre com os calcanhares
+8e68b865-2306-4a6c-9a8c-c76d2e7a0acd,Hip flexor lunge stretch,pernas,,,1,iso,false,30,,joelho,Alongue o quadril mantendo o joelho levemente flexionado
+eacfb37d-7efc-45b6-b70d-f5e980f2b6d9,Leg press 45°,pernas,,leg-press,1,squat,true,30,,joelho|lombar,Empurre a plataforma mantendo as costas firmes
+46978a48-622c-4182-9f0a-83af824dfbf0,Leg press horizontal,pernas,,leg-press,1,squat,true,30,,joelho|lombar,Empurre a plataforma mantendo postura ereta
+1ea7f6aa-f8bf-4b9c-9041-41f8ca228782,Lizard pose (lagarto),pernas,,,1,iso,false,30,,,Mantenha o tronco alinhado e estenda a perna
+b6fa15de-41a0-45eb-8907-0ce91ada6bff,Mesa flexora,pernas,,flexora,1,iso,false,30,,joelho,Contraia os glúteos ao levantar o peso
+53b97ccc-a2f9-44ab-8359-91bf994802f2,Panturrilha em pé (máquina),pernas,,panturrilha,1,iso,false,30,,,Eleve o calcanhar mantendo o corpo ereto
+d0f340ce-1cf9-4b67-a635-65dd8ec4ebd3,Panturrilha no leg press,pernas,,leg-press,1,iso,false,30,,joelho|lombar,Faça a extensão usando a perna no leg press
+3d39ba11-3c49-4cc7-98fd-3c7f62447edb,Panturrilha sentado (máquina),pernas,,panturrilha,1,iso,false,30,,,Eleve o calcanhar sentado mantendo postura
+f77323e0-ffb1-4f57-910a-2186dac72833,Pigeon pose,pernas,,,1,iso,false,30,,joelho,Desça o quadril até sentir alongamento
+71c6e1b3-3136-4b6b-9d73-32d5945f33b1,Pistol squat,pernas,,,2,squat,true,30,,joelho|lombar,Desça controlado mantendo equilíbrio
+b9c61d69-4254-4bb9-8d86-36372b028a21,Squat hold (agachamento profundo),pernas,,,1,squat,false,30,,joelho|lombar,Segure a posição profunda mantendo tronco reto
+4dab23cc-d361-49fe-86a1-e86223420a19,Step-up (peso corporal),pernas,,caixa,1,lunge,true,30,,joelho|lombar,Suba completamente alternando as pernas
+83a9a9d7-96ef-47d1-b67f-815cb13fcba2,Stiff (barra),pernas,,barra,2,hinge,true,30,,lombar|joelho,Mantenha a barra próxima e costas neutras
+f4720f36-8ab9-42a1-8f5b-94abce9c95e2,Stiff (halteres),pernas,,halter,2,hinge,true,30,,lombar|joelho,Mantenha os halteres ao lado e costas retas
+13090b1a-5a57-43a5-a552-4fb93546c776,Alongamento de tríceps acima da cabeça,triceps,,,1,iso,false,20,,ombro,Eleve o braço e segure o cotovelo com a outra mão
+fb21406b-cb9c-44b4-bcea-21bb2a6f23d0,Alongamento de tríceps com toalha,triceps,,,1,iso,false,20,,ombro,Segure a toalha atrás das costas e puxe o cotovelo
+6edf2015-23ca-45d1-8e7b-bc6615f81add,Mergulho (peso corporal),triceps,peito|ombros,paralelas,2,push-h,true,30,,ombro|punho,Desça o corpo até os cotovelos dobrados e empurre para cima
+ef57062a-cda0-4df1-a13d-53a79058bd01,Mergulho em máquina assistida,triceps,peito|ombros,paralelas,2,push-h,true,30,,ombro|punho,Ajuste a carga e empurre para cima mantendo cotovelos próximos
+ae02b169-8a6c-4b5c-89de-15b92dfe2e09,Mergulho em paralelas (calistenia),triceps,peito|ombros,paralelas,2,push-h,true,30,,ombro|punho,Segure as paralelas  desça e suba usando os tríceps
+995d7975-329a-426a-95b6-eb003d995ea9,Mergulho no banco,triceps,peito|ombros,banco,1,push-h,true,30,,ombro|punho,Coloque as mãos no banco  pés no chão e empurre para cima
+028eb582-c7d1-4300-ad16-4f851c1e73b0,Tríceps coice (halter),triceps,,halter,1,iso,false,30,,ombro|punho|lombar,Incline o tronco e estenda o halter para trás
+58a343cc-8b20-4252-8f53-3538bbacace6,Tríceps corda (pulley),triceps,ombros,polia-alta,1,push-h,false,30,,ombro|punho,Puxe a corda para baixo mantendo cotovelos fixos
+9809bf65-9ae5-4662-8a9a-8e4708698514,Tríceps francês (halter),triceps,ombros,halter|banco,1,iso,false,30,,ombro|punho|lombar,Segure o halter atrás da cabeça e estenda os cotovelos
+bc1d9114-e914-4fd1-b346-f0c82f71eb50,Tríceps pulley (barra),triceps,,polia-alta,1,push-v,false,30,,ombro|punho,Mantenha cotovelos fixos e empurre a barra para baixo
+c6e010bf-7a02-454a-9b1d-2080f9cdab27,Tríceps testa (barra),triceps,,barra|banco,1,push-h,false,30,,ombro|punho,Mantenha braços estáveis e desça a barra até a testa
+5daae6fa-cfef-4f0a-940b-575bcf61f9da,Tríceps testa (halter),triceps,,halter|banco,1,push-h,false,30,,ombro|punho,Segure halteres deite e leve-os à altura da testa

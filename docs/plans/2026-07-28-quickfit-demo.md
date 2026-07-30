@@ -3015,6 +3015,270 @@ Revise, valide, semeie. A demo já funciona com a onda 1; a onda 2 dá profundid
 
 ---
 
+### Task 9b: Campo `kind` — o motor distingue treino de mobilidade
+
+Achado ao rodar o motor com o catálogo real de 153 exercícios, depois da classificação. A ficha saía assim:
+
+```
+Peito + Tríceps:  Alongamento de tríceps com toalha   3x8-12
+                  Wall chest stretch                  3x8-12
+Perna completa:   Foam roll quadríceps                3x8-12
+                  Foam roll glúteo                    3x8-12
+```
+
+Ninguém faz três séries de oito a doze repetições de um alongamento. E pior: um input de hipertrofia para pernas com `avoid: ['joelho','lombar']` devolvia **quatro alongamentos e nenhum exercício de força** — seguro e inútil.
+
+Não é erro de classificação, e nenhuma edição de célula conserta: o esquema `3x8-12` vem do **objetivo**, não do exercício. O motor não tem o conceito de "isto é alongamento".
+
+São 60 dos 256 exercícios (23%). E o `modality` da origem já separa quase perfeitamente:
+
+| modality do Persona Fit | treino | mobilidade |
+|---|---|---|
+| `generico` | 7 | **53** |
+| `musculacao` | 146 | 1 |
+| `calistenia` | 29 | 0 |
+| `crossfit` | 20 | 0 |
+
+**Files:**
+- Modify: `packages/core/src/engine/types.ts` (tipo `Kind`, campo em `Exercise`)
+- Modify: `packages/core/src/engine/filter.ts` (uma cláusula)
+- Modify: `packages/core/src/engine/filter.test.ts` (fixture + 2 testes)
+- Modify: `packages/core/src/engine/__fixtures__/catalog.ts` (fixture)
+- Modify: `packages/core/src/engine/generate.property.test.ts` (nada, se o fixture bastar)
+- Modify: `packages/core/src/catalog/schema.ts` (coluna e validação)
+- Modify: `catalog/exercises.csv` e `catalog/exercises.classified.csv` (coluna nova)
+- Modify: `scripts/classify.ts` (emite `kind` a partir de `modality`)
+- Create: `supabase/migrations/20260729000000_exercise_kind.sql`
+- Modify: `apps/totem/src/data/loadCatalog.ts` (mapeia a coluna)
+- Modify: `scripts/seed-catalog.ts` (envia a coluna)
+
+**Interfaces:**
+- Produces: `type Kind = 'treino' | 'mobilidade'` em `@quickfit/core/engine`; `Exercise.kind`
+
+- [ ] **Step 1: O tipo**
+
+Em `packages/core/src/engine/types.ts`, antes de `Exercise`:
+
+```ts
+/**
+ * Alongamento e liberação não são "exercício com séries menos intenso": são
+ * outra coisa. Prescrever "Foam roll quadríceps 3x8-12" numa ficha de
+ * hipertrofia é o que acontece quando o motor não sabe distinguir.
+ */
+export type Kind = 'treino' | 'mobilidade';
+```
+
+E o campo em `Exercise`, imediatamente antes de `contraindications`:
+
+```ts
+  kind: Kind;
+```
+
+- [ ] **Step 2: A cláusula no filtro**
+
+Em `packages/core/src/engine/filter.ts`, dentro do `catalog.filter`, **antes** da checagem de nível:
+
+```ts
+    // Mobilidade é o único objetivo que prescreve alongamento; os outros quatro
+    // prescrevem treino. Sem esta cláusula o motor mistura os dois, e a ficha
+    // sai com "Foam roll quadríceps 3x8-12".
+    const querMobilidade = input.goal === 'mobilidade';
+    if (querMobilidade !== (ex.kind === 'mobilidade')) return false;
+```
+
+A equivalência é de mão dupla de propósito: objetivo mobilidade traz **só** mobilidade, e os outros quatro trazem **só** treino. Um professor poria um alongamento no fim de um treino de hipertrofia, mas o esquema é uniforme por sessão — o alongamento sairia com `3x8-12` de novo. Enquanto o esquema for por objetivo e não por exercício, a separação estrita é a única que não mente na ficha.
+
+- [ ] **Step 3: Os fixtures**
+
+Em `packages/core/src/engine/filter.test.ts`, a fábrica `ex()` ganha o default:
+
+```ts
+  level: 1, pattern: 'iso', isCompound: false, avgSecPerSet: 30, kind: 'treino',
+```
+
+E em `packages/core/src/engine/__fixtures__/catalog.ts`, a fábrica `e()`:
+
+```ts
+  level: 1, pattern, isCompound, avgSecPerSet: 30, kind: 'treino',
+```
+
+Os 24 exercícios do fixture são todos de treino, então o default resolve todos. **Não** acrescente exercício de mobilidade ao fixture: os testes de `generate` medem seleção de treino, e misturar mobilidade ali muda o que eles afirmam.
+
+- [ ] **Step 4: Dois testes no filtro**
+
+Em `packages/core/src/engine/filter.test.ts`, no `describe('eligible')`:
+
+```ts
+  it('objetivo mobilidade traz só alongamento, e nunca treino', () => {
+    const cat = [
+      ex({ id: 'supino', kind: 'treino' }),
+      ex({ id: 'along-peito', kind: 'mobilidade' }),
+    ];
+    const out = eligible(cat, input({ goal: 'mobilidade' }));
+    expect(out.map((e) => e.id)).toEqual(['along-peito']);
+  });
+
+  it('os outros quatro objetivos nunca trazem alongamento', () => {
+    const cat = [
+      ex({ id: 'supino', kind: 'treino' }),
+      ex({ id: 'along-peito', kind: 'mobilidade' }),
+    ];
+    // O defeito que este teste tranca: "Foam roll quadríceps 3x8-12" numa
+    // ficha de hipertrofia, medido com o catálogo real de 153 exercícios.
+    for (const goal of ['hipertrofia', 'emagrecimento', 'resistencia', 'forca'] as const) {
+      expect(eligible(cat, input({ goal })).map((e) => e.id)).toEqual(['supino']);
+    }
+  });
+```
+
+- [ ] **Step 5: Rodar e ver falhar, depois passar**
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+npm test -- packages/core/src/engine/filter.test.ts
+```
+
+Escreva os testes do Step 4 **antes** da cláusula do Step 2 e confirme que falham. Um teste de regressão que ninguém viu falhar não é teste de regressão.
+
+- [ ] **Step 6: A coluna no schema do CSV**
+
+Em `packages/core/src/catalog/schema.ts`, no `exerciseSchema`, antes de `contraindications`:
+
+```ts
+  kind: z.enum(['treino', 'mobilidade'], { message: 'kind precisa ser treino ou mobilidade' }),
+```
+
+E no `candidate` de `parseExercisesCsv`, junto dos outros campos:
+
+```ts
+      kind,
+```
+
+O header de `exercises.csv` ganha `kind` entre `pattern` e `is_compound`, e o destructuring das colunas em `parseExercisesCsv` precisa acompanhar a **mesma ordem** — a lista de nomes é posicional, então errar a ordem embaralha todos os campos seguintes em silêncio.
+
+- [ ] **Step 7: O `kind` nos CSVs**
+
+O `modality` da origem é a fonte:
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+python3 - <<'PY'
+import csv
+raw={r['id']:r for r in csv.DictReader(open('catalog/exercises.raw.csv',encoding='utf-8'))}
+for arq in ('catalog/exercises.classified.csv','catalog/exercises.csv'):
+    rows=list(csv.DictReader(open(arq,encoding='utf-8')))
+    if 'kind' in rows[0]: print(f"{arq}: ja tem kind"); continue
+    cols=list(rows[0].keys()); cols.insert(cols.index('is_compound'),'kind')
+    n={'treino':0,'mobilidade':0}
+    for r in rows:
+        o=raw.get(r['id'])
+        r['kind']='mobilidade' if (o and o['modality']=='generico') else 'treino'
+        n[r['kind']]+=1
+    with open(arq,'w',encoding='utf-8',newline='') as f:
+        w=csv.DictWriter(f,fieldnames=cols); w.writeheader(); w.writerows(rows)
+    print(f"{arq}: {n['treino']} treino, {n['mobilidade']} mobilidade")
+PY
+npm run validate:catalog
+```
+
+- [ ] **Step 8: O `classify.ts` passa a emitir `kind`**
+
+No `scripts/classify.ts`, a linha do CSV ganha o campo na posição certa (entre `pattern` e `is_compound`), derivado do `modality` da origem e **não** do LLM:
+
+```ts
+      limpa(i.pattern),
+      r.modality === 'generico' ? 'mobilidade' : 'treino',
+      String(composto),
+```
+
+Determinístico de propósito: o `modality` já separa 53 dos 54 casos, e pedir ao LLM o que o dado já responde é convidar divergência.
+
+- [ ] **Step 9: A migration**
+
+`supabase/migrations/20260729000000_exercise_kind.sql`:
+
+```sql
+-- Alongamento e liberação não são exercício com séries. Sem esta coluna o
+-- motor prescreve "Foam roll quadríceps 3x8-12" numa ficha de hipertrofia.
+alter table public.exercises
+  add column if not exists kind text not null default 'treino'
+  check (kind in ('treino', 'mobilidade'));
+
+comment on column public.exercises.kind is
+  'treino = exercício com séries; mobilidade = alongamento ou liberação, só no objetivo mobilidade';
+```
+
+O `default 'treino'` existe para a coluna entrar em tabela já populada sem quebrar. O seed sobrescreve com o valor real.
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+npm run db:push
+```
+
+- [ ] **Step 10: `loadCatalog` e o seed**
+
+Em `apps/totem/src/data/loadCatalog.ts`, o `select` ganha `kind`, o tipo `ExerciseRow` ganha `kind: 'treino' | 'mobilidade'`, e o mapeamento ganha `kind: row.kind`.
+
+Em `scripts/seed-catalog.ts`, o objeto enviado a `exercises` ganha `kind: e.kind`.
+
+- [ ] **Step 11: O gate, e a prova no catálogo real**
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+npm test && npm run typecheck && npm run build && npm run validate:catalog
+```
+
+**117 testes** (115 + 2 novos). Depois a prova que motivou a task:
+
+```bash
+npx tsx -e "
+import { readFileSync } from 'node:fs';
+import { parseEquipmentCsv, parseExercisesCsv } from './packages/core/src/catalog/schema';
+import { generateWorkout } from './packages/core/src/engine';
+const eq = parseEquipmentCsv(readFileSync('catalog/equipment.csv','utf8'));
+const cat = parseExercisesCsv(readFileSync('catalog/exercises.csv','utf8'), new Set(eq.map(e=>e.id)));
+const gen = (goal, groups, minutes) => generateWorkout({goal,groups,minutes,level:3,availableEquipment:eq.map(e=>e.id),avoid:[],seed:42}, cat);
+for (const [g,gr] of [['hipertrofia',['peito','triceps']],['hipertrofia',['pernas','gluteos']],['mobilidade',['pernas','costas']]]) {
+  const w = gen(g, gr, 45);
+  const mob = w.items.filter(i=>i.exercise.kind==='mobilidade').length;
+  console.log(g, gr.join('+'), '->', w.items.length, 'itens,', mob, 'de mobilidade,', w.scheme.sets+'x'+w.scheme.reps);
+}
+"
+```
+
+Esperado: os dois de hipertrofia com **zero** de mobilidade, e o de mobilidade com itens e esquema `2x30-45s`.
+
+- [ ] **Step 12: Semear e ver no navegador**
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+npm run seed:catalog
+```
+
+Abra `http://localhost:5173`, passe o PAR-Q e escolha "Peito + Tríceps". A ficha não deve ter nenhum alongamento.
+
+- [ ] **Step 13: Commit**
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+git add -A
+git commit -m "feat(engine): campo kind separa treino de mobilidade
+
+O motor prescrevia 'Foam roll quadriceps 3x8-12' numa ficha de hipertrofia, e
+um input com avoid joelho+lombar devolvia so alongamento. Sao 60 dos 256
+exercicios, e o modality da origem ja separava 53 deles.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
 ### Task 10: Schema do Supabase e RLS
 
 Sem login no totem, tudo passa pela role `anon`. Escrever as policies erradas aqui expõe a telemetria de todas as academias.
