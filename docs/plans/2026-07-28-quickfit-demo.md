@@ -2086,12 +2086,26 @@ describe('parseExercisesCsv', () => {
   });
 
   it('aponta o número da linha no erro', () => {
+    // A linha é DERIVADA do arquivo, não fixada em 5. Hoje o CSV tem 4 linhas
+    // físicas e a linha ruim cai na 5 — mas a task 9 enche o catálogo com 269
+    // exercícios, e aí a mesma linha ruim cai na 271. Um `/linha 5/` fixo
+    // quebraria nessa task sem que nada em `schema.ts` tivesse regredido.
+    const linhaEsperada = exCsv.trim().split('\n').length + 1;
     const bad = exCsv + 'x,X,inexistente,,barra,1,iso,false,20,,,\n';
     try {
       parseExercisesCsv(bad, known());
       expect.unreachable('deveria ter lançado');
     } catch (e) {
-      expect((e as CatalogError).message).toMatch(/linha 5/);
+      expect((e as CatalogError).message).toMatch(new RegExp(`linha ${linhaEsperada}`));
+    }
+  });
+
+  it('rejeita is_compound que não seja exatamente true ou false', () => {
+    // "1", "ture", "True" e célula vazia viravam `false` em silêncio, e este
+    // campo decide a ordem dos exercícios na sessão.
+    for (const v of ['1', 'ture', 'True', '']) {
+      const bad = exCsv + `z,Z,peito,,barra,1,iso,${v},30,,,\n`;
+      expect(() => parseExercisesCsv(bad, known())).toThrow(/is_compound/);
     }
   });
 });
@@ -2142,21 +2156,35 @@ export type EquipmentRow = { id: string; name: string; category: (typeof CATEGOR
 
 const equipmentSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/, 'id deve ser kebab-case minúsculo'),
-  name: z.string().min(1),
+  name: z.string().min(1, 'name não pode ficar vazio'),
   category: z.enum(CATEGORIES, { message: 'categoria inválida' }),
 });
 
 const exerciseSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/, 'id deve ser kebab-case minúsculo'),
-  name: z.string().min(1),
+  name: z.string().min(1, 'name não pode ficar vazio'),
   primary: z.enum(GROUPS, { message: 'primary inválido' }),
   secondary: z.array(z.enum(GROUPS, { message: 'secondary inválido' })),
   equipment: z.array(z.string()),
-  level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  // Cadeia de number em vez de union de literais: `z.union([...], { message })`
+  // NÃO aplica a mensagem custom em erro de união — o zod devolve "Invalid
+  // input" em inglês, testado. Com min/max a faixa é a mesma e a mensagem sai
+  // em pt-BR. O `as Exercise` no fim da função reconcilia `number` com `Level`.
+  level: z
+    .number({ message: 'level precisa ser um número' })
+    .int('level precisa ser inteiro')
+    .min(1, 'level precisa ser 1, 2 ou 3')
+    .max(3, 'level precisa ser 1, 2 ou 3'),
   pattern: z.enum(PATTERNS, { message: 'pattern inválido' }),
   isCompound: z.boolean(),
-  avgSecPerSet: z.number().int(),
-  durationSec: z.number().int().positive().optional(),
+  avgSecPerSet: z
+    .number({ message: 'avg_sec_per_set precisa ser um número' })
+    .int('avg_sec_per_set precisa ser inteiro'),
+  durationSec: z
+    .number({ message: 'duration_sec precisa ser um número' })
+    .int('duration_sec precisa ser inteiro')
+    .positive('duration_sec precisa ser positivo')
+    .optional(),
   contraindications: z.array(z.enum(CONTRAS, { message: 'contraindicação inválida' })),
   cue: z.string().optional(),
 });
@@ -2206,6 +2234,19 @@ export function parseExercisesCsv(text: string, knownEquipment: Set<string>): Ex
       id, name, primary, secondary, equipment, level, pattern,
       isCompound, avgSecPerSet, durationSec, contraindications, cue,
     ] = cols;
+
+    // `isCompound === 'true'` sozinho aceita QUALQUER coisa e devolve false em
+    // silêncio: "True", "TRUE", "1", "ture", célula vazia — todos viravam
+    // `false` sem erro. E `isCompound` é o campo que decide a ORDEM do treino
+    // (composto no primeiro terço, task 5), então um typo aqui reordena a
+    // sessão inteira sem ninguém notar. O `z.boolean()` do schema não pegava
+    // porque valida DEPOIS da coerção, quando o valor já é booleano.
+    if (isCompound !== 'true' && isCompound !== 'false') {
+      throw new CatalogError(
+        `linha ${line} (${id}): is_compound = "${isCompound}", ` +
+          `precisa ser exatamente "true" ou "false" (minúsculo).`,
+      );
+    }
 
     const candidate = {
       id, name, primary,
@@ -2265,7 +2306,7 @@ cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 npm test -- packages/core/src/catalog/schema.test.ts
 ```
 
-Esperado: PASS, 14 testes.
+Esperado: PASS, 15 testes.
 
 - [ ] **Step 6: Script de validação para o CI**
 
@@ -2279,6 +2320,18 @@ try {
   const equip = parseEquipmentCsv(readFileSync('catalog/equipment.csv', 'utf8'));
   const known = new Set(equip.map((e) => e.id));
   const ex = parseExercisesCsv(readFileSync('catalog/exercises.csv', 'utf8'), known);
+
+  // Arquivo vazio ou só com header parseia para `[]` sem erro — não há linha
+  // para violar a contagem de colunas. Um merge ruim, um `git checkout` errado
+  // ou um editor que salvou vazio passariam pelo portão com
+  // "OK — 0 equipamentos, 0 exercícios" e exit 0. O piso mora aqui e não no
+  // parser porque os testes parseiam strings pequenas de propósito.
+  if (equip.length === 0) {
+    throw new Error('catalog/equipment.csv não tem nenhuma linha. Arquivo truncado?');
+  }
+  if (ex.length === 0) {
+    throw new Error('catalog/exercises.csv não tem nenhuma linha. Arquivo truncado?');
+  }
 
   const porGrupo = new Map<string, number>();
   for (const e of ex) porGrupo.set(e.primary, (porGrupo.get(e.primary) ?? 0) + 1);
