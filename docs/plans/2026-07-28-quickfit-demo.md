@@ -176,7 +176,10 @@ quickfit/
 - Create: `vitest.config.ts`
 - Create: `packages/core/src/engine/index.ts`
 - Create: `apps/totem/tailwind.config.js`, `apps/totem/postcss.config.js`
+- Create: `apps/totem/src/vite-env.d.ts`
 - Test: `packages/core/src/engine/smoke.test.ts`
+
+**O gate desta tarefa são três comandos, não dois:** `npm test`, `npm run typecheck` **e** `npm run build`. O `build` entra porque ele usa um compilador diferente do `typecheck` (o `typescript` de `apps/totem`, não o da raiz) — foi o único que pegou o `baseUrl` deprecado e os tipos ambient faltando na primeira execução desta tarefa.
 
 **Interfaces:**
 - Consumes: a casca do monorepo já versionada
@@ -248,15 +251,16 @@ Tailwind v3 de propósito: a v4 mudou a configuração de tema para CSS-first e 
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "types": ["vitest/globals", "node"],
-    "baseUrl": ".",
     "paths": {
-      "@quickfit/core/engine": ["packages/core/src/engine/index.ts"],
-      "@quickfit/core/catalog": ["packages/core/src/catalog/schema.ts"],
-      "@quickfit/core/theme": ["packages/core/src/theme/index.ts"]
+      "@quickfit/core/engine": ["./packages/core/src/engine/index.ts"],
+      "@quickfit/core/catalog": ["./packages/core/src/catalog/schema.ts"],
+      "@quickfit/core/theme": ["./packages/core/src/theme/index.ts"]
     }
   }
 }
 ```
+
+**Sem `baseUrl`, de propósito.** O TypeScript 6 emite `TS5101` (`baseUrl` está deprecado) e o 7 removeu a opção. Desde o TS 4.4 o `paths` funciona sozinho: os caminhos passam a ser resolvidos em relação ao arquivo que os **declara** — este `tsconfig.base.json`, que está na raiz. Daí o `./` na frente de cada um. O efeito é idêntico ao do `baseUrl: "."`, e sobrevive à próxima major.
 
 `tsconfig.json` (na raiz — é o que `npm run typecheck` usa):
 
@@ -277,6 +281,25 @@ Substitua o `tsconfig.json` que o Vite gerou em `apps/totem/`:
 ```
 
 E apague `apps/totem/tsconfig.node.json` e `apps/totem/tsconfig.app.json` se o Vite os gerou — o `tsconfig.base.json` cobre os dois casos, e três arquivos de config para um app pequeno é cerimônia.
+
+Crie também `apps/totem/src/vite-env.d.ts`:
+
+```ts
+/// <reference types="vite/client" />
+```
+
+Uma linha, e ela é obrigatória. Sem ela o `tsc` não conhece os tipos ambient do Vite e recusa os imports com efeito colateral de CSS (`import './index.css'`) com `TS2882`. Os templates antigos do `npm create vite` geravam este arquivo; o atual não gera mais — então ele precisa ser criado à mão.
+
+**Uma única versão de `typescript` no repositório.** O Vite instala um `typescript` próprio em `apps/totem`, e o `build` do totem (`tsc -b && vite build`) usa esse, não o da raiz. Se as duas versões divergirem, `npm run typecheck` (raiz) pode ficar verde enquanto `npm run build` quebra — foi exatamente o que aconteceu na primeira execução desta tarefa. Alinhe as duas no mesmo range e verifique os três comandos:
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+npm pkg get devDependencies.typescript --workspace apps/totem   # veja o range que o Vite instalou
+npm pkg set devDependencies.typescript="<esse mesmo range>"     # aplica na raiz
+npm install
+npm test && npm run typecheck && npm run build
+```
 
 - [ ] **Step 4: Configurar o Vite para resolver o core como fonte TS**
 
@@ -425,8 +448,11 @@ export default {
         accent:   'var(--qf-accent)',
         onAccent: 'var(--qf-on-accent)',
         violet:   'var(--qf-violet)',
-        danger:   '#F43F5E',
-        warn:     '#F59E0B',
+        // `danger` também é token, não hex. Não porque a academia troque a cor
+        // de erro — ela não troca — mas porque no modo claro `#F43F5E` precisa
+        // escurecer para continuar legível, e é o `applyTheme` que decide isso
+        // (task 12). Hex aqui congelaria a cor nos dois modos.
+        danger:   'var(--qf-danger)',
       },
       fontFamily: {
         display: ['Sora', 'system-ui', 'sans-serif'],
@@ -458,6 +484,7 @@ export default {
   --qf-accent: #39FF14;
   --qf-on-accent: #07080B;
   --qf-violet: #8B5CF6;
+  --qf-danger: #F43F5E;
   --qf-accent-glow: rgba(57, 255, 20, 0.22);
 }
 
@@ -3443,6 +3470,25 @@ describe('validateAccent', () => {
     expect(() => validateAccent('vermelho', 'dark')).toThrow(/hex/i);
   });
 });
+
+describe('danger por modo', () => {
+  // O motivo de `--qf-danger` existir como token: o vermelho do escuro reprova
+  // no claro. Se alguém "simplificar" para um hex único, este teste cai.
+  it('o danger de cada modo passa 4.5:1 contra o fundo daquele modo', () => {
+    expect(contrastRatio(DARK_BASE.danger, DARK_BASE.bg)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(LIGHT_BASE.danger, LIGHT_BASE.bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('o danger do escuro reprovaria no claro — é por isso que são dois', () => {
+    expect(contrastRatio(DARK_BASE.danger, LIGHT_BASE.bg)).toBeLessThan(4.5);
+  });
+});
+```
+
+O `import` no topo deste arquivo precisa incluir os dois bases:
+
+```ts
+import { DARK_BASE, LIGHT_BASE } from './base';
 ```
 
 - [ ] **Step 2: Rodar e ver falhar**
@@ -3494,6 +3540,7 @@ export const DARK_BASE = {
   text: '#F4F5F7',
   dim: '#A1A6B2',
   violet: '#8B5CF6',
+  danger: '#F43F5E',
 } as const;
 
 export const LIGHT_BASE = {
@@ -3504,7 +3551,23 @@ export const LIGHT_BASE = {
   text: '#0B0D12',
   dim: '#5B6270',
   violet: '#6D28D9',
+  danger: '#BE123C',
 } as const;
+
+/**
+ * Por que `danger` muda entre os modos, medido (WCAG, fórmula do contrast.ts):
+ *
+ *   #F43F5E  sobre #07080B (escuro) = 5.45:1  ✓
+ *   #F43F5E  sobre #F7F8FA (claro)  = 3.46:1  ✗ reprova para texto normal
+ *   #BE123C  sobre #F7F8FA (claro)  = 5.91:1  ✓
+ *
+ * É o único caso onde a mudança de modo não é cosmética: o mesmo vermelho que
+ * funciona no escuro fica ilegível no claro. Daí `--qf-danger` ser token e não
+ * hex no `tailwind.config.js` — a academia não escolhe esta cor, mas o modo
+ * escolhe. O chip de contraindicação (`bg-danger text-white`) fica em 3.67:1 no
+ * escuro e 6.29:1 no claro: passa AA porque o alvo de toque tem 96px e o rótulo
+ * conta como texto grande (mínimo 3:1), não como corpo de texto.
+ */
 
 /** Mínimo WCAG AA para texto grande. Abaixo disto o painel recusa a cor. */
 export const MIN_CONTRAST = 4.5;
