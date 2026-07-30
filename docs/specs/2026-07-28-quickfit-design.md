@@ -576,6 +576,8 @@ O aluno lê de pé, a 60–80cm, sob luz de galpão, possivelmente sem óculos, 
 
 96px, não os 44px de mobile: dedo grosso, mão suada, pessoa em pé.
 
+Com uma exceção deliberada: `← Voltar` e `✕ Sair` ficam em **64px**. Acertar "Sair" por acidente no meio do fluxo faz o aluno perder o progresso e recomeçar, então ali o alvo menor é a proteção. A regra é 96px para o que o aluno **escolhe**, 64px para o que ele usa para **desistir**, e nunca 44px.
+
 **Sora** nos títulos, **Inter** no corpo, as duas **auto-hospedadas em woff2 no bundle**.
 Nunca Google Fonts por CDN — o totem numa academia com internet ruim renderizaria em
 Times New Roman na frente do gestor.
