@@ -1,0 +1,26 @@
+id,name,category
+barra,Barra livre,livre
+banco,Banco reto,acessorio
+banco-incl,Banco inclinado,acessorio
+halter,Halteres,livre
+mq-supino,Máquina supino,maquina
+mq-crucifixo,Máquina crucifixo,maquina
+crossover,Cross Over,cabo
+polia-alta,Polia alta,cabo
+polia-baixa,Polia baixa,cabo
+corda,Corda,acessorio
+mq-remada,Máquina remada,maquina
+barra-fixa,Barra fixa,corporal
+leg-press,Leg Press 45°,maquina
+hack,Hack machine,maquina
+smith,Smith,maquina
+extensora,Cadeira extensora,maquina
+flexora,Mesa flexora,maquina
+gluteo-mq,Máquina glúteo,maquina
+abdutora,Cadeira abdutora,maquina
+panturrilha,Máquina panturrilha,maquina
+banco-scott,Banco Scott,acessorio
+kettlebell,Kettlebell,livre
+esteira,Esteira,cardio
+bike,Bike ergométrica,cardio
+eliptico,Elíptico,cardio

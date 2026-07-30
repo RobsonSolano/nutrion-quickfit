@@ -1,0 +1,4 @@
+id,name,primary,secondary,equipment,level,pattern,is_compound,avg_sec_per_set,duration_sec,contraindications,cue
+supino-reto,Supino reto com barra,peito,triceps|ombros,barra|banco,2,push-h,true,35,,ombro,Escápulas retraídas; barra na linha do mamilo
+leg-press,Leg Press 45°,pernas,gluteos,leg-press,1,squat,true,38,,joelho,Não deixe a lombar sair do apoio
+esteira-moderada,Esteira — ritmo moderado,cardio,,esteira,1,cardio,false,0,600,,Mantenha um ritmo em que consiga conversar
