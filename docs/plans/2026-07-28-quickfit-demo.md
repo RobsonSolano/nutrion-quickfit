@@ -3173,7 +3173,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Create: `apps/totem/src/data/supabase.ts`
 - Create: `apps/totem/src/data/loadCatalog.ts`
 - Test: `apps/totem/src/data/loadCatalog.test.ts`
-- Modify: `package.json` (script `seed:catalog`)
+- (o script `seed:catalog` já existe no `package.json` desde a task 1 — nada a modificar)
 
 **Interfaces:**
 - Consumes: `parseEquipmentCsv`, `parseExercisesCsv` de `../catalog/schema`; tipos do motor
@@ -3295,23 +3295,28 @@ console.log(`academia demo: ${gym!.id} com ${equipment.length} aparelhos ligados
 console.log('\nSeed completo.');
 ```
 
-- [ ] **Step 2: Registrar e rodar**
+- [ ] **Step 2: Rodar o seed** — 🔒 **BLOQUEADO por credencial**
 
-`package.json` — em `scripts`:
-
-```json
-"seed:catalog": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/seed-catalog.ts"
-```
+O script `seed:catalog` **já está registrado** no `package.json` desde a task 1. Confira e não reinstale nada:
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+npm pkg get scripts.seed:catalog
+```
+
+Rodar o seed exige `SUPABASE_SERVICE_ROLE` no `.env.local`, e essa chave **está ausente de propósito**: a original foi exposta num log de conversa e precisa ser rotacionada antes de qualquer uso. Também exige que a task 10 já tenha criado as tabelas.
+
+```bash
+# só depois da rotação da chave e da task 10
 npm run seed:catalog
 ```
 
-Esperado: contagens conferindo com o CSV, e `Seed completo.`
+Esperado quando rodar: contagens conferindo com o CSV, e `Seed completo.`
 
-- [ ] **Step 3: Confirmar que a role anon lê o catálogo semeado**
+**Este step, o Step 3 e o Step 8 ficam pendentes.** Os demais (1, 4, 5, 6, 7, 9) não precisam de credencial: o teste do carregador exercita só as funções de cache, com `localStorage` stubado, e passa offline. Escrever o arquivo do seed (Step 1) também não precisa de chave — só executá-lo precisa.
+
+- [ ] **Step 3: Confirmar que a role anon lê o catálogo semeado** — 🔒 **BLOQUEADO** (depende do Step 2)
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
@@ -3574,7 +3579,7 @@ npm test -- apps/totem/src/data/loadCatalog.test.ts && npm run typecheck
 
 Esperado: PASS, 6 testes; typecheck limpo.
 
-- [ ] **Step 8: Verificar o carregamento real no browser**
+- [ ] **Step 8: Verificar o carregamento real no browser** — 🔒 **BLOQUEADO** (depende do Step 2; sem tabelas semeadas o totem cai na tela de indisponível, que é o comportamento correto, mas não prova o caminho feliz)
 
 Adicione temporariamente ao `apps/totem/src/main.tsx`, antes do `render`:
 
