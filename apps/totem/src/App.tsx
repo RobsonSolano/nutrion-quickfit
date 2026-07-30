@@ -24,10 +24,21 @@ import { embellish, type Embellishment } from './ai/embellish';
 import { SharedWorkout } from './screens/SharedWorkout';
 import { saveWorkout } from './data/saveWorkout';
 
+/**
+ * Sem hook nenhum de propósito: o roteamento de `/w/:id` precisa decidir
+ * ANTES de qualquer `useState`/`useEffect` rodar, e um componente com
+ * `return` condicional antes de um hook viola a regra dos hooks. Separar
+ * em dois componentes — este sem hooks, `TotemApp` com todos — é a forma
+ * limpa; a alternativa (early return dentro de `TotemApp`) violaria a
+ * regra de verdade, não só o lint.
+ */
 export function App() {
   const shared = window.location.pathname.match(/^\/w\/([0-9a-z]{6,20})$/);
   if (shared) return <SharedWorkout id={shared[1]} />;
+  return <TotemApp />;
+}
 
+function TotemApp() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [bundle, setBundle] = useState<CatalogBundle | null>(null);
   const [failed, setFailed] = useState(false);
@@ -178,7 +189,7 @@ export function App() {
                 <Result
                   workout={state.workout}
                   groupsTitle={groupsLabel(state.groups)}
-                  levelLabel={LEVEL_OPTIONS.find((o) => o.level === state.level)!.sub}
+                  levelLabel={LEVEL_OPTIONS.find((o) => o.level === state.level)!.label}
                   embellishTitle={flair?.title ?? null}
                   cues={flair?.cues}
                   onPrint={() => dispatch({ type: 'OPEN_FICHA' })}
