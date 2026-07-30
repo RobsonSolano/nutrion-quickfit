@@ -93,7 +93,7 @@ src/
 
   state/machine.ts   ← triagem → escolha → geração → resultado
   screens/           ← UI, burra de propósito
-  print/             ← template A4 + @media print
+  print/             ← template CUPOM (72mm) + @media print
   ai/embellish.ts    ← opcional. falha em silêncio.
   theme/apply.ts     ← white-label
 ```
@@ -122,7 +122,7 @@ aluno toca
             └→ screens/Result  ← pinta AQUI
                  ├→ ai/embellish()      ~1.5s, opcional, falha em silêncio
                  ├→ data/saveWorkout()  → id curto, pro QR
-                 └→ print/A4 via window.print()
+                 └→ print/cupom via window.print()
 ```
 
 O resultado aparece **antes** do LLM e **antes** de salvar. O aluno nunca espera rede.
@@ -137,8 +137,15 @@ O resultado aparece **antes** do LLM e **antes** de salvar. O aluno nunca espera
 export type MuscleGroup = 'peito' | 'costas' | 'ombros' | 'biceps'
   | 'triceps' | 'pernas' | 'gluteos' | 'core' | 'cardio';
 
-export type Pattern = 'push-horizontal' | 'push-vertical' | 'pull-horizontal'
-  | 'pull-vertical' | 'squat' | 'hinge' | 'lunge' | 'isolation' | 'core' | 'cardio';
+export type Pattern = 'push-h' | 'push-v' | 'pull-h'
+  | 'pull-v' | 'squat' | 'hinge' | 'lunge' | 'iso' | 'core' | 'cardio';
+
+export type Contra = 'joelho' | 'lombar' | 'ombro' | 'punho' | 'cervical';
+
+// Alongamento e liberação não são "exercício com séries menos intenso": são
+// outra coisa. Sem isto o motor prescreve "Foam roll quadríceps 3x8-12" numa
+// ficha de hipertrofia (achado real, task 9b).
+export type Kind = 'treino' | 'mobilidade';
 
 export type Exercise = {
   id: string;
@@ -150,19 +157,23 @@ export type Exercise = {
   pattern: Pattern;
   isCompound: boolean;
   avgSecPerSet: number;          // 15 (isolado leve) → 45 (agachamento pesado)
-  contraindications: string[];   // 'joelho' | 'lombar' | 'ombro' | 'punho' | 'cervical'
+  durationSec?: number;          // só para pattern 'cardio' — duração total
+  kind: Kind;
+  contraindications: Contra[];
   cue?: string;                  // dica curta de execução
   videoUrl?: string;             // usado só na página do QR
 };
 
+export type Minutes = 20 | 30 | 40 | 45 | 50 | 60 | 90;
+
 export type Input = {
   goal: 'hipertrofia' | 'emagrecimento' | 'resistencia' | 'mobilidade' | 'forca';
   groups: MuscleGroup[];
-  minutes: 20 | 30 | 45 | 60 | 90;
+  minutes: Minutes;
   level: 1 | 2 | 3;
   availableEquipment: string[];  // vem de gym_equipment
-  avoid: string[];               // tags de contraindicação a evitar. SEMPRE `[]` no
-                                 // caminho de atalho — só o passo 6 do "Montar do
+  avoid: Contra[];               // tags de contraindicação a evitar. SEMPRE `[]` no
+                                 // caminho de atalho — só o passo 5 do "Montar do
                                  // zero" popula este campo.
   seed: number;                  // é isso que faz o treino variar
 };
@@ -182,6 +193,11 @@ export function eligible(catalog: Exercise[], input: Input): Exercise[] {
 
     if (ex.level > input.level) return false;
     if (ex.contraindications.some(c => input.avoid.includes(c))) return false;
+
+    // Mobilidade é o único objetivo que prescreve alongamento; os outros
+    // quatro prescrevem treino. Sem isto o motor mistura os dois (task 9b).
+    const querMobilidade = input.goal === 'mobilidade';
+    if (querMobilidade !== (ex.kind === 'mobilidade')) return false;
 
     return input.groups.includes(ex.primary)
         || ex.secondary.some(g => input.groups.includes(g));
@@ -588,28 +604,33 @@ Times New Roman na frente do gestor.
 
 ### Demo (agora)
 
-`window.print()` + folha `@media print` sobre um template A4. Nada mais. O template
-esconde o chrome da UI e imprime: logo da academia, dados do treino, tabela de
-exercícios com campos de carga em branco, área de anotações, QR code e rodapé de
-homologação CREF.
+`window.print()` + folha `@media print` sobre um layout de **cupom térmico**, não
+A4 (decisão do Robson, jul/2026 — impressão em cupom é prática consolidada em
+academia, e a compatibilidade entre formatos é de mão única: cupom imprime
+aceitável em A4, mas A4 não cabe num cupom). Uma coluna estreita de 72mm
+(`--qf-cupom`), sem tabela: logo da academia, dados do treino, lista de
+exercícios com campo de carga em branco, QR code e rodapé de homologação CREF.
 
 QR gerado no cliente com a lib `qrcode` — não depende de serviço externo.
 
-**Regras não-negociáveis do `@media print`.** Todas nasceram de defeito real medido no
-protótipo, não de teoria:
+**Regras não-negociáveis do `@media print`** (`apps/totem/src/print/print.css`).
+Todas nasceram de defeito real medido, não de teoria:
 
 | Regra | Por quê |
 |---|---|
-| `.sheet-body { overflow: visible; height: auto; max-height: none }` | A pré-visualização rola para caber na tela do totem. Se o `overflow: auto` vazar para a impressão, **exercício desaparece do papel sem aviso** — o mais perigoso dos defeitos, porque a tela mostra certo. |
-| `thead { display: table-header-group }` | Cabeçalho da tabela repete em cada página impressa. |
-| `tr { break-inside: avoid }` | Nenhum exercício parte no meio entre páginas. |
-| `.sheet-ft { position: fixed; bottom: 0 }` | O rodapé de homologação CREF repete em **toda** página. Não pode existir folha impressa sem ele. |
-| esconder todo controle (`.qf-cta`, `.qf-row`, `.side`) | Sem isso os botões "Imprimir" e "Voltar" saem impressos na ficha. |
-| `background: #fff` em toda a cadeia de ancestrais | Senão o cinza da página de apoio vaza como um bloco no meio da folha. |
+| `.qf-sheet, .qf-sheet-body { overflow: visible; height: auto; max-height: none }` | A pré-visualização rola para caber na tela do totem. Se o `overflow: auto` vazar para a impressão, **exercício desaparece do papel sem aviso** — o mais perigoso dos defeitos, porque a tela mostra certo. |
+| `.ex { break-inside: avoid }` | Nenhum exercício parte no meio entre páginas (numa bobina não existe "próxima página", mas o corte pode cair em cima da linha). |
+| `.qf-sheet-footer { position: static }`, não `fixed` | O rodapé de homologação CREF é o último bloco no fluxo. Numa bobina de altura automática, `position: fixed` se comporta de forma imprevisível entre drivers — diferente de A4, o cupom não precisa repetir o rodapé em toda página porque é uma tira contínua. |
+| `.no-print { display: none }` | Sem isso os botões "Imprimir" e "Voltar" saem impressos na ficha. |
+| `background: #fff` em toda a cadeia de ancestrais | Senão o cinza da interface vaza como um bloco no meio da folha. |
+| tudo preto (`color: #000` em `.qf-sheet *`) | Térmica é 1 bit — não existe cinza. Hierarquia sai de peso e caixa alta, não de cor. |
+| separadores tracejados (`.rule`), não linha fina | Térmica de 203dpi borra hairline; tracejado sobrevive. |
 
-**Verificado:** 9 exercícios, 5 exercícios e 4 exercícios geram **1 página A4** cada,
-com todas as linhas presentes e o rodapé CREF legível. Conferido gerando PDF de verdade
-e contando `/Count` no objeto `/Pages`, não por inspeção visual.
+**Não se conta página.** Numa impressora A4 um cupom de 9 exercícios pode ocupar
+duas folhas, e isso não é defeito — numa bobina térmica é uma tira contínua que
+corta onde o conteúdo acaba (`@page { size: auto }` é o que permite os dois
+comportamentos). A checagem que importa é conteúdo completo: todos os
+exercícios presentes no papel, nenhum cortado pelo overflow.
 
 Um alerta para quem for automatizar essa checagem: `page.emulateMedia({media:'screen'})`
 **sobrepõe** o print media do `page.pdf()` e faz o PDF sair com a folha de tela. Isso
