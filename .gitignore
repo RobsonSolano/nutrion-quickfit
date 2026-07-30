@@ -1,0 +1,42 @@
+# dependências
+node_modules/
+.npm/
+
+# segredos — NUNCA versionar
+.env
+.env.local
+.env.*.local
+
+# builds
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# testes
+coverage/
+playwright-report/
+test-results/
+.playwright-mcp/
+
+# catálogo: `exercises.csv` (revisado à mão) e `exercises.raw.csv` (export do
+# Persona Fit) SÃO versionados — o raw deixa a classificação reproduzível sem
+# precisar de credencial do outro projeto. Só a saída crua do LLM, antes da
+# revisão humana, é descartável.
+catalog/exercises.classified.csv
+
+# supabase local
+supabase/.branches/
+supabase/.temp/
+.supabase/
+
+# vercel
+.vercel/
+
+# editores / sistema
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*~

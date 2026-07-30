@@ -1,0 +1,15 @@
+{
+  "name": "@quickfit/core",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Motor de geração, catálogo, tipos e tema — compartilhados pelo totem e pelo painel",
+  "exports": {
+    "./engine": "./src/engine/index.ts",
+    "./catalog": "./src/catalog/schema.ts",
+    "./theme": "./src/theme/index.ts"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}

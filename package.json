@@ -1,0 +1,29 @@
+{
+  "name": "quickfit",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "NutriOn QuickFit — totem de autoatendimento que gera treino personalizado em 3 toques",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @quickfit/totem",
+    "dev:painel": "npm run dev --workspace @quickfit/painel",
+    "build": "npm run build --workspaces --if-present",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --build --force",
+    "e2e": "playwright test",
+    "validate:catalog": "tsx scripts/validate-catalog.ts",
+    "export:raw": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/export-from-app.ts",
+    "classify": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/classify.ts",
+    "seed:catalog": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/seed-catalog.ts",
+    "db:push": "supabase db push",
+    "fn:deploy": "supabase functions deploy embellish"
+  }
+}
