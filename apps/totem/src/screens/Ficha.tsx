@@ -76,7 +76,7 @@ export function Ficha({ workout, gym, groupsTitle, workoutId, onBack }: Props) {
               </div>
               <div className="flex items-baseline justify-between gap-2">
                 <span>
-                  {it.sets} x {it.reps}
+                  {it.exercise.pattern === 'cardio' ? it.reps : `${it.sets} x ${it.reps}`}
                 </span>
                 <span className="text-[11px]">
                   carga <span className="carga inline-block min-w-[18mm] border-b border-black" />
