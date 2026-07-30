@@ -4,7 +4,7 @@
 
 **Goal:** Construir a demo comercial do QuickFit — totem web que gera treino personalizado em 3 toques, imprime ficha A4 e roda offline — pronta para ser mostrada a gestores de academia.
 
-**Architecture:** App React/Vite servido pela Vercel, aberto em `chrome --kiosk` quando virar totem. O motor de geração é TypeScript puro sem I/O (`src/engine/`), testado com vitest; todo o resto é raso. Catálogo de exercícios é autorado em CSV no repo, classificado uma vez com a API da Anthropic, revisado à mão e semeado num projeto Supabase próprio, de onde o cliente carrega e cacheia em `localStorage`.
+**Architecture:** App React/Vite servido pela Vercel, aberto em `chrome --kiosk` quando virar totem. O motor de geração é TypeScript puro sem I/O (`packages/core/src/engine/`), testado com vitest; todo o resto é raso. Catálogo de exercícios é autorado em CSV no repo, classificado uma vez com a API da Anthropic, revisado à mão e semeado num projeto Supabase próprio, de onde o cliente carrega e cacheia em `localStorage`.
 
 **Tech Stack:** React 19 + Vite + TypeScript + Tailwind (via CSS custom properties), vitest, Playwright, Supabase (Postgres + RLS), Vercel.
 
@@ -30,7 +30,7 @@
   ```bash
   export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
   ```
-- **`src/engine/` tem ZERO dependências.** Sem React, sem Supabase, sem lib externa. É o que torna os testes instantâneos e o motor portável para o servidor no piloto.
+- **`packages/core/src/engine/` tem ZERO dependências.** Sem React, sem Supabase, sem lib externa. É o que torna os testes instantâneos e o motor portável para o servidor no piloto.
 - **Filtro de equipamento usa `every`, nunca `some`.** Um exercício só é elegível se **todos** os seus equipamentos existem na unidade.
 - **Copy em pt-BR**, tratamento na segunda pessoa ("você"), sem jargão de academia que aluno iniciante não entenda.
 - **Alvo de toque mínimo: 96px de altura.** Não 44px.
@@ -39,150 +39,280 @@
 - **Segredos só em `.env.local`, que está no `.gitignore`.** O `service_role` nunca vai para o cliente nem para o git.
 - **Projeto Supabase:** ref `jpgnplzkdbfmjkinfvln`. As chaves estão nas notas do Robson — **rotacione o `sb_secret_...` antes de usar**, ele foi exposto num log de conversa.
 - **Toda tarefa termina com `npm test` verde e um commit.**
+- **`npm test`, `npm run typecheck` e `git` rodam sempre na RAIZ** (`quickfit/`), nunca dentro de um workspace. Um único vitest e um único tsconfig cobrem `packages/` e `apps/`.
+- **`packages/core` nunca importa de `apps/`.** A seta aponta num sentido só. Dentro de core, imports relativos; de `apps/` para core, sempre `@quickfit/core/*`.
+- **O alias de `@quickfit/core` existe em três arquivos** — `tsconfig.base.json`, `apps/totem/vite.config.ts` e `vitest.config.ts`. Mexer em um exige mexer nos três; `apps/totem/src/resolve.test.ts` é o que avisa quando divergem.
 
 ---
 
 ## Estrutura de arquivos
 
-Mapa do que cada arquivo é responsável, decidido antes das tarefas:
+Monorepo com `npm workspaces`. **A casca já existe no repositório** — este plano preenche.
 
 ```
 quickfit/
-  .env.local                    (gitignored) VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE
-  .env.example                  mesmas chaves, valores vazios — este vai pro git
-  index.html                    <meta charset="utf-8">, root div, sem mais nada
-  package.json
-  tailwind.config.js            mapeia cores para var(--qf-*)
-  tsconfig.json
-  vite.config.ts
-  vitest.config.ts
+  package.json                  workspaces: packages/*, apps/*
+  .env.local                    (gitignored)
+  .env.example                  no git
+  tsconfig.base.json            paths: @quickfit/core/* → packages/core/src/*
+  vitest.config.ts              cobre packages/ E apps/
   playwright.config.ts
+  README.md
 
-  public/fonts/                 Sora + Inter em woff2 (subset latin)
+  ┌─ COMPARTILHADO ─────────────────────────────────────────────────────────
+  packages/core/                @quickfit/core — totem E painel consomem
+    package.json                exports: ./engine, ./catalog, ./theme
+    src/
+      engine/                   ← MÓDULO FUNDO. sem I/O, sem React.
+        types.ts                  Exercise, Input, Scheme, Workout, WorkoutItem
+        constants.ts              REST, SETS_REPS, TARGET_EX, MAX_EX…
+        filter.ts                 eligible()
+        budget.ts                 schemeFor(), costOf()
+        rng.ts                    mulberry32(), weightedPick()
+        generate.ts               generateWorkout()
+        index.ts                  API pública do motor
+        __fixtures__/catalog.ts
+        *.test.ts
 
+      catalog/
+        schema.ts                 zod + parseEquipmentCsv/parseExercisesCsv
+        schema.test.ts
+        integration.test.ts       catálogo real × motor
+
+      theme/
+        types.ts                  Gym, GymTheme — o painel também escreve
+        base.ts                   DARK_BASE, LIGHT_BASE, MIN_CONTRAST
+        contrast.ts               contrastRatio, bestContrast, validateAccent
+        apply.ts                  applyTheme()
+        index.ts
+        contrast.test.ts
+
+  ┌─ TOTEM (fase 1) ────────────────────────────────────────────────────────
+  apps/totem/
+    package.json                @quickfit/totem — depende de @quickfit/core
+    index.html                  <meta charset="utf-8">, root div
+    vite.config.ts
+    tailwind.config.js          cores → var(--qf-*)
+    public/fonts/               Sora + Inter em woff2 (subset latin)
+    src/
+      data/
+        supabase.ts               cliente único (anon)
+        loadCatalog.ts            fetch + cache localStorage + fallback
+        saveWorkout.ts            persiste, devolve nanoid curto
+      state/
+        machine.ts                reducer + Action + MachineState
+        useIdleTimeout.ts         volta pra attract em 90s
+      screens/
+        Attract Parq Blocked Home
+        Goal Groups Time Level
+        Generating Result Ficha Thin Unavailable SharedWorkout
+        labels.ts  useHasMore.ts
+      components/
+        BigButton.tsx             96px mínimo, aria-pressed
+        Cta.tsx
+        Boundary.tsx              error boundary: volta ao attract em 5s
+      print/
+        print.css                 @media print — as 6 regras da spec §7
+        qr.ts
+      ai/
+        embellish.ts              Edge Function, falha em silêncio
+        cacheKey.ts               hash de (goal, groups, exercise ids)
+      App.tsx  main.tsx  index.css
+
+  ┌─ PAINEL (fase 3 — só a casca) ──────────────────────────────────────────
+  apps/painel/
+    README.md                   por que a casca existe agora; o que vai morar aqui
+
+  ┌─ COMPARTILHADO POR AMBOS ───────────────────────────────────────────────
   catalog/
     equipment.csv               id,name,category
-    exercises.csv               autoria humana — a fonte de verdade da fase 1
-    exercises.raw.csv           saída do export (task 8), entrada da classificação
+    exercises.csv               autoria humana — fonte de verdade (versionado)
+    exercises.raw.csv           export do Persona Fit (versionado)
+    exercises.classified.csv    saída crua do LLM (gitignored)
 
   scripts/
-    export-from-app.ts          Persona Fit Supabase → exercises.raw.csv
-    classify.ts                 exercises.raw.csv → exercises.csv (via Anthropic)
-    seed-catalog.ts             catalog/*.csv → Supabase do QuickFit
+    validate-catalog.ts         roda no CI
+    export-from-app.ts          Persona Fit → exercises.raw.csv
+    classify.ts                 raw → classified (Anthropic, offline)
+    seed-catalog.ts             CSVs → Supabase
 
   supabase/
     migrations/
-      20260728000000_catalog.sql       equipment, exercises, tabelas de junção
-      20260728000100_gyms.sql          gyms, gym_equipment
-      20260728000200_workouts.sql      generated_workouts
-      20260728000300_rls.sql           policies para a role anon
+      20260728000000_catalog.sql        equipment, exercises, junções
+      20260728000100_gyms.sql           gyms, gym_equipment, view de disponíveis
+      20260728000200_workouts.sql       generated_workouts + views de stats
+      20260728000300_rls.sql            policies anon + get_workout()
       20260728000400_embellishments.sql cache do enfeite por hash
-    functions/
-      embellish/
-        index.ts                       handler: cache → provedor → cache
-        provider.ts                    interface Provider + adaptador OpenAI-compatível
+    functions/embellish/
+      index.ts                          handler: cache → provedor → cache
+      provider.ts                       interface Provider (OpenAI-compatível)
 
-  src/
-    engine/                     ← MÓDULO FUNDO. sem I/O.
-      types.ts                    Exercise, Input, Scheme, Workout, WorkoutItem
-      constants.ts                REST, SETS_REPS, TARGET_EX, MAX_EX, MAX_PER_GROUP, WARMUP_SEC…
-      filter.ts                   eligible()
-      budget.ts                   schemeFor(), costOf()
-      rng.ts                      mulberry32(), weightedPick()
-      generate.ts                 generateWorkout()
-      index.ts                    re-exporta a API pública do motor
-      *.test.ts
+  docs/
+    specs/2026-07-28-quickfit-design.md
+    plans/2026-07-28-quickfit-demo.md   este arquivo
 
-    catalog/
-      schema.ts                   zod: ExerciseRow, EquipmentRow + parseCatalogCsv()
-      schema.test.ts
-
-    data/
-      supabase.ts                 cliente único (anon)
-      loadCatalog.ts              fetch + cache localStorage + fallback
-      saveWorkout.ts              persiste, devolve id curto
-
-    state/
-      machine.ts                  reducer + Action + MachineState
-      machine.test.ts
-      useIdleTimeout.ts           volta pra attract em 90s
-
-    theme/
-      apply.ts                    applyTheme()
-      contrast.ts                 contrastRatio(), bestContrast()
-      contrast.test.ts
-      base.ts                     DARK_BASE, LIGHT_BASE
-
-    screens/
-      Attract.tsx  Parq.tsx  Blocked.tsx  Home.tsx
-      Goal.tsx  Groups.tsx  Time.tsx  Level.tsx
-      Generating.tsx  Result.tsx  Ficha.tsx
-      Thin.tsx                    combinação sem treino viável
-
-    components/
-      BigButton.tsx               96px mínimo, aria-pressed
-      Cta.tsx
-      Boundary.tsx                error boundary: volta ao attract em 5s
-
-    print/
-      print.css                   @media print — as 6 regras da spec §7
-      qr.ts                       gera dataURL do QR com a lib `qrcode`
-
-    ai/
-      embellish.ts                chama a Edge Function, falha em silêncio
-      cacheKey.ts                 hash de (goal, groups, exercise ids)
-
-    App.tsx                       monta a máquina de estados + rota /w/:id
-    main.tsx
-    index.css                     @tailwind + :root com os tokens --qf-*
+  e2e/demo.spec.ts
 ```
 
-**A fronteira que importa:** `engine/` recebe `Exercise[]` e devolve `Workout`. Não importa nada de `data/`, `screens/` ou `theme/`. Se um teste do motor precisar de `await`, a fronteira foi violada.
+### As duas fronteiras que importam
+
+**1. `packages/core/src/engine/` recebe `Exercise[]` e devolve `Workout`.** Não importa nada de `data/`, `screens/` ou `theme/`. Se um teste do motor precisar de `await`, a fronteira foi violada.
+
+**2. `packages/core` nunca importa de `apps/`.** A seta aponta só num sentido. Foi esta regra que forçou `Gym` e `GymTheme` para `core/theme/types.ts` — eles têm dois consumidores (o painel escreve o tema com validação de contraste, o totem lê), então morar em `apps/totem` inverteria a dependência.
+
+**Dentro de `packages/core`, imports são relativos** (`../engine/types`). **De `apps/` para o core, sempre pelo nome do pacote** (`@quickfit/core/engine`). Um arquivo de core que se auto-referencia pelo nome do pacote é sinal de que ele está na camada errada.
 
 ---
 
 ## Fase A — Fundação
 
-### Task 1: Scaffold do projeto com teste verde e git
+### Task 1: Scaffold do workspace com teste verde
+
+**Já existe no repositório** (commit `chore: estrutura do monorepo`): a árvore de pastas, o `package.json` raiz com workspaces, `.gitignore`, `.env.example`, `README.md`, `packages/core/package.json` e `apps/painel/README.md`. Esta tarefa preenche o resto.
 
 **Files:**
-- Create: `quickfit/` (projeto inteiro via scaffold)
-- Create: `quickfit/vitest.config.ts`
-- Create: `quickfit/src/engine/index.ts`
-- Create: `quickfit/.env.example`
-- Create: `quickfit/.gitignore`
-- Test: `quickfit/src/engine/smoke.test.ts`
+- Create: `apps/totem/` (via Vite)
+- Create: `tsconfig.base.json`, `tsconfig.json`
+- Create: `vitest.config.ts`
+- Create: `packages/core/src/engine/index.ts`
+- Create: `apps/totem/tailwind.config.js`, `apps/totem/postcss.config.js`
+- Test: `packages/core/src/engine/smoke.test.ts`
 
 **Interfaces:**
-- Consumes: nada — é a primeira tarefa
-- Produces: `npm test` executável; `npm run dev` servindo; repositório git com commit inicial
+- Consumes: a casca do monorepo já versionada
+- Produces: `npm test` executável na raiz; `npm run dev` servindo o totem; `@quickfit/core/engine` resolvível de `apps/totem`
 
-- [ ] **Step 1: Criar o projeto Vite**
-
-```bash
-export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
-cd /home/robson/www/_estudos/pessoal/nutrion
-npm create vite@latest quickfit -- --template react-ts
-cd quickfit
-npm install
-```
-
-- [ ] **Step 2: Instalar Tailwind, vitest e as libs de runtime**
+- [ ] **Step 1: Criar o app do totem dentro do workspace**
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm install -D tailwindcss@^3 postcss autoprefixer vitest @vitest/coverage-v8
-npm install @supabase/supabase-js zod qrcode nanoid
-npm install -D @types/qrcode
-npx tailwindcss init -p
+npm create vite@latest apps/totem -- --template react-ts
+```
+
+O Vite gera um `package.json` em `apps/totem`. Renomeie o pacote e declare a dependência do core:
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+npm pkg set name="@quickfit/totem" --workspace apps/totem
+npm pkg set private=true --workspace apps/totem
+npm pkg set dependencies.@quickfit/core="*" --workspace apps/totem
+```
+
+- [ ] **Step 2: Instalar dependências nos lugares certos**
+
+Onde cada coisa mora importa: o SDK da Anthropic é ferramenta de script e **nunca** pode entrar no bundle do cliente.
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
+
+# raiz: ferramentas de build e teste, compartilhadas
+npm install -D -w . typescript vitest @vitest/coverage-v8 tsx \
+  @playwright/test @types/node
+
+# core: só zod (já declarado no package.json — instala o link)
+npm install
+
+# totem: runtime do app
+npm install -w @quickfit/totem @supabase/supabase-js qrcode nanoid
+npm install -D -w @quickfit/totem tailwindcss@^3 postcss autoprefixer @types/qrcode
+
+# raiz: scripts offline. devDependency de propósito — não vai pro bundle.
+npm install -D -w . @anthropic-ai/sdk @supabase/supabase-js
 ```
 
 Tailwind v3 de propósito: a v4 mudou a configuração de tema para CSS-first e o mapeamento para `var(--qf-*)` fica menos direto.
 
-- [ ] **Step 3: Escrever o teste de fumaça (vai falhar)**
+- [ ] **Step 3: Configurar TypeScript com o alias do core**
 
-`src/engine/smoke.test.ts`:
+`tsconfig.base.json` (na raiz):
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "types": ["vitest/globals", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@quickfit/core/engine": ["packages/core/src/engine/index.ts"],
+      "@quickfit/core/catalog": ["packages/core/src/catalog/schema.ts"],
+      "@quickfit/core/theme": ["packages/core/src/theme/index.ts"]
+    }
+  }
+}
+```
+
+`tsconfig.json` (na raiz — é o que `npm run typecheck` usa):
+
+```json
+{
+  "extends": "./tsconfig.base.json",
+  "include": ["packages/*/src/**/*", "apps/*/src/**/*", "scripts/**/*", "e2e/**/*"]
+}
+```
+
+Substitua o `tsconfig.json` que o Vite gerou em `apps/totem/`:
+
+```json
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["src"]
+}
+```
+
+E apague `apps/totem/tsconfig.node.json` e `apps/totem/tsconfig.app.json` se o Vite os gerou — o `tsconfig.base.json` cobre os dois casos, e três arquivos de config para um app pequeno é cerimônia.
+
+- [ ] **Step 4: Configurar o Vite para resolver o core como fonte TS**
+
+`apps/totem/vite.config.ts`:
+
+```ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'node:url';
+
+const core = (p: string) => fileURLToPath(new URL(`../../packages/core/src/${p}`, import.meta.url));
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@quickfit/core/engine': core('engine/index.ts'),
+      '@quickfit/core/catalog': core('catalog/schema.ts'),
+      '@quickfit/core/theme': core('theme/index.ts'),
+    },
+  },
+  // O core é fonte TypeScript, não um pacote publicado. Sem isto o Vite
+  // tenta pré-empacotá-lo e falha ao encontrar o build.
+  optimizeDeps: { exclude: ['@quickfit/core'] },
+  server: { port: 5173 },
+  preview: { port: 4173 },
+});
+```
+
+O alias explícito é redundante com os `paths` do tsconfig para o *type checking*, mas o Vite não lê `paths` — precisa do seu próprio resolve. Manter os dois em sincronia é o custo de não usar um plugin de paths; para três entradas, é mais barato que a dependência.
+
+- [ ] **Step 5: Escrever os testes de fumaça (vão falhar)**
+
+Dois testes, porque há duas coisas que podem estar quebradas na fundação: o vitest roda, e o alias do core resolve de dentro de `apps/`.
+
+`packages/core/src/engine/smoke.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -195,56 +325,89 @@ describe('engine', () => {
 });
 ```
 
-- [ ] **Step 4: Configurar o vitest e rodar para ver falhar**
+`apps/totem/src/resolve.test.ts`:
+
+```ts
+import { describe, it, expect } from 'vitest';
+// Import pelo NOME do pacote, como as telas farão. Se o alias estiver errado,
+// este teste avisa agora — não como erro de build na task 14.
+import { ENGINE_VERSION } from '@quickfit/core/engine';
+
+describe('resolução do workspace', () => {
+  it('apps/totem importa @quickfit/core/engine', () => {
+    expect(ENGINE_VERSION).toBe('1.0.0');
+  });
+});
+```
+
+- [ ] **Step 6: Configurar o vitest na raiz e rodar para ver falhar**
+
+Um único config na raiz cobre os dois workspaces. Dois configs para uma suíte seria cerimônia.
 
 `vitest.config.ts`:
 
 ```ts
 import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
+
+const core = (p: string) =>
+  fileURLToPath(new URL(`./packages/core/src/${p}`, import.meta.url));
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@quickfit/core/engine': core('engine/index.ts'),
+      '@quickfit/core/catalog': core('catalog/schema.ts'),
+      '@quickfit/core/theme': core('theme/index.ts'),
+    },
+  },
   test: {
-    environment: 'node',        // o motor não precisa de DOM
-    include: ['src/**/*.test.ts'],
+    // `node` porque o motor não precisa de DOM. O que precisa (cache em
+    // localStorage) recebe stub via vi.stubGlobal nos próprios testes.
+    environment: 'node',
+    include: ['packages/*/src/**/*.test.ts', 'apps/*/src/**/*.test.{ts,tsx}'],
+    globals: true,
   },
 });
 ```
 
-`package.json` — adicione em `scripts`:
-
-```json
-"test": "vitest run",
-"test:watch": "vitest",
-"typecheck": "tsc --noEmit"
-```
+Os scripts `test`, `test:watch` e `typecheck` já estão no `package.json` da raiz.
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit && npm test
 ```
 
-Esperado: FAIL — `Failed to resolve import "./index"`.
+Esperado: FAIL — `Failed to resolve import "./index"` e `@quickfit/core/engine`.
 
-- [ ] **Step 5: Implementação mínima**
+- [ ] **Step 7: Implementação mínima**
 
-`src/engine/index.ts`:
+`packages/core/src/engine/index.ts`:
 
 ```ts
 export const ENGINE_VERSION = '1.0.0';
 ```
 
-- [ ] **Step 6: Rodar e ver passar**
+- [ ] **Step 8: Rodar e ver passar**
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
-cd /home/robson/www/_estudos/pessoal/nutrion/quickfit && npm test
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit && npm test && npm run typecheck
 ```
 
-Esperado: PASS, 1 teste.
+Esperado: PASS, 2 testes; `typecheck` sem saída.
 
-- [ ] **Step 7: Configurar Tailwind com os tokens `--qf-*`**
+Se o teste de resolução falhar mas o do core passar, o alias do `vitest.config.ts` não bate com o do `tsconfig.base.json` — são três entradas em dois arquivos, e é o erro mais provável desta tarefa.
 
-`tailwind.config.js`:
+- [ ] **Step 9: Configurar Tailwind com os tokens `--qf-*`**
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit/apps/totem
+npx tailwindcss init -p
+```
+
+`apps/totem/tailwind.config.js`:
 
 ```js
 /** @type {import('tailwindcss').Config} */
@@ -278,7 +441,7 @@ export default {
 };
 ```
 
-`src/index.css` (substitui o conteúdo gerado pelo Vite):
+`apps/totem/src/index.css` (substitui o conteúdo gerado pelo Vite):
 
 ```css
 @tailwind base;
@@ -311,48 +474,42 @@ body {
 }
 ```
 
-- [ ] **Step 8: `.gitignore` e `.env.example`**
+- [ ] **Step 10: Confirmar que o Vite não trouxe lixo versionável**
 
-`.gitignore` — acrescente ao gerado pelo Vite:
-
-```
-.env.local
-.env*.local
-/playwright-report
-/test-results
-```
-
-`.env.example`:
-
-```
-VITE_SUPABASE_URL=https://jpgnplzkdbfmjkinfvln.supabase.co
-VITE_SUPABASE_ANON_KEY=
-# só para scripts locais — NUNCA no bundle do cliente
-SUPABASE_SERVICE_ROLE=
-ANTHROPIC_API_KEY=
-# origem do export do catálogo (projeto do Persona Fit)
-APP_SUPABASE_URL=
-APP_SUPABASE_SERVICE_ROLE=
-```
-
-- [ ] **Step 9: Verificar que `.env.local` não é rastreado**
+O `.gitignore` e o `.env.example` já estão no repositório. O que precisa de checagem é o que o `npm create vite` acrescentou — e que nada de segredo entrou:
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-printf 'VITE_SUPABASE_URL=x\n' > .env.local
-git init && git add -A && git status --short | grep -c '\.env\.local' || echo "OK: .env.local ignorado"
+git status --short
+git check-ignore -v .env.local node_modules apps/totem/node_modules apps/totem/dist 2>/dev/null
 ```
 
-Esperado: `OK: .env.local ignorado`.
+Esperado: nenhum `.env*` e nenhum `node_modules` em `git status`; o `check-ignore` confirma cada um. Se `apps/totem/dist` não estiver coberto, o padrão `dist/` do `.gitignore` já resolve — confirme antes de commitar.
 
-- [ ] **Step 10: Commit**
+Apague o boilerplate que o Vite gera e que não vamos usar:
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
+cd /home/robson/www/_estudos/pessoal/nutrion/quickfit/apps/totem
+rm -f src/App.css src/assets/react.svg public/vite.svg
+rmdir src/assets 2>/dev/null || true
+```
+
+O `src/App.tsx` e o `src/main.tsx` gerados são reescritos na task 14; deixe-os por enquanto para o `npm run dev` continuar servindo.
+
+- [ ] **Step 11: Commit**
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 git add -A
-git commit -m "chore: scaffold do QuickFit com Vite, Tailwind e vitest
+git commit -m "chore: app do totem no workspace, com Tailwind e vitest
+
+Alias de @quickfit/core em três lugares que precisam ficar em sincronia:
+tsconfig.base.json (types), vite.config.ts (bundle) e vitest.config.ts
+(testes). O teste de resolução em apps/totem existe para avisar quando
+divergirem.
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
@@ -364,10 +521,10 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ### Task 2: Tipos e filtro de elegibilidade
 
 **Files:**
-- Create: `src/engine/types.ts`
-- Create: `src/engine/constants.ts`
-- Create: `src/engine/filter.ts`
-- Test: `src/engine/filter.test.ts`
+- Create: `packages/core/src/engine/types.ts`
+- Create: `packages/core/src/engine/constants.ts`
+- Create: `packages/core/src/engine/filter.ts`
+- Test: `packages/core/src/engine/filter.test.ts`
 
 **Interfaces:**
 - Consumes: nada do motor ainda
@@ -380,7 +537,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Escrever os tipos** (não é passo de teste — é a interface que as tarefas 3–6 consomem)
 
-`src/engine/types.ts`:
+`packages/core/src/engine/types.ts`:
 
 ```ts
 export type MuscleGroup =
@@ -467,7 +624,7 @@ export type Workout = {
 
 - [ ] **Step 2: Escrever as constantes**
 
-`src/engine/constants.ts`:
+`packages/core/src/engine/constants.ts`:
 
 ```ts
 import type { Goal, Input, Scheme } from './types';
@@ -517,7 +674,7 @@ export const AVG_SEC = 30;
 
 - [ ] **Step 3: Escrever os testes do filtro (vão falhar)**
 
-`src/engine/filter.test.ts`:
+`packages/core/src/engine/filter.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -587,14 +744,14 @@ describe('eligible', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/engine/filter.test.ts
+npm test -- packages/core/src/engine/filter.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./filter"`.
 
 - [ ] **Step 5: Implementar o filtro**
 
-`src/engine/filter.ts`:
+`packages/core/src/engine/filter.ts`:
 
 ```ts
 import type { Exercise, Input } from './types';
@@ -628,7 +785,7 @@ export function eligible(catalog: Exercise[], input: Input): Exercise[] {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/engine/filter.test.ts
+npm test -- packages/core/src/engine/filter.test.ts
 ```
 
 Esperado: PASS, 6 testes.
@@ -638,7 +795,7 @@ Esperado: PASS, 6 testes.
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add src/engine
+git add packages/core/src/engine
 git commit -m "feat(engine): tipos, constantes e filtro de elegibilidade
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
@@ -649,8 +806,8 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ### Task 3: Esquema derivado do tempo e custo por exercício
 
 **Files:**
-- Create: `src/engine/budget.ts`
-- Test: `src/engine/budget.test.ts`
+- Create: `packages/core/src/engine/budget.ts`
+- Test: `packages/core/src/engine/budget.test.ts`
 
 **Interfaces:**
 - Consumes: `Exercise`, `Input`, `Scheme`, `Goal` de `./types`; todas as constantes de `./constants`
@@ -660,7 +817,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Escrever os testes (vão falhar)**
 
-`src/engine/budget.test.ts`:
+`packages/core/src/engine/budget.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -742,14 +899,14 @@ describe('costOf', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/engine/budget.test.ts
+npm test -- packages/core/src/engine/budget.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./budget"`.
 
 - [ ] **Step 3: Implementar**
 
-`src/engine/budget.ts`:
+`packages/core/src/engine/budget.ts`:
 
 ```ts
 import {
@@ -794,7 +951,7 @@ export function costOf(ex: Exercise, sc: Scheme): number {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/engine/budget.test.ts
+npm test -- packages/core/src/engine/budget.test.ts
 ```
 
 Esperado: PASS, 8 testes.
@@ -804,7 +961,7 @@ Esperado: PASS, 8 testes.
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add src/engine
+git add packages/core/src/engine
 git commit -m "feat(engine): esquema de séries derivado do tempo disponível
 
 20 min de hipertrofia cabia 1 exercício com 4x75s. Agora o motor mira no
@@ -818,8 +975,8 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ### Task 4: Aleatoriedade determinística
 
 **Files:**
-- Create: `src/engine/rng.ts`
-- Test: `src/engine/rng.test.ts`
+- Create: `packages/core/src/engine/rng.ts`
+- Test: `packages/core/src/engine/rng.test.ts`
 
 **Interfaces:**
 - Consumes: nada
@@ -829,7 +986,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Escrever os testes (vão falhar)**
 
-`src/engine/rng.test.ts`:
+`packages/core/src/engine/rng.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -905,14 +1062,14 @@ describe('weightedPick', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/engine/rng.test.ts
+npm test -- packages/core/src/engine/rng.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./rng"`.
 
 - [ ] **Step 3: Implementar**
 
-`src/engine/rng.ts`:
+`packages/core/src/engine/rng.ts`:
 
 ```ts
 /**
@@ -961,7 +1118,7 @@ export function weightedPick<T>(
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/engine/rng.test.ts
+npm test -- packages/core/src/engine/rng.test.ts
 ```
 
 Esperado: PASS, 8 testes.
@@ -971,7 +1128,7 @@ Esperado: PASS, 8 testes.
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add src/engine
+git add packages/core/src/engine
 git commit -m "feat(engine): rng determinístico e sorteio ponderado
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
@@ -982,22 +1139,22 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ### Task 5: Seleção de exercícios — o coração do produto
 
 **Files:**
-- Create: `src/engine/generate.ts`
-- Modify: `src/engine/index.ts` (re-exportar a API pública)
-- Test: `src/engine/generate.test.ts`
-- Create: `src/engine/__fixtures__/catalog.ts`
+- Create: `packages/core/src/engine/generate.ts`
+- Modify: `packages/core/src/engine/index.ts` (re-exportar a API pública)
+- Test: `packages/core/src/engine/generate.test.ts`
+- Create: `packages/core/src/engine/__fixtures__/catalog.ts`
 
 **Interfaces:**
 - Consumes: `eligible` de `./filter`; `schemeFor`, `costOf` de `./budget`; `mulberry32`, `weightedPick` de `./rng`; `MAX_EX`, `MAX_PER_GROUP`, `WARMUP_SEC` de `./constants`
 - Produces:
   - `generateWorkout(input: Input, catalog: Exercise[]): Workout`
-  - `src/engine/index.ts` re-exporta: `generateWorkout`, `eligible`, `schemeFor`, `costOf`, `mulberry32`, e todos os tipos
+  - `packages/core/src/engine/index.ts` re-exporta: `generateWorkout`, `eligible`, `schemeFor`, `costOf`, `mulberry32`, e todos os tipos
 
 - [ ] **Step 1: Criar o catálogo de teste**
 
 Fixture pequeno e explícito. Não use o CSV real aqui — testes do motor não leem arquivo.
 
-`src/engine/__fixtures__/catalog.ts`:
+`packages/core/src/engine/__fixtures__/catalog.ts`:
 
 ```ts
 import type { Exercise } from '../types';
@@ -1060,7 +1217,7 @@ export const ALL_EQUIPMENT = [
 
 - [ ] **Step 2: Escrever os testes (vão falhar)**
 
-`src/engine/generate.test.ts`:
+`packages/core/src/engine/generate.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -1210,14 +1367,14 @@ describe('generateWorkout — casos degenerados', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/engine/generate.test.ts
+npm test -- packages/core/src/engine/generate.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./generate"`.
 
 - [ ] **Step 4: Implementar**
 
-`src/engine/generate.ts`:
+`packages/core/src/engine/generate.ts`:
 
 ```ts
 import { MAX_EX, MAX_PER_GROUP, WARMUP_SEC } from './constants';
@@ -1346,7 +1503,7 @@ export function generateWorkout(input: Input, catalog: Exercise[]): Workout {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/engine/generate.test.ts
+npm test -- packages/core/src/engine/generate.test.ts
 ```
 
 Esperado: PASS, 18 testes.
@@ -1355,7 +1512,7 @@ Se `não põe composto na segunda metade da sessão` falhar com 2 compostos, ver
 
 - [ ] **Step 6: Exportar a API pública do motor**
 
-`src/engine/index.ts`:
+`packages/core/src/engine/index.ts`:
 
 ```ts
 export const ENGINE_VERSION = '1.0.0';
@@ -1383,7 +1540,7 @@ Esperado: PASS em todos os arquivos; `tsc --noEmit` sem saída.
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add src/engine
+git add packages/core/src/engine
 git commit -m "feat(engine): seleção de exercícios com teto, cobertura e ordem de compostos
 
 Codifica as quatro regras que um professor aplica sem pensar: composto no
@@ -1400,7 +1557,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 O teste mais valioso do conjunto. Testes de exemplo verificam os casos que você imaginou; este verifica os que você não imaginou.
 
 **Files:**
-- Test: `src/engine/generate.property.test.ts`
+- Test: `packages/core/src/engine/generate.property.test.ts`
 
 **Interfaces:**
 - Consumes: `generateWorkout`, `MAX_EX`, `MAX_PER_GROUP` do motor; `CATALOG`, `ALL_EQUIPMENT` do fixture
@@ -1408,7 +1565,7 @@ O teste mais valioso do conjunto. Testes de exemplo verificam os casos que você
 
 - [ ] **Step 1: Escrever o teste (vai falhar se qualquer invariante estiver quebrada)**
 
-`src/engine/generate.property.test.ts`:
+`packages/core/src/engine/generate.property.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -1523,7 +1680,7 @@ describe('generateWorkout — invariantes sobre 1000 inputs aleatórios', () => 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/engine/generate.property.test.ts
+npm test -- packages/core/src/engine/generate.property.test.ts
 ```
 
 Esperado: PASS, 2 testes, em menos de 2 segundos (o motor roda em ~0.1ms por geração).
@@ -1535,7 +1692,7 @@ Se falhar, a mensagem traz o `ctx` com os parâmetros exatos que quebraram — r
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add src/engine
+git add packages/core/src/engine
 git commit -m "test(engine): property test com 1000 inputs aleatórios
 
 Afirma as invariantes que testes de exemplo não pegam: equipamento, nível,
@@ -1553,10 +1710,10 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 O CSV é a fonte de autoria (D3). Se ele puder entrar inválido, o motor recebe lixo e os testes do motor não pegam — eles usam fixture. Este é o portão.
 
 **Files:**
-- Create: `src/catalog/schema.ts`
+- Create: `packages/core/src/catalog/schema.ts`
 - Create: `catalog/equipment.csv`
 - Create: `catalog/exercises.csv` (com 3 linhas de exemplo, para o teste ter o que ler)
-- Test: `src/catalog/schema.test.ts`
+- Test: `packages/core/src/catalog/schema.test.ts`
 - Modify: `package.json` (script `validate:catalog`)
 
 **Interfaces:**
@@ -1612,7 +1769,7 @@ esteira-moderada,Esteira — ritmo moderado,cardio,,esteira,1,cardio,false,0,600
 
 - [ ] **Step 2: Escrever os testes (vão falhar)**
 
-`src/catalog/schema.test.ts`:
+`packages/core/src/catalog/schema.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -1712,17 +1869,19 @@ describe('parseExercisesCsv', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/catalog/schema.test.ts
+npm test -- packages/core/src/catalog/schema.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./schema"`.
 
 - [ ] **Step 4: Implementar**
 
-`src/catalog/schema.ts`:
+`packages/core/src/catalog/schema.ts`:
 
 ```ts
 import { z } from 'zod';
+// Import relativo: este arquivo VIVE em @quickfit/core, então não se
+// auto-referencia pelo nome do pacote.
 import type { Contra, Exercise, Level, MuscleGroup, Pattern } from '../engine/types';
 
 export class CatalogError extends Error {}
@@ -1865,7 +2024,7 @@ export function parseExercisesCsv(text: string, knownEquipment: Set<string>): Ex
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/catalog/schema.test.ts
+npm test -- packages/core/src/catalog/schema.test.ts
 ```
 
 Esperado: PASS, 14 testes.
@@ -1876,7 +2035,7 @@ Esperado: PASS, 14 testes.
 
 ```ts
 import { readFileSync } from 'node:fs';
-import { parseEquipmentCsv, parseExercisesCsv } from '../src/catalog/schema';
+import { parseEquipmentCsv, parseExercisesCsv } from '../packages/core/src/catalog/schema';
 
 try {
   const equip = parseEquipmentCsv(readFileSync('catalog/equipment.csv', 'utf8'));
@@ -1928,7 +2087,7 @@ Esperado: `OK — 25 equipamentos, 3 exercícios` seguido de avisos de profundid
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add catalog src/catalog scripts package.json package-lock.json
+git add catalog packages/core/src/catalog scripts package.json package-lock.json
 git commit -m "feat(catalog): schema do CSV com validação que quebra o build
 
 Equipamento inexistente, avg_sec_per_set absurdo, cardio sem duração e
@@ -2085,7 +2244,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { parseEquipmentCsv } from '../src/catalog/schema';
+import { parseEquipmentCsv } from '../packages/core/src/catalog/schema';
 
 const BATCH = 12;           // saída pequena por chamada = sem risco de truncar
 const MODEL = 'claude-opus-5';
@@ -2333,16 +2492,16 @@ Esperado: `OK — 25 equipamentos, ~110 exercícios` e nenhum aviso de grupo com
 
 - [ ] **Step 8: Rodar a suíte para confirmar que o motor aceita o catálogo real**
 
-Acrescente um teste de integração leve — o único do motor que lê arquivo, e por isso mora fora de `src/engine/`:
+Acrescente um teste de integração leve — o único do motor que lê arquivo, e por isso mora fora de `packages/core/src/engine/`:
 
-`src/catalog/integration.test.ts`:
+`packages/core/src/catalog/integration.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { parseEquipmentCsv, parseExercisesCsv } from './schema';
 import { generateWorkout } from '../engine';
-import type { Input } from '../engine/types';
+import type { Input } from '@quickfit/core/engine';
 
 const equip = parseEquipmentCsv(readFileSync('catalog/equipment.csv', 'utf8'));
 const catalog = parseExercisesCsv(
@@ -2391,7 +2550,7 @@ Se `combinação esquisita` falhar, o catálogo revisado ainda não tem profundi
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add catalog scripts/classify.ts src/catalog package.json package-lock.json
+git add catalog scripts/classify.ts packages/core/src/catalog package.json package-lock.json
 git commit -m "feat(catalog): classificação assistida por Claude + onda 1 revisada
 
 Script propõe via claude-opus-5 com saída validada por zod; contraindicação,
@@ -2721,9 +2880,9 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 **Files:**
 - Create: `scripts/seed-catalog.ts`
-- Create: `src/data/supabase.ts`
-- Create: `src/data/loadCatalog.ts`
-- Test: `src/data/loadCatalog.test.ts`
+- Create: `apps/totem/src/data/supabase.ts`
+- Create: `apps/totem/src/data/loadCatalog.ts`
+- Test: `apps/totem/src/data/loadCatalog.test.ts`
 - Modify: `package.json` (script `seed:catalog`)
 
 **Interfaces:**
@@ -2741,7 +2900,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```ts
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'node:fs';
-import { parseEquipmentCsv, parseExercisesCsv } from '../src/catalog/schema';
+import { parseEquipmentCsv, parseExercisesCsv } from '../packages/core/src/catalog/schema';
 
 const url = process.env.VITE_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE;
@@ -2877,12 +3036,12 @@ Esperado: um array com 5 ids. Se vier `[]`, a policy `anon_read_exercises` não 
 
 - [ ] **Step 4: Escrever os testes do carregador (vão falhar)**
 
-`src/data/loadCatalog.test.ts`:
+`apps/totem/src/data/loadCatalog.test.ts`:
 
 ```ts
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CACHE_KEY, hydrateFromCache, writeCache, type CatalogBundle } from './loadCatalog';
-import type { Exercise } from '../engine/types';
+import type { Exercise } from '@quickfit/core/engine';
 
 const ex: Exercise = {
   id: 'supino', name: 'Supino', primary: 'peito', secondary: ['triceps'],
@@ -2952,14 +3111,14 @@ describe('cache do catálogo', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/data/loadCatalog.test.ts
+npm test -- apps/totem/src/data/loadCatalog.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./loadCatalog"`.
 
 - [ ] **Step 6: Implementar o cliente e o carregador**
 
-`src/data/supabase.ts`:
+`apps/totem/src/data/supabase.ts`:
 
 ```ts
 import { createClient } from '@supabase/supabase-js';
@@ -2977,25 +3136,18 @@ export const supabase = createClient(url, anon, {
 });
 ```
 
-`src/data/loadCatalog.ts`:
+`apps/totem/src/data/loadCatalog.ts`:
 
 ```ts
 import { supabase } from './supabase';
-import type { Contra, Exercise, MuscleGroup, Pattern } from '../engine/types';
+import type { Contra, Exercise, MuscleGroup, Pattern } from '@quickfit/core/engine';
+import type { Gym, GymTheme } from '@quickfit/core/theme';
 
 export const CACHE_KEY = 'qf.catalog.v1';
 
-export type GymTheme = { accent: string; mode: 'dark' | 'light' };
-
-export type Gym = {
-  id: string;
-  slug: string;
-  name: string;
-  logoUrl: string | null;
-  theme: GymTheme;
-  trainerName: string | null;
-  trainerCref: string | null;
-};
+// `Gym` e `GymTheme` são definidos em @quickfit/core/theme porque o painel
+// também os consome. Re-exportados aqui só por conveniência de import nas telas.
+export type { Gym, GymTheme } from '@quickfit/core/theme';
 
 export type CatalogBundle = {
   exercises: Exercise[];
@@ -3127,14 +3279,14 @@ export async function loadCatalog(gymSlug = 'demo'): Promise<CatalogBundle> {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/data/loadCatalog.test.ts && npm run typecheck
+npm test -- apps/totem/src/data/loadCatalog.test.ts && npm run typecheck
 ```
 
 Esperado: PASS, 6 testes; typecheck limpo.
 
 - [ ] **Step 8: Verificar o carregamento real no browser**
 
-Adicione temporariamente ao `src/main.tsx`, antes do `render`:
+Adicione temporariamente ao `apps/totem/src/main.tsx`, antes do `render`:
 
 ```ts
 import { loadCatalog } from './data/loadCatalog';
@@ -3158,7 +3310,7 @@ Remova o trecho temporário do `main.tsx` depois de conferir.
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add scripts/seed-catalog.ts src/data package.json
+git add scripts/seed-catalog.ts apps/totem/src/data package.json
 git commit -m "feat(data): seed do catálogo e carregamento com cache offline
 
 O totem carrega uma vez e cacheia em localStorage. Se a internet da academia
@@ -3176,14 +3328,18 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 D8: a academia mexe em uma cor, o logo e o modo. Tudo o mais é seu, fixo e testado.
 
 **Files:**
-- Create: `src/theme/contrast.ts`
-- Create: `src/theme/base.ts`
-- Create: `src/theme/apply.ts`
-- Test: `src/theme/contrast.test.ts`
+- Create: `packages/core/src/theme/types.ts`
+- Create: `packages/core/src/theme/contrast.ts`
+- Create: `packages/core/src/theme/base.ts`
+- Create: `packages/core/src/theme/apply.ts`
+- Create: `packages/core/src/theme/index.ts`
+- Test: `packages/core/src/theme/contrast.test.ts`
 
 **Interfaces:**
-- Consumes: `GymTheme` de `../data/loadCatalog`
+- Consumes: nada de fora de `@quickfit/core`
 - Produces:
+  - `type GymTheme = { accent: string; mode: 'dark' | 'light' }` e `type Gym` — **definidos aqui**, não em `apps/totem`
+  - `MIN_CONTRAST = 4.5`
   - `contrastRatio(a: string, b: string): number` — razão WCAG, 1 a 21
   - `bestContrast(color: string, options: string[]): string`
   - `validateAccent(accent: string, mode: 'dark' | 'light'): { ok: boolean; ratio: number; suggestion?: string }`
@@ -3192,7 +3348,7 @@ D8: a academia mexe em uma cor, o logo e o modo. Tudo o mais é seu, fixo e test
 
 - [ ] **Step 1: Escrever os testes (vão falhar)**
 
-`src/theme/contrast.test.ts`:
+`packages/core/src/theme/contrast.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -3277,14 +3433,39 @@ describe('validateAccent', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/theme/contrast.test.ts
+npm test -- packages/core/src/theme/contrast.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./contrast"`.
 
-- [ ] **Step 3: Implementar contraste e base**
+- [ ] **Step 3: Implementar tipos, contraste e base**
 
-`src/theme/base.ts`:
+`packages/core/src/theme/types.ts`:
+
+```ts
+/**
+ * Estes tipos vivem em @quickfit/core porque têm DOIS consumidores: o painel
+ * escreve o tema (com validação de contraste) e o totem o lê. Se morassem em
+ * apps/totem, o core dependeria do app — inversão de dependência que a
+ * separação totem/painel expôs.
+ */
+export type GymTheme = {
+  accent: string;
+  mode: 'dark' | 'light';
+};
+
+export type Gym = {
+  id: string;
+  slug: string;
+  name: string;
+  logoUrl: string | null;
+  theme: GymTheme;
+  trainerName: string | null;
+  trainerCref: string | null;
+};
+```
+
+`packages/core/src/theme/base.ts`:
 
 ```ts
 /** Herdado do tailwind.config.js do Persona Fit. Fixo — a academia não mexe. */
@@ -3312,7 +3493,7 @@ export const LIGHT_BASE = {
 export const MIN_CONTRAST = 4.5;
 ```
 
-`src/theme/contrast.ts`:
+`packages/core/src/theme/contrast.ts`:
 
 ```ts
 import { DARK_BASE, LIGHT_BASE, MIN_CONTRAST } from './base';
@@ -3393,17 +3574,17 @@ export function validateAccent(
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/theme/contrast.test.ts
+npm test -- packages/core/src/theme/contrast.test.ts
 ```
 
 Esperado: PASS, 12 testes.
 
 - [ ] **Step 5: Implementar `applyTheme`**
 
-`src/theme/apply.ts`:
+`packages/core/src/theme/apply.ts`:
 
 ```ts
-import type { GymTheme } from '../data/loadCatalog';
+import type { GymTheme } from './types';
 import { DARK_BASE, LIGHT_BASE } from './base';
 import { bestContrast, rgba, validateAccent } from './contrast';
 
@@ -3438,7 +3619,20 @@ export function applyTheme(theme: GymTheme): void {
 }
 ```
 
-- [ ] **Step 6: Rodar a suíte e o typecheck**
+- [ ] **Step 6: Exportar a API pública do tema**
+
+`packages/core/src/theme/index.ts`:
+
+```ts
+export * from './types';
+export { DARK_BASE, LIGHT_BASE, MIN_CONTRAST } from './base';
+export { contrastRatio, bestContrast, rgba, validateAccent } from './contrast';
+export { applyTheme } from './apply';
+```
+
+Este é o caminho declarado em `packages/core/package.json` → `exports['./theme']`. Sem ele, `import { applyTheme } from '@quickfit/core/theme'` não resolve.
+
+- [ ] **Step 7: Rodar a suíte e o typecheck**
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
@@ -3446,12 +3640,12 @@ cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 npm test && npm run typecheck
 ```
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add src/theme
+git add packages/core/src/theme
 git commit -m "feat(theme): white-label de uma cor com validação de contraste
 
 Accent abaixo de 4.5:1 é recusado e substituído pela variante ajustada. É a
@@ -3467,9 +3661,9 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 Kiosk não tem botão de voltar do browser, e o aluno abandona no meio. A máquina é o que garante que o próximo aluno não vê os dados do anterior.
 
 **Files:**
-- Create: `src/state/machine.ts`
-- Create: `src/state/useIdleTimeout.ts`
-- Test: `src/state/machine.test.ts`
+- Create: `apps/totem/src/state/machine.ts`
+- Create: `apps/totem/src/state/useIdleTimeout.ts`
+- Test: `apps/totem/src/state/machine.test.ts`
 
 **Interfaces:**
 - Consumes: tipos do motor (`Goal`, `MuscleGroup`, `Level`, `Contra`, `Input`, `Workout`)
@@ -3484,7 +3678,7 @@ Kiosk não tem botão de voltar do browser, e o aluno abandona no meio. A máqui
 
 - [ ] **Step 1: Escrever os testes (vão falhar)**
 
-`src/state/machine.test.ts`:
+`apps/totem/src/state/machine.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -3694,17 +3888,17 @@ describe('toInput', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/state/machine.test.ts
+npm test -- apps/totem/src/state/machine.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./machine"`.
 
 - [ ] **Step 3: Implementar a máquina**
 
-`src/state/machine.ts`:
+`apps/totem/src/state/machine.ts`:
 
 ```ts
-import type { Contra, Goal, Input, Level, MuscleGroup, Workout } from '../engine/types';
+import type { Contra, Goal, Input, Level, MuscleGroup, Workout } from '@quickfit/core/engine';
 
 export type Screen =
   | 'attract' | 'parq' | 'blocked' | 'home'
@@ -3900,14 +4094,14 @@ export function toInput(state: MachineState, availableEquipment: string[]): Inpu
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/state/machine.test.ts
+npm test -- apps/totem/src/state/machine.test.ts
 ```
 
 Esperado: PASS, 16 testes.
 
 - [ ] **Step 5: Implementar o idle timeout**
 
-`src/state/useIdleTimeout.ts`:
+`apps/totem/src/state/useIdleTimeout.ts`:
 
 ```ts
 import { useEffect, useRef } from 'react';
@@ -3956,7 +4150,7 @@ npm test && npm run typecheck
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add src/state
+git add apps/totem/src/state
 git commit -m "feat(state): máquina do fluxo com PAR-Q bloqueante e idle timeout
 
 RESET descarta todo o estado do aluno; a seed sobrevive para o próximo não
@@ -3974,18 +4168,18 @@ Ao fim desta tarefa o totem **funciona**: attract → PAR-Q → atalho → trein
 **Referência visual:** o protótipo validado está em `/tmp/claude-1000/-home-robson-www--estudos-pessoal-nutrion/5ace61d8-50bc-456a-8188-01d62cb6e9c3/scratchpad/quickfit-prototipo.html`. Ele já resolveu o dimensionamento das telas, o véu de scroll e a escala tipográfica — copie as decisões visuais dele em vez de redesenhar. A diferença: no protótipo tudo escala com `cqw` porque o totem é uma caixa dentro de uma página; aqui o app **é** a viewport, então use `vh`/`vw` e a escala em px da spec §6.
 
 **Files:**
-- Create: `src/components/BigButton.tsx`
-- Create: `src/components/Cta.tsx`
-- Create: `src/components/Boundary.tsx`
-- Create: `src/screens/Attract.tsx`
-- Create: `src/screens/Parq.tsx`
-- Create: `src/screens/Blocked.tsx`
-- Create: `src/screens/Home.tsx`
-- Create: `src/screens/Generating.tsx`
-- Create: `src/screens/Thin.tsx`
-- Create: `src/screens/Unavailable.tsx`
-- Modify: `src/App.tsx`
-- Modify: `src/main.tsx`
+- Create: `apps/totem/src/components/BigButton.tsx`
+- Create: `apps/totem/src/components/Cta.tsx`
+- Create: `apps/totem/src/components/Boundary.tsx`
+- Create: `apps/totem/src/screens/Attract.tsx`
+- Create: `apps/totem/src/screens/Parq.tsx`
+- Create: `apps/totem/src/screens/Blocked.tsx`
+- Create: `apps/totem/src/screens/Home.tsx`
+- Create: `apps/totem/src/screens/Generating.tsx`
+- Create: `apps/totem/src/screens/Thin.tsx`
+- Create: `apps/totem/src/screens/Unavailable.tsx`
+- Modify: `apps/totem/src/App.tsx`
+- Modify: `apps/totem/src/main.tsx`
 - Modify: `index.html`
 - Create: `public/fonts/` (Sora + Inter em woff2)
 
@@ -4010,7 +4204,7 @@ ls -la public/fonts/
 
 Esperado: 4 arquivos `.woff2`. **Não** use `<link>` para Google Fonts — o totem numa academia com internet ruim renderizaria em Times New Roman na frente do gestor (spec §6).
 
-Acrescente ao topo de `src/index.css`, antes dos `@tailwind`:
+Acrescente ao topo de `apps/totem/src/index.css`, antes dos `@tailwind`:
 
 ```css
 @font-face {
@@ -4046,7 +4240,7 @@ Acrescente ao topo de `src/index.css`, antes dos `@tailwind`:
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/apps/totem/src/main.tsx"></script>
   </body>
 </html>
 ```
@@ -4055,7 +4249,7 @@ Acrescente ao topo de `src/index.css`, antes dos `@tailwind`:
 
 - [ ] **Step 3: Escrever os componentes base**
 
-`src/components/BigButton.tsx`:
+`apps/totem/src/components/BigButton.tsx`:
 
 ```tsx
 type Props = {
@@ -4094,7 +4288,7 @@ export function BigButton({ title, sub, pressed, onClick }: Props) {
 }
 ```
 
-`src/components/Cta.tsx`:
+`apps/totem/src/components/Cta.tsx`:
 
 ```tsx
 type Props = {
@@ -4128,7 +4322,7 @@ export function Cta({ children, onClick, variant = 'solid', disabled }: Props) {
 
 - [ ] **Step 4: Escrever as quatro telas do caminho de 3 toques**
 
-`src/screens/Attract.tsx`:
+`apps/totem/src/screens/Attract.tsx`:
 
 ```tsx
 export function Attract({ gymName, onTouch }: { gymName: string; onTouch: () => void }) {
@@ -4177,7 +4371,7 @@ export function Mark({ size = 52 }: { size?: number }) {
 }
 ```
 
-`src/screens/Parq.tsx`:
+`apps/totem/src/screens/Parq.tsx`:
 
 ```tsx
 import { PARQ_QUESTIONS } from '../state/machine';
@@ -4235,7 +4429,7 @@ export function Parq({ marked, onToggle, onNone }: Props) {
 }
 ```
 
-`src/screens/Blocked.tsx`:
+`apps/totem/src/screens/Blocked.tsx`:
 
 ```tsx
 import { Cta } from '../components/Cta';
@@ -4260,7 +4454,7 @@ export function Blocked({ onReset }: { onReset: () => void }) {
 }
 ```
 
-`src/screens/Home.tsx`:
+`apps/totem/src/screens/Home.tsx`:
 
 ```tsx
 import { SHORTCUTS } from '../state/machine';
@@ -4297,7 +4491,7 @@ export function Home({ onShortcut, onCustom }: Props) {
 
 - [ ] **Step 5: Telas de transição e de falha**
 
-`src/screens/Generating.tsx`:
+`apps/totem/src/screens/Generating.tsx`:
 
 ```tsx
 import { useEffect, useState } from 'react';
@@ -4340,7 +4534,7 @@ export function Generating() {
 }
 ```
 
-`src/screens/Thin.tsx`:
+`apps/totem/src/screens/Thin.tsx`:
 
 ```tsx
 import { Cta } from '../components/Cta';
@@ -4376,7 +4570,7 @@ export function Thin({ poolSize, onBack, onReset }: Props) {
 }
 ```
 
-`src/screens/Unavailable.tsx`:
+`apps/totem/src/screens/Unavailable.tsx`:
 
 ```tsx
 /** Nenhum caminho termina em tela branca (spec §8). */
@@ -4396,13 +4590,13 @@ export function Unavailable() {
 
 - [ ] **Step 6: Montar o `App`**
 
-`src/App.tsx`:
+`apps/totem/src/App.tsx`:
 
 ```tsx
 import { useEffect, useReducer, useState } from 'react';
-import { generateWorkout } from './engine';
+import { generateWorkout } from '@quickfit/core/engine';
 import { loadCatalog, type CatalogBundle } from './data/loadCatalog';
-import { applyTheme } from './theme/apply';
+import { applyTheme } from '@quickfit/core/theme';
 import { initialState, reducer, toInput } from './state/machine';
 import { useIdleTimeout } from './state/useIdleTimeout';
 import { Attract, Mark } from './screens/Attract';
@@ -4505,7 +4699,7 @@ function Header({ gymName }: { gymName: string }) {
 }
 ```
 
-`src/main.tsx`:
+`apps/totem/src/main.tsx`:
 
 ```tsx
 import { StrictMode } from 'react';
@@ -4524,7 +4718,7 @@ createRoot(document.getElementById('root')!).render(
 
 Spec §8, última linha. Um totem sem operador precisa se recuperar sozinho.
 
-`src/components/Boundary.tsx`:
+`apps/totem/src/components/Boundary.tsx`:
 
 ```tsx
 import { Component, type ReactNode } from 'react';
@@ -4625,15 +4819,15 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 O scroll da lista não é detalhe: com 9 exercícios a lista estoura a dobra, e sem véu e contador o aluno não sabe que há mais.
 
 **Files:**
-- Create: `src/screens/Goal.tsx`
-- Create: `src/screens/Groups.tsx`
-- Create: `src/screens/Time.tsx`
-- Create: `src/screens/Level.tsx`
-- Create: `src/screens/Result.tsx`
-- Create: `src/screens/useHasMore.ts`
-- Test: `src/screens/labels.test.ts`
-- Create: `src/screens/labels.ts`
-- Modify: `src/App.tsx`
+- Create: `apps/totem/src/screens/Goal.tsx`
+- Create: `apps/totem/src/screens/Groups.tsx`
+- Create: `apps/totem/src/screens/Time.tsx`
+- Create: `apps/totem/src/screens/Level.tsx`
+- Create: `apps/totem/src/screens/Result.tsx`
+- Create: `apps/totem/src/screens/useHasMore.ts`
+- Test: `apps/totem/src/screens/labels.test.ts`
+- Create: `apps/totem/src/screens/labels.ts`
+- Modify: `apps/totem/src/App.tsx`
 
 **Interfaces:**
 - Consumes: `Action`, `MachineState` de `../state/machine`; `Workout` do motor
@@ -4644,12 +4838,12 @@ O scroll da lista não é detalhe: com 9 exercícios a lista estoura a dobra, e 
 
 - [ ] **Step 1: Escrever os testes dos rótulos e do resumo (vão falhar)**
 
-`src/screens/labels.test.ts`:
+`apps/totem/src/screens/labels.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
 import { GROUP_LABEL, GOAL_OPTIONS, LEVEL_OPTIONS, TIME_OPTIONS, describeWorkout } from './labels';
-import type { Workout } from '../engine/types';
+import type { Workout } from '@quickfit/core/engine';
 
 describe('rótulos', () => {
   it('todo grupo muscular tem rótulo em pt-BR', () => {
@@ -4704,17 +4898,17 @@ describe('describeWorkout', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/screens/labels.test.ts
+npm test -- apps/totem/src/screens/labels.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./labels"`.
 
 - [ ] **Step 3: Implementar rótulos e resumo**
 
-`src/screens/labels.ts`:
+`apps/totem/src/screens/labels.ts`:
 
 ```ts
-import type { Goal, Input, Level, MuscleGroup, Workout } from '../engine/types';
+import type { Goal, Input, Level, MuscleGroup, Workout } from '@quickfit/core/engine';
 
 /** Nunca mostre o id ao aluno. "core" é jargão; "Abdômen" é português. */
 export const GROUP_LABEL: Record<MuscleGroup, string> = {
@@ -4771,19 +4965,19 @@ export function groupsLabel(groups: MuscleGroup[]): string {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/screens/labels.test.ts
+npm test -- apps/totem/src/screens/labels.test.ts
 ```
 
 Esperado: PASS, 7 testes.
 
 - [ ] **Step 5: Escrever as quatro telas do caminho completo**
 
-`src/screens/Goal.tsx`:
+`apps/totem/src/screens/Goal.tsx`:
 
 ```tsx
 import { BigButton } from '../components/BigButton';
 import { GOAL_OPTIONS } from './labels';
-import type { Goal as GoalType } from '../engine/types';
+import type { Goal as GoalType } from '@quickfit/core/engine';
 
 type Props = { onPick: (g: GoalType) => void; onBack: () => void };
 
@@ -4834,14 +5028,14 @@ export function StepShell({
 }
 ```
 
-`src/screens/Groups.tsx`:
+`apps/totem/src/screens/Groups.tsx`:
 
 ```tsx
 import { BigButton } from '../components/BigButton';
 import { Cta } from '../components/Cta';
 import { StepShell } from './Goal';
 import { GROUP_LABEL } from './labels';
-import type { MuscleGroup } from '../engine/types';
+import type { MuscleGroup } from '@quickfit/core/engine';
 
 type Props = {
   selected: MuscleGroup[];
@@ -4879,13 +5073,13 @@ export function Groups({ selected, onToggle, onConfirm, onBack }: Props) {
 }
 ```
 
-`src/screens/Time.tsx`:
+`apps/totem/src/screens/Time.tsx`:
 
 ```tsx
 import { BigButton } from '../components/BigButton';
 import { StepShell } from './Goal';
 import { TIME_OPTIONS } from './labels';
-import type { Input } from '../engine/types';
+import type { Input } from '@quickfit/core/engine';
 
 type Props = { onPick: (m: Input['minutes']) => void; onBack: () => void };
 
@@ -4902,13 +5096,13 @@ export function Time({ onPick, onBack }: Props) {
 }
 ```
 
-`src/screens/Level.tsx`:
+`apps/totem/src/screens/Level.tsx`:
 
 ```tsx
 import { BigButton } from '../components/BigButton';
 import { StepShell } from './Goal';
 import { LEVEL_OPTIONS } from './labels';
-import type { Level as LevelType } from '../engine/types';
+import type { Level as LevelType } from '@quickfit/core/engine';
 
 type Props = { onPick: (l: LevelType) => void; onBack: () => void };
 
@@ -4927,7 +5121,7 @@ export function Level({ onPick, onBack }: Props) {
 
 - [ ] **Step 6: Hook do véu de scroll**
 
-`src/screens/useHasMore.ts`:
+`apps/totem/src/screens/useHasMore.ts`:
 
 ```ts
 import { useCallback, useEffect, useState, type RefObject } from 'react';
@@ -4976,14 +5170,14 @@ export function useHasMore(ref: RefObject<HTMLElement | null>): {
 
 - [ ] **Step 7: Tela de resultado**
 
-`src/screens/Result.tsx`:
+`apps/totem/src/screens/Result.tsx`:
 
 ```tsx
 import { useEffect, useRef } from 'react';
 import { Cta } from '../components/Cta';
 import { useHasMore } from './useHasMore';
 import { describeWorkout, groupsLabel } from './labels';
-import type { Workout } from '../engine/types';
+import type { Workout } from '@quickfit/core/engine';
 
 type Props = {
   workout: Workout;
@@ -5182,12 +5376,12 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 `overflow: auto` na pré-visualização **corta conteúdo no papel**. É o defeito mais perigoso do produto porque a tela mostra certo.
 
 **Files:**
-- Create: `src/print/print.css`
-- Create: `src/print/qr.ts`
-- Create: `src/screens/Ficha.tsx`
-- Test: `src/print/qr.test.ts`
-- Modify: `src/index.css` (importar `print.css`)
-- Modify: `src/App.tsx`
+- Create: `apps/totem/src/print/print.css`
+- Create: `apps/totem/src/print/qr.ts`
+- Create: `apps/totem/src/screens/Ficha.tsx`
+- Test: `apps/totem/src/print/qr.test.ts`
+- Modify: `apps/totem/src/index.css` (importar `print.css`)
+- Modify: `apps/totem/src/App.tsx`
 
 **Interfaces:**
 - Consumes: `Workout`, `Gym`, `describeWorkout`, `groupsLabel`
@@ -5198,7 +5392,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Escrever os testes do QR (vão falhar)**
 
-`src/print/qr.test.ts`:
+`apps/totem/src/print/qr.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -5236,14 +5430,14 @@ describe('qrDataUrl', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/print/qr.test.ts
+npm test -- apps/totem/src/print/qr.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./qr"`.
 
 - [ ] **Step 3: Implementar o QR**
 
-`src/print/qr.ts`:
+`apps/totem/src/print/qr.ts`:
 
 ```ts
 import QRCode from 'qrcode';
@@ -5277,14 +5471,14 @@ export function workoutUrl(
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/print/qr.test.ts
+npm test -- apps/totem/src/print/qr.test.ts
 ```
 
 Esperado: PASS, 4 testes.
 
 - [ ] **Step 5: Escrever a folha de impressão — as 6 regras não-negociáveis**
 
-`src/print/print.css`:
+`apps/totem/src/print/print.css`:
 
 ```css
 /* Cada regra aqui nasceu de defeito real medido no protótipo, não de teoria.
@@ -5353,7 +5547,7 @@ Esperado: PASS, 4 testes.
 }
 ```
 
-Acrescente ao fim de `src/index.css`:
+Acrescente ao fim de `apps/totem/src/index.css`:
 
 ```css
 @import './print/print.css';
@@ -5361,7 +5555,7 @@ Acrescente ao fim de `src/index.css`:
 
 - [ ] **Step 6: Escrever a tela da ficha**
 
-`src/screens/Ficha.tsx`:
+`apps/totem/src/screens/Ficha.tsx`:
 
 ```tsx
 import { useEffect, useState } from 'react';
@@ -5369,7 +5563,7 @@ import { Cta } from '../components/Cta';
 import { qrDataUrl, workoutUrl } from '../print/qr';
 import { describeWorkout } from './labels';
 import type { Gym } from '../data/loadCatalog';
-import type { Workout } from '../engine/types';
+import type { Workout } from '@quickfit/core/engine';
 
 type Props = {
   workout: Workout;
@@ -5567,13 +5761,13 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 D5: o LLM nunca está no caminho crítico. Ele chega **depois** do treino estar na tela e desiste em silêncio.
 
 **Files:**
-- Create: `src/ai/cacheKey.ts`
-- Create: `src/ai/embellish.ts`
+- Create: `apps/totem/src/ai/cacheKey.ts`
+- Create: `apps/totem/src/ai/embellish.ts`
 - Create: `supabase/functions/embellish/provider.ts`
 - Create: `supabase/functions/embellish/index.ts`
-- Test: `src/ai/cacheKey.test.ts`
-- Test: `src/ai/embellish.test.ts`
-- Modify: `src/App.tsx`
+- Test: `apps/totem/src/ai/cacheKey.test.ts`
+- Test: `apps/totem/src/ai/embellish.test.ts`
+- Modify: `apps/totem/src/App.tsx`
 
 **Interfaces:**
 - Consumes: `Workout` do motor; `supabase` de `../data/supabase`
@@ -5585,7 +5779,7 @@ D5: o LLM nunca está no caminho crítico. Ele chega **depois** do treino estar 
 
 - [ ] **Step 1: Escrever os testes da chave de cache (vão falhar)**
 
-`src/ai/cacheKey.test.ts`:
+`apps/totem/src/ai/cacheKey.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -5628,17 +5822,17 @@ describe('cacheKey', () => {
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/ai/cacheKey.test.ts
+npm test -- apps/totem/src/ai/cacheKey.test.ts
 ```
 
 Esperado: FAIL — `Failed to resolve import "./cacheKey"`.
 
 - [ ] **Step 3: Implementar a chave**
 
-`src/ai/cacheKey.ts`:
+`apps/totem/src/ai/cacheKey.ts`:
 
 ```ts
-import type { Goal, MuscleGroup } from '../engine/types';
+import type { Goal, MuscleGroup } from '@quickfit/core/engine';
 
 /**
  * Grupos entram ordenados (peito+tríceps é o mesmo treino que tríceps+peito),
@@ -5667,11 +5861,11 @@ export async function cacheKey(
 
 O contrato que importa: **nunca lança e nunca demora**.
 
-`src/ai/embellish.test.ts`:
+`apps/totem/src/ai/embellish.test.ts`:
 
 ```ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Workout } from '../engine/types';
+import type { Workout } from '@quickfit/core/engine';
 
 const rpc = vi.fn();
 const from = vi.fn();
@@ -5775,12 +5969,12 @@ describe('embellish', () => {
 
 - [ ] **Step 5: Implementar o enfeite**
 
-`src/ai/embellish.ts`:
+`apps/totem/src/ai/embellish.ts`:
 
 ```ts
 import { supabase } from '../data/supabase';
 import { cacheKey } from './cacheKey';
-import type { Goal, MuscleGroup, Workout } from '../engine/types';
+import type { Goal, MuscleGroup, Workout } from '@quickfit/core/engine';
 
 export type Embellishment = { title: string; cues: Record<string, string> };
 
@@ -5864,7 +6058,7 @@ export async function embellish(
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-npm test -- src/ai
+npm test -- apps/totem/src/ai
 ```
 
 Esperado: PASS, 12 testes.
@@ -6095,7 +6289,7 @@ Agora **desligue a rede** (DevTools → Network → Offline) e gere outro. O tre
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 npm test && npm run typecheck && npm run build
-git add src/ai supabase/functions src
+git add apps/totem/src/ai supabase/functions src
 git commit -m "feat(ai): enfeite opcional com cache, atrás de adaptador de provedor
 
 Cache por hash de (objetivo, grupos, exercícios) derruba ~90% das chamadas
@@ -6110,13 +6304,13 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ### Task 18: Persistir o treino, smoke test e deploy
 
 **Files:**
-- Create: `src/data/saveWorkout.ts`
-- Create: `src/screens/SharedWorkout.tsx`
+- Create: `apps/totem/src/data/saveWorkout.ts`
+- Create: `apps/totem/src/screens/SharedWorkout.tsx`
 - Create: `e2e/demo.spec.ts`
 - Create: `playwright.config.ts`
 - Create: `vercel.json`
 - Create: `README.md`
-- Modify: `src/App.tsx`
+- Modify: `apps/totem/src/App.tsx`
 - Modify: `package.json`
 
 **Interfaces:**
@@ -6128,12 +6322,12 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Implementar a persistência**
 
-`src/data/saveWorkout.ts`:
+`apps/totem/src/data/saveWorkout.ts`:
 
 ```ts
 import { customAlphabet } from 'nanoid';
 import { supabase } from './supabase';
-import type { Input, Workout } from '../engine/types';
+import type { Input, Workout } from '@quickfit/core/engine';
 
 // 10 chars sem ambíguos (0/O, 1/l/I): URL curta gera QR de baixa densidade,
 // que lê rápido em câmera ruim sob luz forte.
@@ -6177,7 +6371,7 @@ export async function saveWorkout(
 
 - [ ] **Step 2: Página mínima do QR**
 
-`src/screens/SharedWorkout.tsx`:
+`apps/totem/src/screens/SharedWorkout.tsx`:
 
 ```tsx
 import { useEffect, useState } from 'react';
