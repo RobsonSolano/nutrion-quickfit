@@ -28,21 +28,35 @@ export type EquipmentRow = { id: string; name: string; category: (typeof CATEGOR
 
 const equipmentSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/, 'id deve ser kebab-case minúsculo'),
-  name: z.string().min(1),
+  name: z.string().min(1, 'name não pode ficar vazio'),
   category: z.enum(CATEGORIES, { message: 'categoria inválida' }),
 });
 
 const exerciseSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/, 'id deve ser kebab-case minúsculo'),
-  name: z.string().min(1),
+  name: z.string().min(1, 'name não pode ficar vazio'),
   primary: z.enum(GROUPS, { message: 'primary inválido' }),
   secondary: z.array(z.enum(GROUPS, { message: 'secondary inválido' })),
   equipment: z.array(z.string()),
-  level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  // Cadeia de number em vez de union de literais: `z.union([...], { message })`
+  // NÃO aplica a mensagem custom em erro de união — o zod devolve "Invalid
+  // input" em inglês, testado. Com min/max a faixa é a mesma e a mensagem sai
+  // em pt-BR. O `as Exercise` no fim da função reconcilia `number` com `Level`.
+  level: z
+    .number({ message: 'level precisa ser um número' })
+    .int('level precisa ser inteiro')
+    .min(1, 'level precisa ser 1, 2 ou 3')
+    .max(3, 'level precisa ser 1, 2 ou 3'),
   pattern: z.enum(PATTERNS, { message: 'pattern inválido' }),
   isCompound: z.boolean(),
-  avgSecPerSet: z.number().int(),
-  durationSec: z.number().int().positive().optional(),
+  avgSecPerSet: z
+    .number({ message: 'avg_sec_per_set precisa ser um número' })
+    .int('avg_sec_per_set precisa ser inteiro'),
+  durationSec: z
+    .number({ message: 'duration_sec precisa ser um número' })
+    .int('duration_sec precisa ser inteiro')
+    .positive('duration_sec precisa ser positivo')
+    .optional(),
   contraindications: z.array(z.enum(CONTRAS, { message: 'contraindicação inválida' })),
   cue: z.string().optional(),
 });
@@ -92,6 +106,19 @@ export function parseExercisesCsv(text: string, knownEquipment: Set<string>): Ex
       id, name, primary, secondary, equipment, level, pattern,
       isCompound, avgSecPerSet, durationSec, contraindications, cue,
     ] = cols;
+
+    // `isCompound === 'true'` sozinho aceita QUALQUER coisa e devolve false em
+    // silêncio: "True", "TRUE", "1", "ture", célula vazia — todos viravam
+    // `false` sem erro. E `isCompound` é o campo que decide a ORDEM do treino
+    // (composto no primeiro terço, task 5), então um typo aqui reordena a
+    // sessão inteira sem ninguém notar. O `z.boolean()` do schema não pegava
+    // porque valida DEPOIS da coerção, quando o valor já é booleano.
+    if (isCompound !== 'true' && isCompound !== 'false') {
+      throw new CatalogError(
+        `linha ${line} (${id}): is_compound = "${isCompound}", ` +
+          `precisa ser exatamente "true" ou "false" (minúsculo).`,
+      );
+    }
 
     const candidate = {
       id, name, primary,
