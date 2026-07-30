@@ -38,7 +38,11 @@ select
   coalesce(e.video_url, '')                    as video_url
 from public.exercises e
 join public.exercise_groups g on g.id = e.group_id
-order by g.sort_order, g.slug, e.sort_order, e.name;
+-- `sort_order` existe em exercise_groups, NÃO em exercises. A primeira versão
+-- desta consulta ordenava por `e.sort_order` e quebrava com
+-- `42703: column e.sort_order does not exist`. Erro meu: inferi a coluna de um
+-- grep solto nas migrations e atribuí à tabela errada.
+order by g.sort_order, g.slug, e.name;
 
 
 -- ---------------------------------------------------------------------------

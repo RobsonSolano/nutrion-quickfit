@@ -1,0 +1,270 @@
+id,name,group_slug,equipment_text,is_compound,modality
+4dc51e1d-9cfc-4805-9014-6413c7ca28ba,Alongamento de latíssimo (lat stretch),back,peso corporal,False,generico
+97464486-fc4d-4744-b5fe-7c46bb22972d,Alongamento de trapézio,back,peso corporal,False,generico
+8db2ff8f-6c21-4af4-a477-76feeb37017c,Barra australiana,back,peso corporal,True,calistenia
+e311ef6d-def7-43b1-8b58-62b3fee0c5be,Barra fixa (pronada),back,peso corporal,True,musculacao
+6024b41b-3514-47e1-b8f0-ec3bffa51324,Barra fixa (supinada),back,peso corporal,True,musculacao
+5ed320f4-75c8-48cb-9f85-9567e42e15aa,Barra fixa fechada,back,peso corporal,True,calistenia
+7aac607d-6556-4dd3-b6c5-6cfcd58d48c6,Barra fixa pegada larga,back,peso corporal,True,calistenia
+2248610d-5290-4c28-b2a8-bfacd31f2c11,Barra fixa pronada,back,peso corporal,True,calistenia
+91eb3dd3-0d68-40fa-b608-2b2d708ffd4d,Barra fixa supinada,back,peso corporal,True,calistenia
+1067599f-8754-4e6c-8156-2044ef142d33,Child's pose,back,peso corporal,False,generico
+fe9db795-997c-42d2-82b2-b669ad4e9f6f,Cobra (alongamento),back,peso corporal,False,generico
+0e835e76-ee1d-4c9b-87d5-91fcd51c825d,Deadlift (CrossFit),back,barra,True,crossfit
+ecdf45cd-c58e-4aec-89e7-6c12411c7dc6,Foam roll lombar,back,rolo,False,generico
+8a6997bd-f1f2-4e2e-a944-f13b299f9e8b,Levantamento terra (barra),back,barra,True,musculacao
+165305f0-bebb-4651-b702-0ea2c9d4bfbd,Muscle-up,back,peso corporal,True,calistenia
+c05b13d4-6a0a-420a-844e-8a2f5b813874,Muscle-up nas argolas,back,argolas,True,crossfit
+81b5bf7a-de72-4de4-a5b7-501196f01a41,Pull-down (pulley),back,cabo,False,musculacao
+74fee36e-70c4-4620-a9d9-5b867ea16f4d,Puxada atrás (pulley),back,cabo,True,musculacao
+e8db89fd-138c-4cfa-a44a-dd430a11dcdf,Puxada frontal (pulley),back,cabo,True,musculacao
+54096b2b-0d3c-407f-bb6e-9bd195ebb8c3,Puxada triângulo (pulley),back,cabo,True,musculacao
+4d01713b-3b01-4ebe-922c-aad62024c35b,REMADA BAIXA ABERTA,back,máquina,False,musculacao
+de4a9988-978a-4d40-bc17-3a3855baa299,REMADA CURVADA PRON.,back,máquina,False,musculacao
+565aef44-3008-4751-9bb0-6c50032ded5e,Remada baixa (pulley),back,cabo,True,musculacao
+10ceb375-2807-43b5-8f8e-97707ae526c4,Remada cavalinho,back,barra,True,musculacao
+916f5a08-b458-4bd0-8928-3f89554b7114,Remada curvada (barra),back,barra,True,musculacao
+e4c4687c-a104-44ac-879b-b43d2640fcc5,Remada curvada (halteres),back,halter,True,musculacao
+a8d8939a-b26e-4c4a-9b22-443a33a6eb21,Remada máquina,back,máquina,True,musculacao
+5f525f4c-533e-43f9-ad99-52a6a3e91957,Remada unilateral (halter),back,halter,True,musculacao
+4004783e-3364-4078-a7b9-44a314a082e6,Spinal twist deitado,back,peso corporal,False,generico
+4097b6d4-1973-40f3-96bb-1f518ced7066,Spinal twist sentado,back,peso corporal,False,generico
+ae0672c4-cf04-41f5-8217-b97861c530a5,Sumô deadlift high pull,back,barra,True,crossfit
+0562ee41-978a-401d-b85f-1989a434bf40,Thread the needle,back,peso corporal,False,generico
+7eba45bd-2a4d-462d-b232-c120822d23b5,Alongamento de antebraço (extensor),biceps,peso corporal,False,generico
+8bc054ab-3020-4014-ae76-819038f04248,Alongamento de antebraço (flexor),biceps,peso corporal,False,generico
+147c62bf-0f75-4602-a81a-3adc48504eeb,Alongamento de bíceps na parede,biceps,peso corporal,False,generico
+06870368-7b0f-47ef-9fbc-f009505f6f62,ROSCA DIRETA POLIA,biceps,máquina,False,musculacao
+fbb00793-d53d-48b3-bf24-79e7fadcbfea,Rosca 21 (barra),biceps,barra,False,musculacao
+09c2e932-5972-4a50-b6dc-ea64c37fa68d,Rosca Scott (barra),biceps,barra,False,musculacao
+8cc0b11b-2038-49d9-9bae-9c937fd4ec89,Rosca Scott (halter),biceps,halter,False,musculacao
+8879c535-21e5-4464-ab37-6a6f6decac40,Rosca alternada (halteres),biceps,halter,False,musculacao
+c310721e-2893-4c18-81e1-898f6ed274d2,Rosca concentrada (halter),biceps,halter,False,musculacao
+217a670f-1b8a-41c7-b054-c0aff1466065,Rosca direta (W),biceps,barra,False,musculacao
+24b0b894-3d42-427f-b900-9bc821004b15,Rosca direta (barra),biceps,barra,False,musculacao
+ee7ed537-b597-4181-b736-2af73bdf262b,Rosca direta (halteres),biceps,halter,False,musculacao
+2d4d5675-1085-4409-b039-c4bb989c6852,Rosca martelo (halteres),biceps,halter,False,musculacao
+97ba757c-6baf-44f1-96be-b8c70088d3e6,Rosca no cabo (pulley),biceps,cabo,False,musculacao
+fa15a332-343a-435c-9a12-87835bf01aeb,Aero jump (cama elástica),cardio,equipamento,False,musculacao
+598a8af0-5821-4c49-be11-2a58133f01db,Assault bike,cardio,bike,True,crossfit
+fb9f739c-0630-474e-a1f2-8154261d1e7f,Bicicleta (ao ar livre),cardio,equipamento,False,musculacao
+26bcedb0-865e-4835-a491-094cfb8276f1,Bicicleta ergométrica,cardio,máquina,False,musculacao
+38585107-814d-42d1-8702-164456e4657c,Caminhada (ao ar livre),cardio,equipamento,False,musculacao
+af4d3c47-a372-4aec-b5f3-9bce6f0c26b2,Corrida (ao ar livre),cardio,equipamento,False,musculacao
+f65a3aa3-b4d7-41c5-8d1e-09a6955cb090,Crosstrainer,cardio,máquina,False,musculacao
+26ff8094-f2f3-4234-92cf-42d463a9469d,Double under,cardio,corda,False,crossfit
+c267327d-861a-48c1-806e-5b0501b98805,Elíptico,cardio,máquina,False,musculacao
+313afe30-cec9-4651-bc3a-af3e97ee2685,Escada / Stair,cardio,máquina,False,musculacao
+425fb5c6-74fb-4f1e-b2e8-ecbf6e36b8ac,Esteira (caminhada),cardio,máquina,False,musculacao
+8dc317d6-2aa7-4e15-a98e-7e3baf2d6640,Esteira (corrida),cardio,máquina,False,musculacao
+20878654-96b3-41a3-ad95-5ca863107646,Fartlek,cardio,pista/rua,True,corrida
+9104c1e0-ea8e-45b9-84e8-1455a52bbdca,HIIT,cardio,peso corporal,False,musculacao
+d9428a88-4ee4-4309-b7c2-34f655443f94,Limiar (threshold),cardio,pista/rua,True,corrida
+233c2fcd-cc68-4aaa-919d-6bcf1db5a7fe,Longão (long run),cardio,rua,True,corrida
+1f1adde0-18de-4281-bfd4-15e1df9e4bb0,Natação,cardio,equipamento,False,musculacao
+3d1142b3-ace5-4e88-a7bf-09b6fe5de4e5,Pular corda,cardio,equipamento,False,musculacao
+dee1cc80-1286-412c-b0a7-1ff0990a127a,Pular corda (alta intensidade),cardio,corda,False,musculacao
+5787ecc5-7ca0-483e-b789-6070fd1693ce,Regenerativo,cardio,rua,False,corrida
+59bf5439-3f6b-41dc-a9f7-7f2507ddaf8f,Remo ergômetro,cardio,máquina,False,musculacao
+61d63e17-706d-4e4f-aeb6-18f65cc6c188,Row 500m,cardio,remo,True,crossfit
+e17a5e91-516a-4dc8-b51a-4c4b48854a83,Single under,cardio,corda,False,crossfit
+65e4dec3-2e19-447e-8f19-29cb48dee972,Ski erg,cardio,ski erg,True,crossfit
+ddda1895-7454-4601-8465-3f533cae39a5,Spinning (aula),cardio,máquina,False,musculacao
+0378e09b-2bf3-405d-8205-265aac9487e3,Sprint na esteira,cardio,máquina,False,musculacao
+91339f74-8fbf-45f2-966c-1d6fe52efda6,Stair climber (máquina),cardio,máquina,False,musculacao
+34a2787a-e6fb-4f3f-b0a2-cc61de65cd9a,Step (aeróbico),cardio,equipamento,False,musculacao
+acfb3e4f-00ba-49bd-865a-bb74260480ff,Subida de escada (ao ar livre),cardio,equipamento,False,musculacao
+e71267a8-6fdb-4477-a0a1-47a6afc3fa03,Tabata,cardio,peso corporal,False,musculacao
+91beb28c-2ccd-4fb6-ba4f-97dbe22108aa,Tiros 400m,cardio,pista/rua,True,corrida
+02486a73-cdb7-4745-a90f-1c4fd21cc7e5,Treino intervalado,cardio,pista/rua,True,corrida
+7bba5189-3745-4a0a-8c0f-b67ddf54b0d7,Trekking,cardio,equipamento,False,musculacao
+958416b1-15d8-4ab9-8b38-4043448b7007,Trote leve (esteira),cardio,máquina,False,musculacao
+ccb125e0-e0c8-4b2a-8b4c-11957dfffea6,Versaclimber,cardio,máquina,False,musculacao
+521c84a8-d1ca-49d8-bb7f-a14347d8103d,Alongamento de peito no batente,chest,peso corporal,False,generico
+927f9975-a129-4319-9db5-f20e81895eb0,Alongamento de peito no chão (cruz),chest,peso corporal,False,generico
+ec6cd0e1-492a-40dd-9040-5491a69af5da,Crossover alto (cabos),chest,cabo,False,musculacao
+ea503f84-3f35-487d-ac7f-8817fb3e06bc,Crossover baixo (cabos),chest,cabo,False,musculacao
+5bf4046e-2cc1-4785-b589-a7c7b0ae7b3b,Crucifixo inclinado (halteres),chest,halter,False,musculacao
+43070d06-d058-4b6a-805a-5136f2e8b565,Crucifixo reto (halteres),chest,halter,False,musculacao
+e27823f7-a7ab-46b2-aafe-d69d12c9c584,Doorway pec stretch,chest,peso corporal,False,generico
+86cfefb4-a972-403c-a898-22762fa4641d,Flexão arqueira,chest,peso corporal,True,calistenia
+dcb1cff7-d86e-4fef-823a-9a01f9d29c2a,Flexão de braço,chest,peso corporal,True,musculacao
+7d340931-ef70-4367-af44-b22b6ddebbdf,Flexão declinada,chest,peso corporal,True,calistenia
+ae97da67-24ce-4285-8ca0-68e96bea494d,Flexão diamante,chest,peso corporal,True,calistenia
+58ae08af-6f79-47ea-85e1-991e3cc073ff,Flexão explosiva,chest,peso corporal,True,calistenia
+029ad3e3-4e46-4255-a3a4-9c61bae3920b,Flexão inclinada,chest,peso corporal,True,calistenia
+8618db44-b444-45ae-9551-6ec20f8be6e0,Flexão pegada larga,chest,peso corporal,True,calistenia
+a9ad08ae-75ce-4181-8989-d2f85f74ad57,Mergulho em paralelas,chest,peso corporal,True,musculacao
+05a4dd59-1da6-4ac4-a6b5-a9dd980576c3,Peck deck (máquina),chest,máquina,False,musculacao
+2ad95840-e854-4fa4-ac6c-a52716ecf92b,Pullover (halter),chest,halter,False,musculacao
+4882657a-5801-4676-b9c2-46f11f03b9be,Supino declinado (barra),chest,barra,True,musculacao
+0e41ebd2-4328-4700-b0aa-2ea369e7c64f,Supino inclinado (barra),chest,barra,True,musculacao
+4dcc05e6-50c5-4536-b3ad-9f3dee9821dd,Supino inclinado (halteres),chest,halter,True,musculacao
+e1e069de-b950-4ccb-b0f0-a4ee278a589c,Supino inclinado (máquina),chest,máquina,True,musculacao
+4b81e3e3-7cca-479f-8d44-06ef839ca12a,Supino reto (barra),chest,barra,True,musculacao
+0d149281-09a8-4525-8dcc-df085acbfd31,Supino reto (halteres),chest,halter,True,musculacao
+9a23be4c-d820-46a6-9ea0-264e98ce7256,Supino reto (máquina),chest,máquina,True,musculacao
+c86a5d71-72ae-4dfb-b577-baaab469ae60,Wall chest stretch,chest,peso corporal,False,generico
+239a19b7-6cd6-471b-8b7e-ae89cf19647a,Ab wheel / rodinha,core,peso corporal,False,musculacao
+db632b13-b8d9-4e95-8dab-52f46f445500,Abdominal V-up,core,peso corporal,False,musculacao
+386e1fe6-89dc-4d5f-88dc-af2bc5dc4078,Abdominal bicicleta,core,peso corporal,False,musculacao
+1b87428e-908a-44cd-9a9d-f5ac64c515c2,Abdominal canivete,core,peso corporal,False,musculacao
+a38e155b-9744-43bc-9ce0-59c79de7d334,Abdominal declinado,core,banco,False,musculacao
+cb5ff8c6-7c1f-4b27-8483-d592f23baed8,Abdominal infra,core,peso corporal,False,musculacao
+eb239763-6a80-42dd-9e8d-8461cf2cbc16,Abdominal na bola,core,bola suíça,False,musculacao
+8039cdbc-b3d6-4b56-b35b-25c8125c3d7b,Abdominal na polia (cable crunch),core,cabo,False,musculacao
+a62fac35-4790-4809-8593-528228fbe064,Abdominal oblíquo,core,peso corporal,False,musculacao
+b33a1d06-a8d8-48cf-bd01-9c0139af2cec,Abdominal remador,core,peso corporal,False,musculacao
+c14cce6f-34df-42be-ad1f-8a4b60397511,Abdominal supra,core,peso corporal,False,musculacao
+e0c877ce-fe7a-41d4-a33e-4862454418c0,Bird dog,core,peso corporal,False,musculacao
+26386bee-20d3-412b-bd47-9e73bcc41338,Dead bug,core,peso corporal,False,musculacao
+5423eccc-faa3-467e-b589-4eeeeb2c7126,ELEVAÇÃO PÉLVICA SOLO UNI,core,peso corporal,False,musculacao
+659089db-f56c-449e-9aeb-1c4a2fcfb2ef,Elevação de joelhos suspensa,core,peso corporal,False,calistenia
+155eb81d-a446-4555-b033-3a6ccf3aa541,Elevação de pernas,core,peso corporal,False,musculacao
+50f8b674-f75b-4475-86ce-9b49262e12bb,Elevação de pernas suspensa,core,peso corporal,False,calistenia
+26309256-e06d-436a-b0c3-bc3daa736b46,Elevação pélvica solo,core,peso corporal,False,musculacao
+e1de4436-78ab-416d-bdab-02e16328a654,Flutter kicks,core,peso corporal,False,musculacao
+a5b1eb06-637b-4c5d-9523-3f029310acc2,Heel touch,core,peso corporal,False,musculacao
+de1f292c-a5de-488c-95f7-479b895826e8,Hollow body hold,core,peso corporal,False,calistenia
+cd10a5f8-89f3-4f6a-a445-ba0453f3771b,Hollow body rock,core,peso corporal,False,musculacao
+d38456e1-790b-46c7-9666-ea529b911d90,Knees to elbow,core,barra,True,crossfit
+06761190-ed61-48f2-acc8-367101c0eb6f,L-sit,core,peso corporal,False,calistenia
+a450b789-08b1-4f6d-80af-79851d107815,Leg raise no banco,core,banco,False,musculacao
+4726f044-9be8-456e-be97-184e15f5d87c,Mountain climber lento,core,peso corporal,False,musculacao
+c297d762-7042-4af9-9b35-17da726c1a4b,Pallof press (cabo),core,cabo,False,musculacao
+2c68e84b-0094-4edb-897a-0afcb30401bb,Prancha,core,peso corporal,False,calistenia
+55369741-6f7b-44be-85f9-99ce70a5a15a,Prancha (frontal),core,peso corporal,False,musculacao
+3dd3f974-7aa7-4e7e-b3ce-d0fe6df8619c,Prancha com elevação de perna,core,peso corporal,False,musculacao
+74377f0b-0b8f-491c-9e91-c85dcde1bb6b,Prancha com toque no ombro,core,peso corporal,False,musculacao
+d58e1f50-6a5a-4dab-9273-2cbcf69bf313,Prancha em antebraço,core,peso corporal,False,musculacao
+a5cd7487-ab9e-47a4-bb22-4e664b45d805,Prancha lateral,core,peso corporal,False,musculacao
+87e9632d-089a-4fd0-aeea-51e7236d4592,Rotação russa com halter,core,halter,False,musculacao
+179b5243-f55f-47c0-94cb-37acf284f877,Russian twist,core,peso corporal,False,musculacao
+49c190ab-0423-4a39-9594-29e9db7ad43a,Sit-up tradicional,core,peso corporal,False,musculacao
+ec5f32e0-3fdb-4c01-bccd-7071d769efe7,Toes to bar,core,barra,True,crossfit
+e86190b8-3500-4585-ae2a-4e68f3632267,Alongamento de panturrilha em pé,full_body,peso corporal,False,generico
+2c962fd7-4f8a-4572-92de-c9b3c208a803,Alongamento de posterior em pé,full_body,peso corporal,False,generico
+32585a3b-4cce-4b76-9dbd-e7439031dbaf,Bear crawl,full_body,peso corporal,True,calistenia
+cf50599a-0121-4110-9ed8-2b7c4d47329b,Box jump,full_body,caixa,True,crossfit
+1944a071-6b96-40b3-b70b-72fe405edbda,Burpee,full_body,peso corporal,True,musculacao
+a4522410-f807-477c-9408-e2bdfcb2950e,Burpee box jump-over,full_body,caixa,True,crossfit
+2f5ac705-d10d-4963-aac8-1dde03df344e,Butterfly stretch,full_body,peso corporal,False,generico
+183799e2-88dd-4658-96dd-501874e960b7,Cat-cow,full_body,peso corporal,False,generico
+4ddd0a1b-face-46e6-9454-50a81abf04d0,Clean and jerk (barra),full_body,barra,True,musculacao
+21425f93-0adb-4031-b23c-09d25727721d,Downward dog,full_body,peso corporal,False,generico
+8d0ef6dd-7711-4f7f-b8e5-bd66543d4e2b,Farmer walk,full_body,halter,True,crossfit
+61ea2316-8aad-4fc3-8004-8f9169e8bbe9,Farmer walk (halteres),full_body,halter,True,musculacao
+46a78010-76f4-4cea-afc2-d7781f3e398c,Foam roll adutor,full_body,rolo,False,generico
+c53d904c-797e-433f-b4d9-e2d6d23c6f37,Foam roll costas,full_body,rolo,False,generico
+a246a9ef-5097-464a-8ee2-c9b4960fd28a,Foam roll glúteo,full_body,rolo,False,generico
+47b2a81d-6413-4670-b5f9-83015a8d231b,Foam roll panturrilha,full_body,rolo,False,generico
+9b940540-5666-4820-9228-7915137cc803,Foam roll quadríceps,full_body,rolo,False,generico
+dbe9e9d8-1524-4234-aaf3-7f17d2162fb4,Hip flexor stretch,full_body,peso corporal,False,generico
+0d17c700-a0b1-4d61-a23a-6d8eafcc3323,Kettlebell swing,full_body,kettlebell,True,musculacao
+185dbe76-2744-494e-bfc9-aaf4b5caa380,Kettlebell swing americano,full_body,kettlebell,True,crossfit
+30b0a5dc-e94c-4f6d-ac70-bcf1b9098acc,Kettlebell swing russo,full_body,kettlebell,True,crossfit
+1d0ca16a-5e77-4a77-8c5a-cb32d8d2ceda,Mobilidade cervical (rotação),full_body,peso corporal,False,generico
+7ab672ee-9e77-4ef4-b2a2-41a9ba93bbcc,Mobilidade de ombro (PVC pass-through),full_body,cano/elástico,False,generico
+df74f593-783f-4445-9de8-14825edfe0ae,Mobilidade de quadril (90/90),full_body,peso corporal,False,generico
+e3430aa8-ae4d-43a3-a9bc-7e42616e0ec3,Mobilidade torácica em quatro apoios,full_body,peso corporal,False,generico
+0eca5118-eb32-4099-bb5d-c984d4f7eaeb,Mountain climber,full_body,peso corporal,True,calistenia
+83797b40-54bc-4fef-bcf7-29d4b1a12369,Power clean,full_body,barra,True,crossfit
+30520f2a-9a6b-4cd2-bb36-5a9a35fb57f6,Roll out / rolinho de coluna,full_body,peso corporal,False,generico
+c2415fb3-f242-445f-808e-20a8fb70f905,Seated forward fold,full_body,peso corporal,False,generico
+2b1a1915-c7d3-4091-a4eb-3907e3be9184,Sled push,full_body,sled,True,crossfit
+bfb4086c-eb84-4ed0-a35d-10079c11be58,Snatch,full_body,barra,True,crossfit
+0fac3e93-d067-4927-982a-4626952b7051,Snatch (barra),full_body,barra,True,musculacao
+03225c1b-22de-43a0-ab05-2aabf5b5121a,Standing forward fold,full_body,peso corporal,False,generico
+023b4b5a-edc8-438a-8432-1c0767245941,Standing side bend,full_body,peso corporal,False,generico
+24d4aad4-8a6d-4d67-b586-2293f1dd80ad,Subida na corda,full_body,corda,True,crossfit
+fc3d84ff-fe8e-4f4e-8843-a27dea026ff3,Thruster,full_body,barra,True,crossfit
+82fe2a51-6641-4f95-8365-ef2367094017,Thruster (barra),full_body,barra,True,musculacao
+101ece1b-9f46-4bd7-9969-73bbf0b7b847,Turkish get-up,full_body,kettlebell,True,crossfit
+9189bae4-381f-4f81-80f2-972a748daf5c,Wall ball,full_body,medicine ball,True,crossfit
+45e045ec-4714-4d57-9dc9-653d9ac61811,World's greatest stretch,full_body,peso corporal,False,generico
+e34866d5-eddc-4af2-abc9-05a9d0c38a38,ABDUÇÃO,legs,máquina,False,musculacao
+7c3dd636-5659-4b51-a88f-1424ebe2156d,ADUÇÃO,legs,máquina,False,musculacao
+5709a9f1-69d9-4b3d-b54a-1686d4a173f4,AGACHAMENTO PÊNDULO,legs,peso corporal,False,musculacao
+83369c02-d162-49ab-a1d7-aa707433139c,Afundo (halteres),legs,halter,True,musculacao
+65d7cd4a-fa73-488b-8800-3314371b3606,Afundo (peso corporal),legs,peso corporal,True,calistenia
+c762901b-fd84-4b3e-99f7-46880c8cabdf,Afundo com salto,legs,peso corporal,True,calistenia
+39805ff6-bdf4-4860-8720-f61389682d2d,Agachamento búlgaro (halteres),legs,halter,True,musculacao
+58e9a3c4-5eb9-4ba4-86b2-c21ccb9326a2,Agachamento com salto,legs,peso corporal,True,calistenia
+13eea8a8-3ad3-4112-bb1e-0c4ace681544,Agachamento frontal (barra),legs,barra,True,musculacao
+c556316d-5fbe-483e-b769-dfba8720376b,Agachamento livre (barra),legs,barra,True,musculacao
+19d1ecb7-9a74-41aa-b934-29d8b54f281e,Agachamento livre (peso corporal),legs,peso corporal,True,calistenia
+d72b0cfa-de97-4a89-a2d9-f3fe9a41ff9d,Alongamento IT band em pé,legs,peso corporal,False,generico
+c3090f75-9529-4261-b517-2eb5435d2ac7,Alongamento de adutor (borboleta),legs,peso corporal,False,generico
+d5d6cbac-6cb2-4720-8f89-a77c6c354803,Alongamento de adutor em pé (afastado),legs,peso corporal,False,generico
+8e009ef5-1b43-402b-9b50-49816d7d6cd1,Alongamento de glúteo deitado (figure 4),legs,peso corporal,False,generico
+e91bca71-8473-4128-8199-c321d276d2a5,Alongamento de glúteo em pé,legs,peso corporal,False,generico
+6c1626ab-b61d-4692-b73a-7bdd5356ebf0,Alongamento de isquiotibiais em pé,legs,peso corporal,False,generico
+2cf692e4-50f3-4c3e-9a15-8586726104b4,Alongamento de isquiotibiais sentado,legs,peso corporal,False,generico
+8f6006d0-2601-4079-8b9b-586cf1240091,Alongamento de panturrilha contra parede,legs,peso corporal,False,generico
+39672f81-bc19-41af-8611-d8cf7b555a9c,Alongamento de panturrilha no step,legs,equipamento,False,generico
+48d692da-87f6-4be6-a1ae-61d4ccfd35e7,Alongamento de quadríceps deitado,legs,peso corporal,False,generico
+6212ea1f-9785-4796-b541-f4f60f54743e,Alongamento de quadríceps em pé,legs,peso corporal,False,generico
+3f3ac620-c7ba-459b-b999-bef6250da4bb,Alongamento piriforme,legs,peso corporal,False,generico
+479c8738-3416-400f-a156-b95fc5ff499e,Avanço (barra),legs,barra,True,musculacao
+87f4d04c-1467-4256-add6-36a3dd4d61de,Cadeira abdutora,legs,máquina,False,musculacao
+40527315-505c-4f26-8ffc-0ed27f413faa,Cadeira adutora,legs,máquina,False,musculacao
+f072bda7-4b57-4231-8a4b-99380bf6142e,Cadeira extensora,legs,máquina,False,musculacao
+4e3c7624-66db-4f69-9643-6503495bbdab,Cadeira flexora,legs,máquina,False,musculacao
+4aea9083-b850-4b59-a5e0-d8ec42773741,EXTENSÃO,legs,máquina,False,musculacao
+486b3c44-b77e-44fd-9690-6f9aacd4f35a,FLEXÃO CADEIRA,legs,máquina,False,musculacao
+67212069-539d-4365-97f9-ecbdfa4e6fe9,FLEXÃO MESA,legs,máquina,False,musculacao
+6d8ca608-8522-460b-99d8-50e0ade715bf,Frog pose (sapo),legs,peso corporal,False,generico
+214c534d-6881-477a-9270-b21a9ff2f7dc,GLÚTEO MÁQUINA,legs,máquina,False,musculacao
+ead435fe-8b92-44e9-9e3e-9f76e57944ea,Goblet squat,legs,kettlebell,True,crossfit
+7fb1f1d4-3165-489f-9ca8-a20a8d5f9b40,GÊMEOS PÊNDULO,legs,peso corporal,False,musculacao
+5159d02b-9310-4846-b3a0-5d691e0715b3,Hack squat,legs,máquina,True,musculacao
+8e68b865-2306-4a6c-9a8c-c76d2e7a0acd,Hip flexor lunge stretch,legs,peso corporal,False,generico
+eacfb37d-7efc-45b6-b70d-f5e980f2b6d9,Leg press 45°,legs,máquina,True,musculacao
+46978a48-622c-4182-9f0a-83af824dfbf0,Leg press horizontal,legs,máquina,True,musculacao
+1ea7f6aa-f8bf-4b9c-9041-41f8ca228782,Lizard pose (lagarto),legs,peso corporal,False,generico
+b6fa15de-41a0-45eb-8907-0ce91ada6bff,Mesa flexora,legs,máquina,False,musculacao
+53b97ccc-a2f9-44ab-8359-91bf994802f2,Panturrilha em pé (máquina),legs,máquina,False,musculacao
+d0f340ce-1cf9-4b67-a635-65dd8ec4ebd3,Panturrilha no leg press,legs,máquina,False,musculacao
+3d39ba11-3c49-4cc7-98fd-3c7f62447edb,Panturrilha sentado (máquina),legs,máquina,False,musculacao
+f77323e0-ffb1-4f57-910a-2186dac72833,Pigeon pose,legs,peso corporal,False,generico
+71c6e1b3-3136-4b6b-9d73-32d5945f33b1,Pistol squat,legs,peso corporal,True,calistenia
+b9c61d69-4254-4bb9-8d86-36372b028a21,Squat hold (agachamento profundo),legs,peso corporal,False,generico
+4dab23cc-d361-49fe-86a1-e86223420a19,Step-up (peso corporal),legs,peso corporal,True,calistenia
+83a9a9d7-96ef-47d1-b67f-815cb13fcba2,Stiff (barra),legs,barra,True,musculacao
+f4720f36-8ab9-42a1-8f5b-94abce9c95e2,Stiff (halteres),legs,halter,True,musculacao
+a8fd61d3-51e4-4ea8-bd37-51f8807b36f8,Alongamento de trapézio superior,shoulders,peso corporal,False,generico
+88ff50d1-54ff-49ca-a301-b39b2ee1c2ef,Arnold press (halteres),shoulders,halter,True,musculacao
+f6d3bba8-3faa-4aaf-80f5-e427760ed82a,Cross-body shoulder stretch,shoulders,peso corporal,False,generico
+976ba7c1-f6af-4e52-99fa-7c5b95384762,Desenvolvimento (barra),shoulders,barra,True,musculacao
+a200a12e-6a46-455a-b7d8-8997ad771aaf,Desenvolvimento (halteres),shoulders,halter,True,musculacao
+e7089565-9b97-486a-a581-f85b6a603959,Desenvolvimento (máquina),shoulders,máquina,True,musculacao
+00e1a112-99cf-45ef-a3dc-e7c96ee34616,Eagle arm stretch,shoulders,peso corporal,False,generico
+9739ac0e-8cd9-4ea3-b952-6cc1be671c22,Elevação frontal (cabo),shoulders,cabo,False,musculacao
+ef93403f-e38f-4200-997b-fb995fb6f370,Elevação frontal (halteres),shoulders,halter,False,musculacao
+624f53e5-fe2c-4e99-88d9-aa9bc1a108ec,Elevação lateral (cabo),shoulders,cabo,False,musculacao
+7dfff003-bab4-47e5-ad76-6923fa932b9c,Elevação lateral (halteres),shoulders,halter,False,musculacao
+6eda3610-91d1-4a43-b258-2cde8899e5dc,Elevação posterior (halteres),shoulders,halter,False,musculacao
+f1b81003-38a7-4874-812d-e2b44ca08d82,Encolhimento (barra),shoulders,barra,False,musculacao
+c8e04aa5-d0fb-4cef-afd1-dbe8d8b17527,Encolhimento (halteres),shoulders,halter,False,musculacao
+18cdd3cf-37b4-4186-8cbc-8aaed674919c,Face pull (cabo),shoulders,cabo,False,musculacao
+505d2ea9-751e-44cc-85ee-3cd62a5aea98,Handstand push-up,shoulders,peso corporal,True,calistenia
+6b0a8af9-807e-4db7-8a55-5b237c2c7b06,PULLEY FRENTE,shoulders,máquina,False,musculacao
+221796b5-7f82-4dfe-af0c-8ad23d22849a,Pike push-up,shoulders,peso corporal,True,calistenia
+51fdbab8-bee5-4f0f-88d2-8ec418205dd9,Push press,shoulders,barra,True,crossfit
+b3259645-6c3b-4450-8b7c-487b171010c8,Remada alta (barra),shoulders,barra,True,musculacao
+a888b233-15f9-4d92-b0ee-7d16252c11cc,Reverse prayer stretch,shoulders,peso corporal,False,generico
+657f7f4d-8ba7-40d3-868e-982ec02b4ad4,Sleeper stretch,shoulders,peso corporal,False,generico
+2c0ea104-7ff4-495b-9c9d-5d6fcc3baeef,Wall slides,shoulders,peso corporal,False,generico
+13090b1a-5a57-43a5-a552-4fb93546c776,Alongamento de tríceps acima da cabeça,triceps,peso corporal,False,generico
+fb21406b-cb9c-44b4-bcea-21bb2a6f23d0,Alongamento de tríceps com toalha,triceps,peso corporal,False,generico
+6edf2015-23ca-45d1-8e7b-bc6615f81add,Mergulho (peso corporal),triceps,peso corporal,True,musculacao
+ef57062a-cda0-4df1-a13d-53a79058bd01,Mergulho em máquina assistida,triceps,máquina,True,musculacao
+ae02b169-8a6c-4b5c-89de-15b92dfe2e09,Mergulho em paralelas (calistenia),triceps,peso corporal,True,calistenia
+995d7975-329a-426a-95b6-eb003d995ea9,Mergulho no banco,triceps,peso corporal,True,calistenia
+6b146e9d-efa0-44c3-b63a-94e5a43fba9b,Ring dips,triceps,argolas,True,crossfit
+028eb582-c7d1-4300-ad16-4f851c1e73b0,Tríceps coice (halter),triceps,halter,False,musculacao
+58a343cc-8b20-4252-8f53-3538bbacace6,Tríceps corda (pulley),triceps,cabo,False,musculacao
+9809bf65-9ae5-4662-8a9a-8e4708698514,Tríceps francês (halter),triceps,halter,False,musculacao
+bc1d9114-e914-4fd1-b346-f0c82f71eb50,Tríceps pulley (barra),triceps,cabo,False,musculacao
+c6e010bf-7a02-454a-9b1d-2080f9cdab27,Tríceps testa (barra),triceps,barra,False,musculacao
+5daae6fa-cfef-4f0a-940b-575bcf61f9da,Tríceps testa (halter),triceps,halter,False,musculacao
