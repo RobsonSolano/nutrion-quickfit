@@ -463,6 +463,39 @@ Não há login no totem, então tudo passa pela role `anon`:
 Explicitamente: `anon` **não** pode listar `generated_workouts`. Sem isso, qualquer um
 dumpa a telemetria de todas as academias.
 
+#### Como verificar o RLS sem se enganar
+
+Verificado contra o banco real em 29/jul/2026, depois da task 10. Duas armadilhas
+custaram tempo e valem ficar escritas:
+
+**1. `DELETE` e `PATCH` bloqueados por RLS devolvem `204`, não `403`.** O PostgREST
+executa a instrução; o RLS filtra para zero linhas; a resposta é "sucesso, nada a
+fazer". Ler o código HTTP e concluir que a `anon` conseguiu apagar é o erro fácil —
+eu cometi. A única checagem que vale é **ler o dado de volta com a service role
+depois**.
+
+**2. Um `[]` obtido de tabela vazia não prova nada.** Antes de testar "a `anon`
+consegue listar?", insira uma linha com a service role. Sem isso o teste passa
+mesmo com o RLS desligado.
+
+O resultado da verificação, para servir de baseline:
+
+| operação com `anon` | HTTP | efeito real |
+|---|---|---|
+| listar `generated_workouts` | 200 | `[]` — bloqueado |
+| `get_workout(id)` existente | 200 | devolve a linha |
+| `get_workout(id)` inexistente | 200 | `[]`, sem vazamento |
+| inserir treino | 201 | permitido |
+| inserir com `Prefer: return=representation` | **401** | esperado — devolver a linha exige `select`, que não existe |
+| apagar treino existente | 204 | **linha intacta** |
+| alterar treino existente | 204 | **dado intacto** |
+| escrever em `equipment` | 401 | bloqueado |
+
+A linha do `return=representation` é a que mais engana no código do app: um
+`.insert(...).select()` no supabase-js pede representação e falha com 401, que parece
+erro de autenticação e é de RLS. O `saveWorkout` só desestrutura `{ error }` de
+propósito — **não adicione `.select()` ali.**
+
 ### Enriquecimento do catálogo
 
 O `public.exercises` do Persona Fit hoje tem `name`, `equipment` (texto livre),
