@@ -2115,7 +2115,12 @@ Esperado: FAIL — `Failed to resolve import "./schema"`.
 import { z } from 'zod';
 // Import relativo: este arquivo VIVE em @quickfit/core, então não se
 // auto-referencia pelo nome do pacote.
-import type { Contra, Exercise, Level, MuscleGroup, Pattern } from '../engine/types';
+// Só `Exercise`. Os vocabulários (`GROUPS`, `PATTERNS`, `CONTRAS`) são
+// declarados abaixo como const arrays porque o zod precisa dos VALORES em
+// runtime, e um `import type` não sobrevive à compilação. Importar
+// `MuscleGroup`/`Pattern`/`Contra`/`Level` aqui só para documentar a intenção
+// quebra o `noUnusedLocals` com TS6196.
+import type { Exercise } from '../engine/types';
 
 export class CatalogError extends Error {}
 
@@ -3585,6 +3590,7 @@ D8: a academia mexe em uma cor, o logo e o modo. Tudo o mais é seu, fixo e test
 ```ts
 import { describe, it, expect } from 'vitest';
 import { contrastRatio, bestContrast, validateAccent } from './contrast';
+import { DARK_BASE, LIGHT_BASE } from './base';
 
 describe('contrastRatio', () => {
   it('preto contra branco é 21:1', () => {
@@ -3671,12 +3677,6 @@ describe('danger por modo', () => {
     expect(contrastRatio(DARK_BASE.danger, LIGHT_BASE.bg)).toBeLessThan(4.5);
   });
 });
-```
-
-O `import` no topo deste arquivo precisa incluir os dois bases:
-
-```ts
-import { DARK_BASE, LIGHT_BASE } from './base';
 ```
 
 - [ ] **Step 2: Rodar e ver falhar**
@@ -3845,7 +3845,7 @@ cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 npm test -- packages/core/src/theme/contrast.test.ts
 ```
 
-Esperado: PASS, 12 testes.
+Esperado: PASS, 15 testes.
 
 - [ ] **Step 5: Implementar `applyTheme`**
 
@@ -4438,7 +4438,7 @@ cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 npm test -- apps/totem/src/state/machine.test.ts
 ```
 
-Esperado: PASS, 16 testes.
+Esperado: PASS, 21 testes.
 
 - [ ] **Step 5: Implementar o idle timeout**
 
@@ -5328,7 +5328,7 @@ cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 npm test -- apps/totem/src/screens/labels.test.ts
 ```
 
-Esperado: PASS, 7 testes.
+Esperado: PASS, 9 testes.
 
 - [ ] **Step 5: Escrever as quatro telas do caminho completo**
 
@@ -5817,7 +5817,17 @@ Esperado: FAIL — `Failed to resolve import "./qr"`.
 ```ts
 import QRCode from 'qrcode';
 
-export function workoutUrl(id: string, base = window.location.origin): string {
+/**
+ * O default é lido de `window` mas com guarda: sem ela, importar este módulo
+ * em ambiente `node` (é o que o vitest usa) explode com `ReferenceError` no
+ * primeiro teste que chamar sem `base`. A guarda deixa a função utilizável nos
+ * dois mundos sem ninguém precisar montar um DOM falso só para testar
+ * concatenação de string.
+ */
+export function workoutUrl(
+  id: string,
+  base = typeof window === 'undefined' ? '' : window.location.origin,
+): string {
   return `${base.replace(/\/$/, '')}/w/${id}`;
 }
 
@@ -5830,15 +5840,6 @@ export async function qrDataUrl(text: string): Promise<string> {
     color: { dark: '#14170F', light: '#FFFFFF' },
   });
 }
-```
-
-Para o teste de `workoutUrl` rodar em ambiente `node`, o default de `base` precisa não explodir. Ajuste a assinatura:
-
-```ts
-export function workoutUrl(
-  id: string,
-  base = typeof window === 'undefined' ? '' : window.location.origin,
-): string {
 ```
 
 - [ ] **Step 4: Rodar e ver passar**
