@@ -1,3 +1,20 @@
+@font-face {
+  font-family: 'Sora'; font-style: normal; font-weight: 600;
+  font-display: block; src: url('/fonts/sora-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Sora'; font-style: normal; font-weight: 800;
+  font-display: block; src: url('/fonts/sora-800.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter'; font-style: normal; font-weight: 400;
+  font-display: block; src: url('/fonts/inter-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter'; font-style: normal; font-weight: 600;
+  font-display: block; src: url('/fonts/inter-600.woff2') format('woff2');
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,6 +31,10 @@
   --qf-violet: #8B5CF6;
   --qf-danger: #F43F5E;
   --qf-accent-glow: rgba(57, 255, 20, 0.22);
+  /* Não faz parte da paleta de tema (não é sobrescrita por applyTheme): as
+     telas Blocked/Thin usam `warn` para "precisa de atenção humana", uma
+     categoria distinta de `danger` (erro) que não muda com o white-label. */
+  --qf-warn: #FBBF24;
 }
 
 html, body, #root { height: 100%; }

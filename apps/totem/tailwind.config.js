@@ -18,6 +18,10 @@ export default {
         // escurecer para continuar legível, e é o `applyTheme` que decide isso
         // (task 12). Hex aqui congelaria a cor nos dois modos.
         danger:   'var(--qf-danger)',
+        // Não vem do white-label (nenhuma academia escolhe esta cor): é o
+        // aviso "precisa de atenção humana" usado por Blocked/Thin, distinto
+        // do vermelho de erro `danger`.
+        warn:     'var(--qf-warn)',
       },
       fontFamily: {
         display: ['Sora', 'system-ui', 'sans-serif'],

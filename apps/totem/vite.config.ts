@@ -6,6 +6,11 @@ const core = (p: string) => fileURLToPath(new URL(`../../packages/core/src/${p}`
 
 export default defineConfig({
   plugins: [react()],
+  // .env.local vive na raiz do monorepo (é lá que `seed:catalog` e os outros
+  // scripts node o leem via --env-file). Sem isto o Vite procura env vars em
+  // apps/totem/ e não acha nada: o cliente supabase.ts lança no import,
+  // antes até do React montar — nenhum error boundary pega isso.
+  envDir: fileURLToPath(new URL('../../', import.meta.url)),
   resolve: {
     alias: {
       '@quickfit/core/engine': core('engine/index.ts'),
