@@ -2871,16 +2871,22 @@ Sem login no totem, tudo passa pela role `anon`. Escrever as policies erradas aq
 - Consumes: projeto Supabase `jpgnplzkdbfmjkinfvln`
 - Produces: tabelas `equipment`, `exercises`, `exercise_secondary_groups`, `exercise_equipment`, `exercise_contraindications`, `gyms`, `gym_equipment`, `generated_workouts`, `embellishments`; view `gym_available_equipment`
 
-- [ ] **Step 1: Ligar o CLI ao projeto**
+- [ ] **Step 1: Preparar o diretório do Supabase — sem `link`**
+
+**Não use `supabase link`.** Ele exige um *personal access token* do dashboard, que não temos e que não é a senha do banco. O caminho que funciona é `--db-url`, e já existe um wrapper para isso:
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-supabase init
-supabase link --project-ref jpgnplzkdbfmjkinfvln
+mkdir -p supabase/migrations
+npm run db:push          # deve dizer "Remote database is up to date."
 ```
 
-O `link` pede a senha do banco. Se você não a tem, gere uma nova no dashboard em Settings → Database.
+O `db:push` chama `scripts/db-push.mjs`, que monta a connection string a partir de `SUPABASE_DB_PASSWORD` e `SUPABASE_PROJECT_REF` do `.env.local` e a passa ao CLI via argv — para a senha não entrar no histórico do shell.
+
+Rota de conexão: **direta** (`db.<ref>.supabase.co`), que neste projeto resolve só em IPv6. Os poolers `aws-0-*` recusaram a conexão em todas as regiões testadas. Se o `db:push` falhar com `Failed to connect`, o problema é IPv6 na máquina, não a senha.
+
+Se `supabase/config.toml` não existir, `supabase init` cria — mas ele **não** é necessário para o `--db-url` funcionar. Crie só se o CLI reclamar.
 
 - [ ] **Step 2: Migration do catálogo**
 
@@ -3114,10 +3120,10 @@ grant execute on function public.bump_embellishment_hits(text) to anon;
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-supabase db push
+npm run db:push
 ```
 
-Esperado: `Finished supabase db push.` sem erro.
+Esperado: a saída JSON listando as 5 migrations aplicadas, sem erro. Antes de aplicar, com o diretório vazio, o mesmo comando responde `"Remote database is up to date."` — use isso para confirmar que a conexão funciona **antes** de escrever SQL.
 
 - [ ] **Step 8: Verificar que `anon` NÃO consegue listar treinos**
 

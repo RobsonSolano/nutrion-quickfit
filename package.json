@@ -23,7 +23,7 @@
     "export:raw": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/export-from-app.ts",
     "classify": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/classify.ts",
     "seed:catalog": "node --env-file=.env.local ./node_modules/.bin/tsx scripts/seed-catalog.ts",
-    "db:push": "supabase db push",
+    "db:push": "node --env-file=.env.local scripts/db-push.mjs",
     "fn:deploy": "supabase functions deploy embellish"
   },
   "devDependencies": {
