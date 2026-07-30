@@ -866,7 +866,12 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```ts
 import { describe, it, expect } from 'vitest';
 import { schemeFor, costOf } from './budget';
-import type { Exercise, Input } from './types';
+import { REST } from './constants';
+import type { Exercise, Goal, Input, Minutes } from './types';
+
+/** Em ordem crescente — três testes dependem disso para varrer a escada. */
+const ALL_MINUTES: Minutes[] = [20, 30, 40, 45, 50, 60, 90];
+const GOALS: Goal[] = ['forca', 'hipertrofia', 'resistencia', 'emagrecimento', 'mobilidade'];
 
 const input = (over: Partial<Input> = {}): Input => ({
   goal: 'hipertrofia', groups: ['peito'], minutes: 45, level: 3,
@@ -902,8 +907,8 @@ describe('schemeFor', () => {
   });
 
   it('nunca desce abaixo de 2 séries', () => {
-    for (const minutes of [20, 30, 40, 45, 50, 60, 90] as const) {
-      for (const goal of ['forca', 'hipertrofia', 'resistencia', 'emagrecimento', 'mobilidade'] as const) {
+    for (const minutes of ALL_MINUTES) {
+      for (const goal of GOALS) {
         expect(schemeFor(input({ minutes, goal })).sets).toBeGreaterThanOrEqual(2);
       }
     }
@@ -913,6 +918,37 @@ describe('schemeFor', () => {
     // 90 min pede 9; força tem teto 6.
     const sc = schemeFor(input({ minutes: 90, goal: 'forca' }));
     expect(sc.target).toBe(6);
+  });
+
+  it('mais tempo nunca produz menos treino, e nunca mais descanso', () => {
+    // O defeito que este teste tranca, medido na escada antiga:
+    //   força 45 min -> 3 séries × 60s  (volume 18)
+    //   força 50 min -> 2 séries × 150s (volume 12)
+    // Cinco minutos A MAIS devolviam um treino MENOR. A causa era o penhasco
+    // de 150s direto para 60s na escada de descanso.
+    for (const goal of GOALS) {
+      let volumeAnterior = 0;
+      let descansoAnterior = 0;
+      for (const minutes of ALL_MINUTES) {
+        const sc = schemeFor(input({ minutes, goal }));
+        expect(sc.sets * sc.target).toBeGreaterThanOrEqual(volumeAnterior);
+        expect(sc.rest).toBeGreaterThanOrEqual(descansoAnterior);
+        volumeAnterior = sc.sets * sc.target;
+        descansoAnterior = sc.rest;
+      }
+    }
+  });
+
+  it('o descanso nunca desce abaixo do piso do objetivo', () => {
+    // Política escolhida: descanso íntegro, menos série. Um descanso curto
+    // demais é o defeito que esta política existe para impedir — o totem não
+    // tem professor ao lado para corrigir execução.
+    for (const goal of GOALS) {
+      const piso = Math.min(35, REST[goal]);
+      for (const minutes of ALL_MINUTES) {
+        expect(schemeFor(input({ minutes, goal })).rest).toBeGreaterThanOrEqual(piso);
+      }
+    }
   });
 });
 
@@ -958,10 +994,40 @@ import {
 } from './constants';
 import type { Exercise, Input, Scheme } from './types';
 
+/** Ninguém sai do totem com uma série só. */
+const MIN_SETS = 2;
+
+/**
+ * Piso absoluto de descanso, em segundos. Só se aplica a objetivos cujo
+ * descanso base já é maior que isso — mobilidade descansa 30s e continua
+ * descansando 30s.
+ */
+const REST_FLOOR = 35;
+
+/**
+ * Descansos que o motor tenta, do ideal ao mínimo aceitável.
+ *
+ * A escada é SEMPRE decrescente. A versão anterior era
+ * `[baseRest, Math.min(baseRest, 60), 45, 35]`, que para mobilidade virava
+ * `[30, 30, 45, 35]` — subia no terceiro degrau. Nunca chegava lá na prática,
+ * mas era uma escada mal formada esperando um objetivo novo para quebrar.
+ *
+ * Os degraus são proporcionais, não absolutos, porque 60s é um corte razoável
+ * para hipertrofia e absurdo para força: a escada antiga pulava de 150s direto
+ * para 60s, e era esse penhasco que fazia força em 50 min devolver 2 séries
+ * enquanto 45 min devolvia 3.
+ */
+function restLadder(baseRest: number): number[] {
+  const floor = Math.min(REST_FLOOR, baseRest);
+  const rungs = [baseRest, Math.round(baseRest * 0.6), Math.round(baseRest * 0.45)]
+    .map((r) => Math.max(r, floor));
+  return [...new Set(rungs)];
+}
+
 /**
  * Escolhe séries e descanso que fazem o ALVO de exercícios caber no tempo.
- * Sessão curta legitimamente usa menos série e descanso menor — é o que um
- * professor faz com quem tem 20 minutos.
+ * Sessão curta legitimamente usa menos série — é o que um professor faz com
+ * quem tem 20 minutos.
  */
 export function schemeFor(input: Input): Scheme {
   const target = Math.min(TARGET_EX[input.minutes], MAX_EX[input.goal]);
@@ -969,17 +1035,23 @@ export function schemeFor(input: Input): Scheme {
   const { sets: baseSets, reps } = SETS_REPS[input.goal];
   const baseRest = REST[input.goal];
 
-  // Degrada primeiro as séries, depois o descanso. Ordem importa: cortar
-  // descanso antes de série muda o estímulo do treino mais do que cortar
-  // uma série do fim.
-  for (const rest of [baseRest, Math.min(baseRest, 60), 45, 35]) {
-    for (let sets = baseSets; sets >= 2; sets--) {
+  // Descanso primeiro, série depois: para cada descanso da escada, esgota as
+  // séries antes de encurtar o descanso. Decisão do Robson (jul/2026) — o
+  // totem não tem professor ao lado, e um descanso curto demais com aluno
+  // iniciante vira execução ruim. Volume menor, cada série executável.
+  const ladder = restLadder(baseRest);
+
+  for (const rest of ladder) {
+    for (let sets = baseSets; sets >= MIN_SETS; sets--) {
       const perEx = sets * (AVG_SEC + rest) + TRANSITION_SEC;
       if (target * perEx <= budget) return { sets, reps, rest, target };
     }
   }
 
-  return { sets: 2, reps, rest: 35, target };
+  // Não deveria acontecer com os 35 pares (tempo × objetivo) de hoje, mas se
+  // algum alvo novo não couber, devolve o mínimo e deixa a duração honesta
+  // aparecer na ficha em vez de mentir sobre o tempo.
+  return { sets: MIN_SETS, reps, rest: ladder[ladder.length - 1]!, target };
 }
 
 export function costOf(ex: Exercise, sc: Scheme): number {
@@ -998,7 +1070,7 @@ cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
 npm test -- packages/core/src/engine/budget.test.ts
 ```
 
-Esperado: PASS, 8 testes.
+Esperado: PASS, 10 testes.
 
 - [ ] **Step 5: Commit**
 
