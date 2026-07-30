@@ -2004,6 +2004,24 @@ import { parseEquipmentCsv, parseExercisesCsv, CatalogError } from './schema';
 const equipCsv = readFileSync('catalog/equipment.csv', 'utf8');
 const exCsv = readFileSync('catalog/exercises.csv', 'utf8');
 
+/**
+ * Fixture PRÓPRIO, e não o catálogo de produção. Todo teste que afirma sobre
+ * VALORES usa este; só o "lê o arquivo real do repo" toca o arquivo de verdade,
+ * e ele afirma ESTRUTURA (quantas linhas, quais colunas).
+ *
+ * A primeira versão destes testes afirmava sobre ids da semente lendo
+ * `catalog/exercises.csv`, e quatro deles quebraram no dia em que o catálogo
+ * real de 153 linhas, com ids uuid do Persona Fit, substituiu a semente de 3.
+ * Nada no parser tinha regredido — o teste estava acoplado ao dado.
+ */
+const FIXTURE_EX = [
+  'id,name,primary,secondary,equipment,level,pattern,is_compound,avg_sec_per_set,duration_sec,contraindications,cue',
+  'supino-reto,Supino reto com barra,peito,triceps|ombros,barra|banco,2,push-h,true,35,,ombro,Escápulas retraídas',
+  'leg-press,Leg Press 45,pernas,gluteos,leg-press,1,squat,true,38,,joelho,Não deixe a lombar sair do apoio',
+  'esteira-moderada,Esteira ritmo moderado,cardio,,esteira,1,cardio,false,0,600,,Mantenha um ritmo em que consiga conversar',
+  '',
+].join('\n');
+
 describe('parseEquipmentCsv', () => {
   it('lê o arquivo real do repo', () => {
     const rows = parseEquipmentCsv(equipCsv);
@@ -2027,12 +2045,17 @@ describe('parseExercisesCsv', () => {
   const known = () => new Set(parseEquipmentCsv(equipCsv).map((e) => e.id));
 
   it('lê o arquivo real do repo', () => {
+    // Afirma ESTRUTURA, nunca valores: o catálogo cresce e muda de conteúdo,
+    // e isso não é regressão do parser.
     const out = parseExercisesCsv(exCsv, known());
     expect(out.length).toBeGreaterThanOrEqual(3);
+    expect(out[0]).toHaveProperty('id');
+    expect(out[0]).toHaveProperty('primary');
+    expect(out[0]).toHaveProperty('equipment');
   });
 
   it('separa arrays por pipe', () => {
-    const out = parseExercisesCsv(exCsv, known());
+    const out = parseExercisesCsv(FIXTURE_EX, known());
     const supino = out.find((e) => e.id === 'supino-reto')!;
     expect(supino.secondary).toEqual(['triceps', 'ombros']);
     expect(supino.equipment).toEqual(['barra', 'banco']);
@@ -2040,40 +2063,40 @@ describe('parseExercisesCsv', () => {
   });
 
   it('trata célula vazia como array vazio, não como [""]', () => {
-    const out = parseExercisesCsv(exCsv, known());
+    const out = parseExercisesCsv(FIXTURE_EX, known());
     const esteira = out.find((e) => e.id === 'esteira-moderada')!;
     expect(esteira.secondary).toEqual([]);
     expect(esteira.contraindications).toEqual([]);
   });
 
   it('converte is_compound para boolean de verdade', () => {
-    const out = parseExercisesCsv(exCsv, known());
+    const out = parseExercisesCsv(FIXTURE_EX, known());
     expect(out.find((e) => e.id === 'supino-reto')!.isCompound).toBe(true);
     expect(out.find((e) => e.id === 'esteira-moderada')!.isCompound).toBe(false);
   });
 
   it('rejeita equipamento que não existe no equipment.csv', () => {
-    const bad = exCsv + 'fake,Fake,peito,,teletransportador,1,iso,false,20,,,\n';
+    const bad = FIXTURE_EX + 'fake,Fake,peito,,teletransportador,1,iso,false,20,,,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/teletransportador/);
   });
 
   it('rejeita avg_sec_per_set fora de 10-60 para não-cardio', () => {
-    const bad = exCsv + 'lento,Lento,peito,,barra,1,iso,false,900,,,\n';
+    const bad = FIXTURE_EX + 'lento,Lento,peito,,barra,1,iso,false,900,,,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/avg_sec_per_set/);
   });
 
   it('exige duration_sec em exercício de cardio', () => {
-    const bad = exCsv + 'bike-x,Bike,cardio,,bike,1,cardio,false,0,,,\n';
+    const bad = FIXTURE_EX + 'bike-x,Bike,cardio,,bike,1,cardio,false,0,,,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/duration_sec/);
   });
 
   it('rejeita grupo muscular inválido', () => {
-    const bad = exCsv + 'x,X,panturrilha,,barra,1,iso,false,20,,,\n';
+    const bad = FIXTURE_EX + 'x,X,panturrilha,,barra,1,iso,false,20,,,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/primary/);
   });
 
   it('rejeita contraindicação fora do vocabulário', () => {
-    const bad = exCsv + 'x,X,peito,,barra,1,iso,false,20,,dedao,\n';
+    const bad = FIXTURE_EX + 'x,X,peito,,barra,1,iso,false,20,,dedao,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/contraindic/i);
   });
 
@@ -2081,7 +2104,7 @@ describe('parseExercisesCsv', () => {
     // O parser tem essa guarda; sem teste ela podia ser removida num refactor
     // sem ninguém notar. Um id duplicado no catálogo faria o motor tratar dois
     // exercícios diferentes como o mesmo na deduplicação do `generateWorkout`.
-    const bad = exCsv + 'supino-reto,Outro supino,peito,,barra,1,iso,false,30,,,\n';
+    const bad = FIXTURE_EX + 'supino-reto,Outro supino,peito,,barra,1,iso,false,30,,,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/duplicado/i);
   });
 
@@ -2090,8 +2113,8 @@ describe('parseExercisesCsv', () => {
     // físicas e a linha ruim cai na 5 — mas a task 9 enche o catálogo com 269
     // exercícios, e aí a mesma linha ruim cai na 271. Um `/linha 5/` fixo
     // quebraria nessa task sem que nada em `schema.ts` tivesse regredido.
-    const linhaEsperada = exCsv.trim().split('\n').length + 1;
-    const bad = exCsv + 'x,X,inexistente,,barra,1,iso,false,20,,,\n';
+    const linhaEsperada = FIXTURE_EX.trim().split('\n').length + 1;
+    const bad = FIXTURE_EX + 'x,X,inexistente,,barra,1,iso,false,20,,,\n';
     try {
       parseExercisesCsv(bad, known());
       expect.unreachable('deveria ter lançado');
@@ -2104,7 +2127,7 @@ describe('parseExercisesCsv', () => {
     // "1", "ture", "True" e célula vazia viravam `false` em silêncio, e este
     // campo decide a ordem dos exercícios na sessão.
     for (const v of ['1', 'ture', 'True', '']) {
-      const bad = exCsv + `z,Z,peito,,barra,1,iso,${v},30,,,\n`;
+      const bad = FIXTURE_EX + `z,Z,peito,,barra,1,iso,${v},30,,,\n`;
       expect(() => parseExercisesCsv(bad, known())).toThrow(/is_compound/);
     }
   });
@@ -3267,7 +3290,18 @@ Abra `http://localhost:5173`, passe o PAR-Q e escolha "Peito + Tríceps". A fich
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.16.0/bin:$PATH"
 cd /home/robson/www/_estudos/pessoal/nutrion/quickfit
-git add -A
+# Staging EXPLICITO, nunca `git add -A`. Outro processo pode estar commitando
+# neste mesmo diretorio — aconteceu na primeira tentativa desta task, e um
+# `add -A` varreria o trabalho alheio para dentro deste commit.
+git add packages/core/src/engine/types.ts \
+        packages/core/src/engine/filter.ts \
+        packages/core/src/engine/filter.test.ts \
+        packages/core/src/engine/__fixtures__/catalog.ts \
+        packages/core/src/catalog/schema.ts \
+        catalog/exercises.csv catalog/exercises.classified.csv \
+        scripts/classify.ts scripts/seed-catalog.ts \
+        apps/totem/src/data/loadCatalog.ts \
+        supabase/migrations/20260729000000_exercise_kind.sql
 git commit -m "feat(engine): campo kind separa treino de mobilidade
 
 O motor prescrevia 'Foam roll quadriceps 3x8-12' numa ficha de hipertrofia, e
