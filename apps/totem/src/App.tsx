@@ -48,13 +48,23 @@ export function App() {
   // delay é só para a animação não piscar.
   useEffect(() => {
     if (state.screen !== 'generating' || !bundle) return;
+    // Guarda contra corrida: mesma classe do stale flag do enfeite de IA
+    // abaixo. "Gerar outro" antes do saveWorkout anterior responder podia
+    // fazer o WORKOUT_SAVED do treino VELHO chegar depois e amarrar o QR
+    // impresso a um treino que não é mais o da tela.
+    let stale = false;
+    const input = toInput(state, bundle.availableEquipment);
     const t = window.setTimeout(() => {
-      const workout = generateWorkout(toInput(state, bundle.availableEquipment), bundle.exercises);
+      const workout = generateWorkout(input, bundle.exercises);
       dispatch({ type: 'GENERATED', workout });
-      saveWorkout(bundle.gym.id, toInput(state, bundle.availableEquipment), workout)
-        .then((id) => { if (id) dispatch({ type: 'WORKOUT_SAVED', id }); });
+      saveWorkout(bundle.gym.id, input, workout).then((id) => {
+        if (id && !stale) dispatch({ type: 'WORKOUT_SAVED', id });
+      });
     }, 820);
-    return () => window.clearTimeout(t);
+    return () => {
+      stale = true;
+      window.clearTimeout(t);
+    };
   }, [state.screen, state.seed, bundle]);
 
   // Registra o bloqueio do PAR-Q para o gestor ver nas estatísticas (spec

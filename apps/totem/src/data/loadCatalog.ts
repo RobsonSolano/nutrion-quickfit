@@ -2,7 +2,11 @@ import { supabase } from './supabase';
 import type { Contra, Exercise, Kind, MuscleGroup, Pattern } from '@quickfit/core/engine';
 import type { Gym, GymTheme } from '@quickfit/core/theme';
 
-export const CACHE_KEY = 'qf.catalog.v1';
+// v2: a v1 não tinha o campo `kind` em Exercise (task 9b). Um cache escrito
+// antes disso hidrataria exercícios com `kind: undefined`, e o filtro de
+// mobilidade (`querMobilidade !== (ex.kind === 'mobilidade')`) trataria isso
+// como treino em todo objetivo — o exato bug que a task 9b existe pra evitar.
+export const CACHE_KEY = 'qf.catalog.v2';
 
 // `Gym` e `GymTheme` são definidos em @quickfit/core/theme porque o painel
 // também os consome. Re-exportados aqui só por conveniência de import nas telas.
