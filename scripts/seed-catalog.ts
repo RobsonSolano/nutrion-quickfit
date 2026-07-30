@@ -39,6 +39,7 @@ die(
         primary_group: e.primary,
         level: e.level,
         pattern: e.pattern,
+        kind: e.kind,
         is_compound: e.isCompound,
         avg_sec_per_set: e.avgSecPerSet,
         duration_sec: e.durationSec ?? null,

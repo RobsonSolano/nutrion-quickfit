@@ -57,6 +57,7 @@ const exerciseSchema = z.object({
     .int('duration_sec precisa ser inteiro')
     .positive('duration_sec precisa ser positivo')
     .optional(),
+  kind: z.enum(['treino', 'mobilidade'], { message: 'kind precisa ser treino ou mobilidade' }),
   contraindications: z.array(z.enum(CONTRAS, { message: 'contraindicação inválida' })),
   cue: z.string().optional(),
 });
@@ -103,7 +104,7 @@ export function parseExercisesCsv(text: string, knownEquipment: Set<string>): Ex
 
   for (const { cols, line } of rows(text)) {
     const [
-      id, name, primary, secondary, equipment, level, pattern,
+      id, name, primary, secondary, equipment, level, pattern, kind,
       isCompound, avgSecPerSet, durationSec, contraindications, cue,
     ] = cols;
 
@@ -126,6 +127,7 @@ export function parseExercisesCsv(text: string, knownEquipment: Set<string>): Ex
       equipment: list(equipment),
       level: Number(level),
       pattern,
+      kind,
       isCompound: isCompound === 'true',
       avgSecPerSet: Number(avgSecPerSet),
       durationSec: durationSec === '' ? undefined : Number(durationSec),

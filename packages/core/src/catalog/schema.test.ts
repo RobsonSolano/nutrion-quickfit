@@ -21,10 +21,10 @@ const exCsv = readFileSync('catalog/exercises.csv', 'utf8');
  * ESTRUTURA (quantas linhas, quais colunas), nunca valores.
  */
 const FIXTURE_EX = [
-  'id,name,primary,secondary,equipment,level,pattern,is_compound,avg_sec_per_set,duration_sec,contraindications,cue',
-  'supino-reto,Supino reto com barra,peito,triceps|ombros,barra|banco,2,push-h,true,35,,ombro,Escápulas retraídas',
-  'leg-press,Leg Press 45,pernas,gluteos,leg-press,1,squat,true,38,,joelho,Não deixe a lombar sair do apoio',
-  'esteira-moderada,Esteira ritmo moderado,cardio,,esteira,1,cardio,false,0,600,,Mantenha um ritmo em que consiga conversar',
+  'id,name,primary,secondary,equipment,level,pattern,kind,is_compound,avg_sec_per_set,duration_sec,contraindications,cue',
+  'supino-reto,Supino reto com barra,peito,triceps|ombros,barra|banco,2,push-h,treino,true,35,,ombro,Escápulas retraídas',
+  'leg-press,Leg Press 45,pernas,gluteos,leg-press,1,squat,treino,true,38,,joelho,Não deixe a lombar sair do apoio',
+  'esteira-moderada,Esteira ritmo moderado,cardio,,esteira,1,cardio,treino,false,0,600,,Mantenha um ritmo em que consiga conversar',
   '',
 ].join('\n');
 
@@ -83,27 +83,27 @@ describe('parseExercisesCsv', () => {
   });
 
   it('rejeita equipamento que não existe no equipment.csv', () => {
-    const bad = FIXTURE_EX + 'fake,Fake,peito,,teletransportador,1,iso,false,20,,,\n';
+    const bad = FIXTURE_EX + 'fake,Fake,peito,,teletransportador,1,iso,treino,false,20,,,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/teletransportador/);
   });
 
   it('rejeita avg_sec_per_set fora de 10-60 para não-cardio', () => {
-    const bad = FIXTURE_EX + 'lento,Lento,peito,,barra,1,iso,false,900,,,\n';
+    const bad = FIXTURE_EX + 'lento,Lento,peito,,barra,1,iso,treino,false,900,,,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/avg_sec_per_set/);
   });
 
   it('exige duration_sec em exercício de cardio', () => {
-    const bad = FIXTURE_EX + 'bike-x,Bike,cardio,,bike,1,cardio,false,0,,,\n';
+    const bad = FIXTURE_EX + 'bike-x,Bike,cardio,,bike,1,cardio,treino,false,0,,,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/duration_sec/);
   });
 
   it('rejeita grupo muscular inválido', () => {
-    const bad = FIXTURE_EX + 'x,X,panturrilha,,barra,1,iso,false,20,,,\n';
+    const bad = FIXTURE_EX + 'x,X,panturrilha,,barra,1,iso,treino,false,20,,,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/primary/);
   });
 
   it('rejeita contraindicação fora do vocabulário', () => {
-    const bad = FIXTURE_EX + 'x,X,peito,,barra,1,iso,false,20,,dedao,\n';
+    const bad = FIXTURE_EX + 'x,X,peito,,barra,1,iso,treino,false,20,,dedao,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/contraindic/i);
   });
 
@@ -111,7 +111,7 @@ describe('parseExercisesCsv', () => {
     // O parser tem essa guarda; sem teste ela podia ser removida num refactor
     // sem ninguém notar. Um id duplicado no catálogo faria o motor tratar dois
     // exercícios diferentes como o mesmo na deduplicação do `generateWorkout`.
-    const bad = FIXTURE_EX + 'supino-reto,Outro supino,peito,,barra,1,iso,false,30,,,\n';
+    const bad = FIXTURE_EX + 'supino-reto,Outro supino,peito,,barra,1,iso,treino,false,30,,,\n';
     expect(() => parseExercisesCsv(bad, known())).toThrow(/duplicado/i);
   });
 
@@ -121,7 +121,7 @@ describe('parseExercisesCsv', () => {
     // exercícios, e aí a mesma linha ruim cai na 271. Um `/linha 5/` fixo
     // quebraria nessa task sem que nada em `schema.ts` tivesse regredido.
     const linhaEsperada = FIXTURE_EX.trim().split('\n').length + 1;
-    const bad = FIXTURE_EX + 'x,X,inexistente,,barra,1,iso,false,20,,,\n';
+    const bad = FIXTURE_EX + 'x,X,inexistente,,barra,1,iso,treino,false,20,,,\n';
     try {
       parseExercisesCsv(bad, known());
       expect.unreachable('deveria ter lançado');
@@ -134,7 +134,7 @@ describe('parseExercisesCsv', () => {
     // "1", "ture", "True" e célula vazia viravam `false` em silêncio, e este
     // campo decide a ordem dos exercícios na sessão.
     for (const v of ['1', 'ture', 'True', '']) {
-      const bad = FIXTURE_EX + `z,Z,peito,,barra,1,iso,${v},30,,,\n`;
+      const bad = FIXTURE_EX + `z,Z,peito,,barra,1,iso,treino,${v},30,,,\n`;
       expect(() => parseExercisesCsv(bad, known())).toThrow(/is_compound/);
     }
   });

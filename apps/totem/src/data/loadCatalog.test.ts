@@ -4,7 +4,7 @@ import type { Exercise } from '@quickfit/core/engine';
 
 const ex: Exercise = {
   id: 'supino', name: 'Supino', primary: 'peito', secondary: ['triceps'],
-  equipment: ['barra', 'banco'], level: 2, pattern: 'push-h',
+  equipment: ['barra', 'banco'], level: 2, pattern: 'push-h', kind: 'treino',
   isCompound: true, avgSecPerSet: 35, contraindications: ['ombro'],
 };
 

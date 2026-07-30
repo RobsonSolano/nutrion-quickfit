@@ -14,6 +14,13 @@ export type Level = 1 | 2 | 3;
 /** Tags de contraindicação. O aluno escolhe estas no passo 6 do fluxo completo. */
 export type Contra = 'joelho' | 'lombar' | 'ombro' | 'punho' | 'cervical';
 
+/**
+ * Alongamento e liberação não são "exercício com séries menos intenso": são
+ * outra coisa. Prescrever "Foam roll quadríceps 3x8-12" numa ficha de
+ * hipertrofia é o que acontece quando o motor não sabe distinguir.
+ */
+export type Kind = 'treino' | 'mobilidade';
+
 export type Exercise = {
   id: string;
   name: string;
@@ -28,6 +35,7 @@ export type Exercise = {
   avgSecPerSet: number;
   /** só para `pattern: 'cardio'` — duração total em segundos. */
   durationSec?: number;
+  kind: Kind;
   contraindications: Contra[];
   cue?: string;
   videoUrl?: string;

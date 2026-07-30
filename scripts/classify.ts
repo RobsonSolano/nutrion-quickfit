@@ -65,7 +65,7 @@ const equipamentos = lerCsv(readFileSync('catalog/equipment.csv', 'utf8'))
   .map((e) => (e as unknown as { id: string }).id);
 
 const CABECALHO =
-  'id,name,primary,secondary,equipment,level,pattern,is_compound,avg_sec_per_set,duration_sec,contraindications,cue';
+  'id,name,primary,secondary,equipment,level,pattern,kind,is_compound,avg_sec_per_set,duration_sec,contraindications,cue';
 
 /** Retoma: lê o que já foi gravado e pula esses ids. */
 const feitos = new Set<string>();
@@ -212,6 +212,7 @@ async function classificar(lote: Raw[]): Promise<string[]> {
       lista(e),
       String(i.level ?? 1),
       limpa(i.pattern),
+      r.modality === 'generico' ? 'mobilidade' : 'treino',
       String(composto),
       String(cardio ? 0 : (i.avg_sec_per_set ?? 30)),
       cardio ? String(i.duration_sec ?? 600) : '',

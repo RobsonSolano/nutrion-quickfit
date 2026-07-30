@@ -9,7 +9,7 @@ const e = (
   over: Partial<Exercise> = {},
 ): Exercise => ({
   id, name: id, primary, secondary: [], equipment,
-  level: 1, pattern, isCompound, avgSecPerSet: 30,
+  level: 1, pattern, isCompound, avgSecPerSet: 30, kind: 'treino',
   contraindications: [], ...over,
 });
 

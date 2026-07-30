@@ -14,7 +14,7 @@ const input = (over: Partial<Input> = {}): Input => ({
 
 const ex = (over: Partial<Exercise> = {}): Exercise => ({
   id: 'x', name: 'X', primary: 'peito', secondary: [], equipment: [],
-  level: 1, pattern: 'iso', isCompound: false, avgSecPerSet: 30,
+  level: 1, pattern: 'iso', isCompound: false, avgSecPerSet: 30, kind: 'treino',
   contraindications: [], ...over,
 });
 

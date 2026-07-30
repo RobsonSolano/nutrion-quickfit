@@ -4,7 +4,7 @@ import type { Exercise, Input } from './types';
 
 const ex = (over: Partial<Exercise>): Exercise => ({
   id: 'x', name: 'X', primary: 'peito', secondary: [], equipment: [],
-  level: 1, pattern: 'iso', isCompound: false, avgSecPerSet: 30,
+  level: 1, pattern: 'iso', isCompound: false, avgSecPerSet: 30, kind: 'treino',
   contraindications: [], ...over,
 });
 
@@ -56,5 +56,26 @@ describe('eligible', () => {
   it('descarta exercício que não toca nenhum grupo pedido', () => {
     const cat = [ex({ id: 'rosca', primary: 'biceps', secondary: [] })];
     expect(eligible(cat, input({ groups: ['pernas'] }))).toHaveLength(0);
+  });
+
+  it('objetivo mobilidade traz só alongamento, e nunca treino', () => {
+    const cat = [
+      ex({ id: 'supino', kind: 'treino' }),
+      ex({ id: 'along-peito', kind: 'mobilidade' }),
+    ];
+    const out = eligible(cat, input({ goal: 'mobilidade' }));
+    expect(out.map((e) => e.id)).toEqual(['along-peito']);
+  });
+
+  it('os outros quatro objetivos nunca trazem alongamento', () => {
+    const cat = [
+      ex({ id: 'supino', kind: 'treino' }),
+      ex({ id: 'along-peito', kind: 'mobilidade' }),
+    ];
+    // O defeito que este teste tranca: "Foam roll quadríceps 3x8-12" numa
+    // ficha de hipertrofia, medido com o catálogo real de 153 exercícios.
+    for (const goal of ['hipertrofia', 'emagrecimento', 'resistencia', 'forca'] as const) {
+      expect(eligible(cat, input({ goal })).map((e) => e.id)).toEqual(['supino']);
+    }
   });
 });

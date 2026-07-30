@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Contra, Exercise, MuscleGroup, Pattern } from '@quickfit/core/engine';
+import type { Contra, Exercise, Kind, MuscleGroup, Pattern } from '@quickfit/core/engine';
 import type { Gym, GymTheme } from '@quickfit/core/theme';
 
 export const CACHE_KEY = 'qf.catalog.v1';
@@ -42,6 +42,7 @@ type ExerciseRow = {
   primary_group: MuscleGroup;
   level: 1 | 2 | 3;
   pattern: Pattern;
+  kind: Kind;
   is_compound: boolean;
   avg_sec_per_set: number;
   duration_sec: number | null;
@@ -61,7 +62,7 @@ export async function loadCatalog(gymSlug = 'demo'): Promise<CatalogBundle> {
   try {
     const [exRes, gymRes] = await Promise.all([
       supabase.from('exercises').select(
-        `id, name, primary_group, level, pattern, is_compound, avg_sec_per_set,
+        `id, name, primary_group, level, pattern, kind, is_compound, avg_sec_per_set,
          duration_sec, cue, video_url,
          exercise_secondary_groups(group_id),
          exercise_equipment(equipment_id),
@@ -91,6 +92,7 @@ export async function loadCatalog(gymSlug = 'demo'): Promise<CatalogBundle> {
       equipment: r.exercise_equipment.map((e) => e.equipment_id),
       level: r.level,
       pattern: r.pattern,
+      kind: r.kind,
       isCompound: r.is_compound,
       avgSecPerSet: r.avg_sec_per_set,
       durationSec: r.duration_sec ?? undefined,
