@@ -25,7 +25,7 @@ export function Groups({ selected, onToggle, onConfirm, onBack }: Props) {
         </Cta>
       }
     >
-      <div className="grid grid-cols-3 content-start gap-3">
+      <div className="grid grid-cols-2 content-start gap-3 sm:grid-cols-3">
         {(Object.keys(GROUP_LABEL) as MuscleGroup[]).map((g) => (
           <BigButton
             key={g}

@@ -2,10 +2,10 @@
 export function Unavailable() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
-      <h2 className="font-display text-[48px] font-extrabold tracking-tight">
+      <h2 className="font-display text-qf-title font-extrabold tracking-tight text-balance">
         Totem indisponível
       </h2>
-      <p className="max-w-[24ch] text-[26px] leading-relaxed text-dim">
+      <p className="max-w-[24ch] text-qf-body leading-relaxed text-dim">
         Procure a recepção para montar seu treino de hoje.
       </p>
     </div>

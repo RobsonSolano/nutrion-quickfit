@@ -21,11 +21,12 @@ export type Shortcut = {
   askTime?: true;
 };
 
-/** Os 4 atalhos da home. D4: a maioria dos alunos sai em 3 toques por aqui. */
+/** Os 5 atalhos da home. D4: a maioria dos alunos sai em 4 toques por aqui. */
 export const SHORTCUTS: Shortcut[] = [
   { label: 'Peito + Tríceps', sub: '45 min', groups: ['peito', 'triceps'],  minutes: 45, goal: 'hipertrofia' },
   { label: 'Costas + Bíceps', sub: '45 min', groups: ['costas', 'biceps'],  minutes: 45, goal: 'hipertrofia' },
   { label: 'Perna completa',  sub: '60 min', groups: ['pernas', 'gluteos'], minutes: 60, goal: 'hipertrofia' },
+  { label: 'Corpo todo',      sub: '60 min', groups: ['peito', 'costas', 'pernas', 'ombros', 'core'], minutes: 60, goal: 'hipertrofia' },
   {
     label: 'Treino rápido',
     sub: 'você escolhe o tempo',
@@ -52,6 +53,8 @@ export type MachineState = {
   minutes: Minutes;
   level: Level;
   avoid: Contra[];
+  /** Só existe para o BACK de 'level' saber se veio de 'time' ou direto da home. */
+  askedTime: boolean;
   seed: number;
   taps: number;
   workout: Workout | null;
@@ -67,6 +70,7 @@ export const initialState: MachineState = {
   minutes: 45,
   level: 2,
   avoid: [],
+  askedTime: false,
   seed: 1,
   taps: 0,
   workout: null,
@@ -100,15 +104,22 @@ export type Action =
 const BACK_TO: Partial<Record<Screen, Screen>> = {
   goal: 'home',
   groups: 'goal',
-  level: 'time',
   avoid: 'level',
   ficha: 'result',
 };
 
-const backFrom = (state: MachineState): Screen | undefined =>
-  state.screen === 'time'
-    ? (state.path === 'atalho' ? 'home' : 'groups')
-    : BACK_TO[state.screen];
+/**
+ * `time` e `level` não têm destino fixo: dependem de qual caminho trouxe o
+ * aluno até ali. `time` distingue por `path`; `level` distingue por
+ * `askedTime` porque no atalho ela é alcançada tanto direto da home (os
+ * shortcuts de tempo fixo) quanto depois de `time` ("Treino rápido", o único
+ * com askTime).
+ */
+const backFrom = (state: MachineState): Screen | undefined => {
+  if (state.screen === 'time') return state.path === 'atalho' ? 'home' : 'groups';
+  if (state.screen === 'level') return state.askedTime ? 'time' : 'home';
+  return BACK_TO[state.screen];
+};
 
 export function reducer(state: MachineState, action: Action): MachineState {
   const tap = (s: MachineState): MachineState => ({ ...s, taps: s.taps + 1 });
@@ -138,8 +149,10 @@ export function reducer(state: MachineState, action: Action): MachineState {
         groups: sc.groups,
         minutes: sc.minutes,
         avoid: [],          // atalho nunca popula avoid
-        // "Treino rápido" pede o tempo antes de gerar; os outros três já o têm.
-        screen: sc.askTime ? 'time' : 'generating',
+        askedTime: false,
+        // "Treino rápido" pede o tempo antes do nível; os outros quatro já
+        // têm tempo fixo e vão direto para o nível.
+        screen: sc.askTime ? 'time' : 'level',
       });
     }
 
@@ -161,16 +174,13 @@ export function reducer(state: MachineState, action: Action): MachineState {
       return tap({ ...state, screen: 'time' });
 
     case 'PICK_TIME':
-      // No atalho o tempo é a última pergunta; no caminho completo ainda falta
-      // o nível.
-      return tap({
-        ...state,
-        minutes: action.minutes,
-        screen: state.path === 'atalho' ? 'generating' : 'level',
-      });
+      // Nos dois caminhos, depois do tempo vem o nível.
+      return tap({ ...state, minutes: action.minutes, askedTime: true, screen: 'level' });
 
     case 'PICK_LEVEL':
-      return tap({ ...state, level: action.level, screen: 'avoid' });
+      // Atalho nunca pergunta contraindicação (D4: velocidade); só o
+      // caminho completo passa por 'avoid'.
+      return tap({ ...state, level: action.level, screen: state.path === 'atalho' ? 'generating' : 'avoid' });
 
     case 'TOGGLE_AVOID': {
       const avoid = state.avoid.includes(action.tag)

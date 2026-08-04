@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('caminho felizeu: 3 toques até o treino, e a ficha imprime com todos os exercícios', async ({ page }) => {
+test('caminho felizeu: 4 toques até o treino, e a ficha imprime com todos os exercícios', async ({ page }) => {
   await page.goto('/');
 
   // 1
@@ -9,6 +9,8 @@ test('caminho felizeu: 3 toques até o treino, e a ficha imprime com todos os ex
   await page.getByRole('button', { name: /nenhuma das anteriores/i }).click();
   // 3
   await page.getByRole('button', { name: /peito \+ tríceps/i }).click();
+  // 4
+  await page.getByRole('button', { name: /^Intermediário/ }).click();
 
   await expect(page.getByText(/montando seu treino/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /imprimir ficha/i })).toBeVisible({ timeout: 10_000 });
@@ -26,7 +28,7 @@ test('caminho felizeu: 3 toques até o treino, e a ficha imprime com todos os ex
   expect(linhasTela).toBe(numExercicios);
 });
 
-test('"Treino rápido" pede o tempo: 4 toques, escada curta, sem pergunta de nível', async ({ page }) => {
+test('"Treino rápido" pede o tempo e o nível: 5 toques, escada curta', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Toque para começar' }).click();
   await page.getByRole('button', { name: /nenhuma das anteriores/i }).click();
@@ -39,8 +41,20 @@ test('"Treino rápido" pede o tempo: 4 toques, escada curta, sem pergunta de ní
 
   await page.getByRole('button', { name: '40 min' }).click();
 
-  // Vai direto para o treino: no atalho não há passo de nível
-  await expect(page.getByRole('button', { name: /^Iniciante/ })).toHaveCount(0);
+  // Mesmo no atalho, o nível agora é perguntado antes de gerar
+  await expect(page.getByRole('button', { name: /^Iniciante/ })).toBeVisible();
+  await page.getByRole('button', { name: /^Iniciante/ }).click();
+
+  await expect(page.getByRole('button', { name: /imprimir ficha/i })).toBeVisible({ timeout: 10_000 });
+});
+
+test('"Corpo todo" cobre os grandes grupos num único treino', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Toque para começar' }).click();
+  await page.getByRole('button', { name: /nenhuma das anteriores/i }).click();
+  await page.getByRole('button', { name: /corpo todo/i }).click();
+  await page.getByRole('button', { name: /^Avançado/ }).click();
+
   await expect(page.getByRole('button', { name: /imprimir ficha/i })).toBeVisible({ timeout: 10_000 });
 });
 

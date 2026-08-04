@@ -11,11 +11,11 @@ type Props = {
 export function Parq({ marked, onToggle, onNone }: Props) {
   return (
     <div className="flex h-full flex-col gap-6">
-      <h2 className="font-display text-[56px] font-extrabold leading-tight tracking-tight text-balance">
+      <h2 className="font-display text-qf-display font-extrabold leading-tight tracking-tight text-balance">
         Algum destes se aplica a você hoje?
       </h2>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
         {PARQ_QUESTIONS.map((q, i) => {
           const on = marked.includes(i);
           return (
@@ -39,7 +39,7 @@ export function Parq({ marked, onToggle, onNone }: Props) {
               >
                 {on ? '✕' : ''}
               </span>
-              <span className="text-[28px] font-semibold">{q}</span>
+              <span className="text-qf-cta font-semibold">{q}</span>
             </button>
           );
         })}

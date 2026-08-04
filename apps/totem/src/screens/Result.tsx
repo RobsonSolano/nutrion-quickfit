@@ -32,10 +32,10 @@ export function Result({
     <div className="flex h-full flex-col gap-5">
       <div className="flex flex-none items-start justify-between gap-6">
         <div>
-          <h2 className="font-display text-[42px] font-extrabold leading-tight tracking-tight">
+          <h2 className="font-display text-qf-title font-extrabold leading-tight tracking-tight text-balance">
             {embellishTitle ?? `Treino A — ${groupsTitle}`}
           </h2>
-          <div className="mt-2 flex flex-wrap gap-x-8 gap-y-1 text-[20px] text-dim">
+          <div className="mt-2 flex flex-wrap gap-x-8 gap-y-1 text-qf-body text-dim">
             <span><b className="text-text">{d.exercicios}</b> exercícios</span>
             <span><b className="text-text">{d.series}</b> séries</span>
             <span>~<b className="text-text">{d.minutos}</b> min com aquecimento</span>
@@ -45,7 +45,7 @@ export function Result({
         <button
           type="button"
           onClick={onExit}
-          className="min-h-[64px] flex-none rounded-xl px-5 text-[22px] text-dim hover:text-text focus-visible:outline focus-visible:outline-4 focus-visible:outline-accent"
+          className="min-h-[64px] flex-none rounded-xl px-5 text-qf-cta text-dim hover:text-text focus-visible:outline focus-visible:outline-4 focus-visible:outline-accent"
         >
           ✕ Sair
         </button>
@@ -69,18 +69,18 @@ export function Result({
                 dense ? 'px-5 py-2' : 'px-5 py-3',
               ].join(' ')}
             >
-              <span className="w-10 flex-none font-display text-[22px] font-extrabold tabular-nums text-accent">
+              <span className="w-10 flex-none font-display text-qf-cta font-extrabold tabular-nums text-accent">
                 {String(i + 1).padStart(2, '0')}
               </span>
               <span className="min-w-0 flex-1">
-                <span className={`block truncate font-semibold ${dense ? 'text-[22px]' : 'text-[26px]'}`}>
+                <span className="block truncate font-display text-qf-button font-semibold">
                   {it.exercise.name}
                 </span>
-                <span className="block truncate text-[17px] text-dim">
+                <span className="block truncate text-qf-label text-dim">
                   {cues?.[it.exercise.id] ?? it.exercise.cue ?? it.exercise.equipment.join(' · ')}
                 </span>
               </span>
-              <span className={`flex-none font-display font-extrabold tabular-nums ${dense ? 'text-[24px]' : 'text-[30px]'}`}>
+              <span className="flex-none font-display text-qf-cta font-extrabold tabular-nums">
                 {it.exercise.pattern === 'cardio' ? it.reps : `${it.sets}×${it.reps}`}
               </span>
             </div>
@@ -94,14 +94,14 @@ export function Result({
               className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
               style={{ background: 'linear-gradient(to top, var(--qf-bg), transparent)' }}
             />
-            <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-accent px-4 py-1 text-[17px] font-extrabold text-onAccent">
+            <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-accent px-4 py-1 text-qf-label font-extrabold text-onAccent">
               ↓ mais {below} exercício{below > 1 ? 's' : ''} — role a lista
             </span>
           </>
         )}
       </div>
 
-      <p className="flex-none text-[18px] text-dim">
+      <p className="flex-none text-qf-label text-dim">
         Descanso de {workout.scheme.rest}s entre séries
         {embellishTitle ? ' · nome e dicas escritos pela IA' : ''}
       </p>

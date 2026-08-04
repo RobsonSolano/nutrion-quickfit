@@ -4,16 +4,18 @@ import { reducer, initialState, toInput, SHORTCUTS, type MachineState } from './
 const run = (actions: Parameters<typeof reducer>[1][], from = initialState): MachineState =>
   actions.reduce(reducer, from);
 
-describe('fluxo de atalho — 3 toques', () => {
-  it('attract → parq → home → result em 3 toques', () => {
-    const s = run([
+describe('fluxo de atalho — 4 toques', () => {
+  it('attract → parq → home → nível → result em 4 toques', () => {
+    let s = run([
       { type: 'TOUCH_ATTRACT' },
       { type: 'PARQ_NONE' },
       { type: 'PICK_SHORTCUT', index: 0 },
     ]);
-    expect(s.screen).toBe('generating');
-    expect(s.taps).toBe(3);
+    expect(s.screen).toBe('level');
     expect(s.path).toBe('atalho');
+    s = reducer(s, { type: 'PICK_LEVEL', level: 3 });
+    expect(s.screen).toBe('generating');
+    expect(s.taps).toBe(4);
   });
 
   it('o atalho preenche objetivo, grupos e tempo de uma vez', () => {
@@ -36,10 +38,28 @@ describe('fluxo de atalho — 3 toques', () => {
     expect(toInput(s, ['barra']).avoid).toEqual([]);
   });
 
-  it('só o "Treino rápido" tem askTime — os outros três geram direto', () => {
+  it('só o "Treino rápido" tem askTime — os outros quatro já têm tempo fixo', () => {
     const comAskTime = SHORTCUTS.filter((s) => s.askTime);
     expect(comAskTime).toHaveLength(1);
     expect(comAskTime[0].label).toBe('Treino rápido');
+  });
+
+  it('"Corpo todo" cobre os grandes grupos, sem isolar bíceps/tríceps', () => {
+    const corpoTodo = SHORTCUTS.find((s) => s.label === 'Corpo todo');
+    expect(corpoTodo?.groups).toEqual(['peito', 'costas', 'pernas', 'ombros', 'core']);
+    expect(corpoTodo?.askTime).toBeUndefined();
+  });
+
+  it('BACK do nível volta para a home — shortcut de tempo fixo não passou por `time`', () => {
+    const s = reducer(
+      run([
+        { type: 'TOUCH_ATTRACT' },
+        { type: 'PARQ_NONE' },
+        { type: 'PICK_SHORTCUT', index: 0 },
+      ]),
+      { type: 'BACK' },
+    );
+    expect(s.screen).toBe('home');
   });
 });
 
@@ -55,21 +75,29 @@ describe('atalho "Treino rápido" — pede o tempo antes de gerar', () => {
     expect(s.path).toBe('atalho');
   });
 
-  it('escolher o tempo gera na hora — no atalho não há pergunta de nível', () => {
+  it('escolher o tempo leva ao nível, não direto para a geração', () => {
     const s = reducer(ateOTempo(), { type: 'PICK_TIME', minutes: 40 });
-    expect(s.screen).toBe('generating');
+    expect(s.screen).toBe('level');
     expect(s.minutes).toBe(40);
   });
 
-  it('custa 4 toques, um mais que os outros atalhos', () => {
-    const rapido = reducer(ateOTempo(), { type: 'PICK_TIME', minutes: 30 });
-    const direto = run([
-      { type: 'TOUCH_ATTRACT' },
-      { type: 'PARQ_NONE' },
-      { type: 'PICK_SHORTCUT', index: 0 },
-    ]);
-    expect(rapido.taps).toBe(4);
-    expect(direto.taps).toBe(3);
+  it('custa 5 toques até gerar, um mais que os outros atalhos', () => {
+    const rapido = reducer(
+      reducer(ateOTempo(), { type: 'PICK_TIME', minutes: 30 }),
+      { type: 'PICK_LEVEL', level: 2 },
+    );
+    const direto = reducer(
+      run([
+        { type: 'TOUCH_ATTRACT' },
+        { type: 'PARQ_NONE' },
+        { type: 'PICK_SHORTCUT', index: 0 },
+      ]),
+      { type: 'PICK_LEVEL', level: 2 },
+    );
+    expect(rapido.screen).toBe('generating');
+    expect(rapido.taps).toBe(5);
+    expect(direto.screen).toBe('generating');
+    expect(direto.taps).toBe(4);
   });
 
   it('BACK da tela de tempo volta para a home, não para os grupos', () => {
@@ -77,6 +105,14 @@ describe('atalho "Treino rápido" — pede o tempo antes de gerar', () => {
     // pelo teste de BACK em "caminho completo".
     const s = reducer(ateOTempo(), { type: 'BACK' });
     expect(s.screen).toBe('home');
+  });
+
+  it('BACK do nível volta para o tempo — aqui, ao contrário dos outros atalhos, ele passou por `time`', () => {
+    const s = reducer(
+      reducer(ateOTempo(), { type: 'PICK_TIME', minutes: 40 }),
+      { type: 'BACK' },
+    );
+    expect(s.screen).toBe('time');
   });
 });
 

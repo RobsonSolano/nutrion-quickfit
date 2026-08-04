@@ -133,7 +133,7 @@ function TotemApp() {
         )}
 
         {state.screen !== 'attract' && (
-          <div className="flex h-full flex-col gap-6 p-10">
+          <div className="flex h-full flex-col gap-4 p-5 sm:gap-6 sm:p-10">
             <div className="no-print"><Header gymName={gym.name} /></div>
             <div className="min-h-0 flex-1">
               {state.screen === 'parq' && (
@@ -181,6 +181,7 @@ function TotemApp() {
               )}
               {state.screen === 'level' && (
                 <Level
+                  variant={state.path}
                   onPick={(level) => dispatch({ type: 'PICK_LEVEL', level })}
                   onBack={() => dispatch({ type: 'BACK' })}
                 />
@@ -231,8 +232,8 @@ function Header({ gymName }: { gymName: string }) {
     <div className="flex flex-none items-center gap-4">
       <Mark />
       <div>
-        <div className="font-display text-[26px] font-bold tracking-tight">{gymName}</div>
-        <div className="text-[16px] uppercase tracking-[0.1em] text-dim">QuickFit</div>
+        <div className="font-display text-qf-body font-bold tracking-tight">{gymName}</div>
+        <div className="text-qf-label uppercase tracking-[0.1em] text-dim">QuickFit</div>
       </div>
     </div>
   );

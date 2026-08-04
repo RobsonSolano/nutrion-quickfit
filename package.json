@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "NutriOn QuickFit — totem de autoatendimento que gera treino personalizado em 3 toques",
+  "description": "NutriOn QuickFit — totem de autoatendimento que gera treino personalizado em 4 toques",
   "engines": {
     "node": ">=22.12.0"
   },

@@ -30,7 +30,7 @@ export function Avoid({ selected, onToggle, onConfirm, onBack }: Props) {
         </Cta>
       }
     >
-      <div className="grid grid-cols-2 content-start gap-4">
+      <div className="grid grid-cols-1 content-start gap-4 sm:grid-cols-2">
         {CONTRA_OPTIONS.map((o) => (
           <BigButton
             key={o.tag}

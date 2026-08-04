@@ -21,7 +21,7 @@ export function Time({ onPick, onBack, variant }: Props) {
       hint={quick ? 'A gente monta um treino de corpo inteiro nesse tempo.' : undefined}
       onBack={onBack}
     >
-      <div className="grid grid-cols-2 content-start gap-4">
+      <div className="grid grid-cols-1 content-start gap-4 sm:grid-cols-2">
         {options.map((m) => (
           <BigButton key={m} title={`${m} min`} onClick={() => onPick(m)} />
         ))}

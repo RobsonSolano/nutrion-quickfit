@@ -27,10 +27,10 @@ export function Generating() {
       <div className="animate-pulse motion-reduce:animate-none">
         <Mark size={96} />
       </div>
-      <h2 className="font-display text-[42px] font-extrabold tracking-tight">
+      <h2 className="font-display text-qf-title font-extrabold tracking-tight">
         Montando seu treino
       </h2>
-      <p aria-live="polite" className="text-[24px] text-dim">
+      <p aria-live="polite" className="text-qf-body text-dim">
         {STEPS[i]}
       </p>
     </div>

@@ -17,8 +17,8 @@ export function Cta({ children, onClick, variant = 'solid', disabled }: Props) {
         'active:scale-[0.99] disabled:opacity-35',
         'focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2',
         variant === 'solid'
-          ? 'bg-accent text-onAccent text-[30px] hover:brightness-110 focus-visible:outline-text'
-          : 'border border-border bg-transparent text-[24px] font-semibold text-dim hover:border-accent hover:text-text focus-visible:outline-accent',
+          ? 'bg-accent text-onAccent text-qf-cta hover:brightness-110 focus-visible:outline-text'
+          : 'border border-border bg-transparent text-qf-body font-semibold text-dim hover:border-accent hover:text-text focus-visible:outline-accent',
       ].join(' ')}
     >
       {children}

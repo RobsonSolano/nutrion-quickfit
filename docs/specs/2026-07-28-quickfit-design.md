@@ -35,7 +35,7 @@ incumbente.
 | D1 | **Web app em modo kiosk**, não executável | Electron/Tauri (`.exe`), app Android/Expo | Deploy = `git push`; corrige bug em 30 academias sem visita técnica; roda em qualquer hardware touch. O `.exe` só adicionaria manutenção de instalador e auto-update. |
 | D2 | **Projeto Supabase novo** (`jpgnplzkdbfmjkinfvln`) | Schema no Supabase do Persona Fit; MongoDB; catálogo só em JSON | Desacopla os dois produtos (migration do QuickFit não pode quebrar o app em produção). Postgres porque a consulta central é relacional: *"exercícios cujos equipamentos estejam **todos** presentes na academia X"* é join + `NOT EXISTS`. RLS dá multi-tenant de graça no piloto. |
 | D3 | **Catálogo autorado em arquivo, servido pelo banco** | Só banco (migrations SQL); só arquivo | Enriquecer 269 exercícios é trabalho de planilha: CSV dá diff revisável em bloco no git. O banco é fonte de runtime desde o dia 1, então não há migração-retrabalho. O painel do gestor, quando existir, escreve no mesmo banco. |
-| D4 | **Atalhos na home + fluxo completo atrás de "Montar do zero"** | Os 5 passos como caminho único; fluxo enxuto de 3 telas densas | 5 passos custa 6–8 toques e pontos de desistência, contradizendo a promessa de "menos de um minuto". Atalhos resolvem 80% em 2 toques; os 5 passos continuam existindo para quem quer controle. |
+| D4 | **Atalhos na home + fluxo completo atrás de "Montar do zero"** | Os 5 passos como caminho único; fluxo enxuto de 3 telas densas | 5 passos custa 6–8 toques e pontos de desistência, contradizendo a promessa de "menos de um minuto". Atalhos resolvem 80% em 3 toques a partir da home (nível sempre entra antes de gerar, jul/2026); os 5 passos continuam existindo para quem quer controle. |
 | D5 | **Regras montam, LLM enfeita, com degradação silenciosa** | Só regras; LLM monta tudo (como `coach-generate-plan` do app) | Motor determinístico: <100ms, R$0, offline, nunca sai do catálogo, testável. LLM só dá nome ao treino e uma dica por exercício — se falhar, o treino já está na tela. Pitch "motor próprio + IA" é literalmente verdade. |
 | D6 | **PAR-Q de 1 tela + homologação por professor CREF** | Só termo no rodapé; PAR-Q completo de 7 perguntas; nada na demo | Prescrição é ato privativo de profissional de educação física (CONFEF). Custa 1 toque (botão "nenhuma das anteriores") e responde a objeção que mais provavelmente mata a venda. PAR-Q completo mata a promessa de tempo e o aluno clica "não" em tudo sem ler, anulando a proteção. |
 | D7 | **269 exercícios reclassificados, revisão em duas ondas** | ~110 exercícios de cobertura; ~50 só dos atalhos | Escolha do dev: não refazer no piloto. Mitigação obrigatória: onda 1 = os ~110 que a demo exercita (libera desenvolvimento), onda 2 = a cauda. Senão o CSV vira gargalo antes de haver o que mostrar. |
@@ -704,7 +704,7 @@ inexistente ou `avg_sec_per_set` fora de 10–60.
 
 **Fluxo (Playwright, smoke).** Dois caminhos:
 
-- feliz: PAR-Q → atalho → resultado → PDF, afirmando que foram **3 toques**
+- feliz: PAR-Q → atalho → nível → resultado → PDF, afirmando que foram **4 toques**
 - bloqueado: marcar uma condição no PAR-Q leva à tela de encaminhamento e o motor
   **nunca é chamado**
 

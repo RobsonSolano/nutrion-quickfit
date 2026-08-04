@@ -26,10 +26,10 @@ export class Boundary extends Component<Props, State> {
     if (!this.state.crashed) return this.props.children;
     return (
       <div className="flex h-full flex-col items-center justify-center gap-5 text-center">
-        <h2 className="font-display text-[44px] font-extrabold tracking-tight">
+        <h2 className="font-display text-qf-title font-extrabold tracking-tight text-balance">
           Algo deu errado
         </h2>
-        <p className="max-w-[26ch] text-[24px] text-dim">
+        <p className="max-w-[26ch] text-qf-body text-dim">
           Voltando ao início em alguns segundos. Se persistir, procure a recepção.
         </p>
       </div>
