@@ -22,9 +22,15 @@ export function eligible(catalog: Exercise[], input: Input): Exercise[] {
     if (ex.level > input.level) return false;
     if (ex.contraindications.some((c) => input.avoid.includes(c))) return false;
 
-    return (
-      input.groups.includes(ex.primary) ||
-      ex.secondary.some((g) => input.groups.includes(g))
-    );
+    if (input.groups.includes(ex.primary)) return true;
+
+    // Grupo secundário só conta pra padrão DINÂMICO (agachamento recruta
+    // glúteo, remada recruta bíceps). Isométrico (`iso`) é sustentar uma
+    // postura — o envolvimento de um grupo secundário ali não justifica
+    // aparecer como "exercício de perna": prancha tem perna/glúteo como
+    // secundário e vazava pra "Perna completa" (bug real, ago/2026).
+    if (ex.pattern === 'iso') return false;
+
+    return ex.secondary.some((g) => input.groups.includes(g));
   });
 }

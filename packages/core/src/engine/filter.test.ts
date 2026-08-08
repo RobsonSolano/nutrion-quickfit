@@ -48,14 +48,25 @@ describe('eligible', () => {
     expect(out.map(e => e.id)).toEqual(['leg']);
   });
 
-  it('aceita exercício cujo grupo SECUNDÁRIO foi pedido', () => {
-    const cat = [ex({ id: 'supino', primary: 'peito', secondary: ['triceps'] })];
+  it('aceita exercício DINÂMICO cujo grupo SECUNDÁRIO foi pedido', () => {
+    const cat = [ex({ id: 'supino', primary: 'peito', secondary: ['triceps'], pattern: 'push-h' })];
     expect(eligible(cat, input({ groups: ['triceps'] }))).toHaveLength(1);
   });
 
   it('descarta exercício que não toca nenhum grupo pedido', () => {
     const cat = [ex({ id: 'rosca', primary: 'biceps', secondary: [] })];
     expect(eligible(cat, input({ groups: ['pernas'] }))).toHaveLength(0);
+  });
+
+  it('ISOMÉTRICO não conta pelo grupo secundário — só pelo primário', () => {
+    // Bug real (ago/2026): "Prancha" (primary: core, secondary: gluteos)
+    // aparecia em "Perna completa" (groups: pernas, gluteos) por causa do
+    // secundário, mesmo sendo uma postura sustentada, não um exercício de perna.
+    const cat = [
+      ex({ id: 'prancha', primary: 'core', secondary: ['gluteos'], pattern: 'iso' }),
+    ];
+    expect(eligible(cat, input({ groups: ['pernas', 'gluteos'] }))).toHaveLength(0);
+    expect(eligible(cat, input({ groups: ['core'] }))).toHaveLength(1);
   });
 
   it('objetivo mobilidade traz só alongamento, e nunca treino', () => {
