@@ -40,7 +40,7 @@ export function hydrateFromCache(): CatalogBundle | null {
   }
 }
 
-type ExerciseRow = {
+export type ExerciseRow = {
   id: string;
   name: string;
   primary_group: MuscleGroup;
@@ -57,6 +57,33 @@ type ExerciseRow = {
   exercise_equipment: { equipment_id: string }[];
   exercise_contraindications: { tag: Contra }[];
 };
+
+/**
+ * Puro de propósito: sem isto, testar "a academia X nunca vê o exercício Y"
+ * exigiria mockar o cliente Supabase inteiro. Separado de `loadCatalog` só
+ * por isso — a chamada de rede continua ali.
+ */
+export function mapExercises(rows: ExerciseRow[], excludedIds: Set<string>): Exercise[] {
+  return rows
+    .filter((r) => !excludedIds.has(r.id))
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      primary: r.primary_group,
+      secondary: r.exercise_secondary_groups.map((s) => s.group_id),
+      equipment: r.exercise_equipment.map((e) => e.equipment_id),
+      level: r.level,
+      pattern: r.pattern,
+      kind: r.kind,
+      isCompound: r.is_compound,
+      avgSecPerSet: r.avg_sec_per_set,
+      durationSec: r.duration_sec ?? undefined,
+      contraindications: r.exercise_contraindications.map((c) => c.tag),
+      cue: r.cue ?? undefined,
+      videoUrl: r.video_url ?? undefined,
+      imageUrl: r.image_url ?? undefined,
+    }));
+}
 
 /**
  * Busca catálogo + academia + equipamento disponível. Se a rede falhar, cai
@@ -83,29 +110,15 @@ export async function loadCatalog(gymSlug = 'demo'): Promise<CatalogBundle> {
     if (exRes.error) throw exRes.error;
     if (gymRes.error) throw gymRes.error;
 
-    const eqRes = await supabase
-      .from('gym_available_equipment')
-      .select('equipment_id')
-      .eq('gym_id', gymRes.data.id);
+    const [eqRes, excludedRes] = await Promise.all([
+      supabase.from('gym_available_equipment').select('equipment_id').eq('gym_id', gymRes.data.id),
+      supabase.from('gym_excluded_exercises').select('exercise_id').eq('gym_id', gymRes.data.id),
+    ]);
     if (eqRes.error) throw eqRes.error;
+    if (excludedRes.error) throw excludedRes.error;
 
-    const exercises: Exercise[] = (exRes.data as ExerciseRow[]).map((r) => ({
-      id: r.id,
-      name: r.name,
-      primary: r.primary_group,
-      secondary: r.exercise_secondary_groups.map((s) => s.group_id),
-      equipment: r.exercise_equipment.map((e) => e.equipment_id),
-      level: r.level,
-      pattern: r.pattern,
-      kind: r.kind,
-      isCompound: r.is_compound,
-      avgSecPerSet: r.avg_sec_per_set,
-      durationSec: r.duration_sec ?? undefined,
-      contraindications: r.exercise_contraindications.map((c) => c.tag),
-      cue: r.cue ?? undefined,
-      videoUrl: r.video_url ?? undefined,
-      imageUrl: r.image_url ?? undefined,
-    }));
+    const excluded = new Set(excludedRes.data.map((e) => e.exercise_id));
+    const exercises = mapExercises(exRes.data as ExerciseRow[], excluded);
 
     if (exercises.length === 0) throw new Error('catálogo vazio no servidor');
 
