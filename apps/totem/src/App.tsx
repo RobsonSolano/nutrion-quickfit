@@ -45,7 +45,7 @@ function TotemApp() {
   const [flair, setFlair] = useState<Embellishment | null>(null);
 
   useEffect(() => {
-    loadCatalog()
+    loadCatalog(import.meta.env.VITE_GYM_SLUG || 'demo')
       .then((b) => {
         applyTheme(b.gym.theme);
         setBundle(b);
@@ -129,12 +129,16 @@ function TotemApp() {
     <Shell>
       <Boundary onReset={() => dispatch({ type: 'RESET' })}>
         {state.screen === 'attract' && (
-          <Attract gymName={gym.name} onTouch={() => dispatch({ type: 'TOUCH_ATTRACT' })} />
+          <Attract
+            gymName={gym.name}
+            logoUrl={gym.logoUrl}
+            onTouch={() => dispatch({ type: 'TOUCH_ATTRACT' })}
+          />
         )}
 
         {state.screen !== 'attract' && (
           <div className="flex h-full flex-col gap-4 p-5 sm:gap-6 sm:p-10">
-            <div className="no-print"><Header gymName={gym.name} /></div>
+            <div className="no-print"><Header gymName={gym.name} logoUrl={gym.logoUrl} /></div>
             <div className="min-h-0 flex-1">
               {state.screen === 'parq' && (
                 <Parq
@@ -150,7 +154,7 @@ function TotemApp() {
                   onCustom={() => dispatch({ type: 'OPEN_CUSTOM' })}
                 />
               )}
-              {state.screen === 'generating' && <Generating />}
+              {state.screen === 'generating' && <Generating logoUrl={gym.logoUrl} />}
               {state.screen === 'thin' && (
                 <Thin
                   poolSize={state.workout?.poolSize ?? 0}
@@ -201,6 +205,7 @@ function TotemApp() {
                   levelLabel={LEVEL_OPTIONS.find((o) => o.level === state.level)!.label}
                   embellishTitle={flair?.title ?? null}
                   cues={flair?.cues}
+                  workoutId={state.workoutId}
                   onPrint={() => dispatch({ type: 'OPEN_FICHA' })}
                   onRegenerate={() => dispatch({ type: 'REGENERATE' })}
                   onExit={() => dispatch({ type: 'RESET' })}
@@ -227,10 +232,10 @@ function Shell({ children }: { children: React.ReactNode }) {
   return <main className="qf-shell h-full w-full overflow-hidden bg-bg text-text">{children}</main>;
 }
 
-function Header({ gymName }: { gymName: string }) {
+function Header({ gymName, logoUrl }: { gymName: string; logoUrl?: string | null }) {
   return (
     <div className="flex flex-none items-center gap-4">
-      <Mark />
+      <Mark logoUrl={logoUrl} />
       <div>
         <div className="font-display text-qf-body font-bold tracking-tight">{gymName}</div>
         <div className="text-qf-label uppercase tracking-[0.1em] text-dim">QuickFit</div>

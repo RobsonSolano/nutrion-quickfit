@@ -13,7 +13,6 @@ const bundle: CatalogBundle = {
   gym: {
     id: 'g1', slug: 'demo', name: 'Academia Persona', logoUrl: null,
     theme: { accent: '#39FF14', mode: 'dark' },
-    trainerName: 'Prof. Marina Alves', trainerCref: 'CREF 012345-G/SP',
   },
   availableEquipment: ['barra', 'banco'],
   fromCache: false,

@@ -86,8 +86,6 @@ const { data: gym, error: gymErr } = await db
       slug: 'demo',
       name: 'Academia Persona',
       theme: { accent: DEFAULT_ACCENT, mode: 'dark' },
-      trainer_name: 'Prof. Marina Alves',
-      trainer_cref: 'CREF 012345-G/SP',
     },
     { onConflict: 'slug' },
   )

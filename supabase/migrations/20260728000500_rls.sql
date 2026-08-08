@@ -24,7 +24,7 @@ create policy anon_read_contra     on public.exercise_contraindications
   for select to anon using (true);
 
 -- Academias e equipamento da unidade: leitura pública.
--- `theme` e `trainer_cref` são exibidos no totem, então não são sigilosos.
+-- `theme` e `logo_url` são exibidos no totem, então não são sigilosos.
 create policy anon_read_gyms       on public.gyms
   for select to anon using (true);
 create policy anon_read_gym_equip  on public.gym_equipment

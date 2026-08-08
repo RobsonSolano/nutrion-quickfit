@@ -20,9 +20,12 @@ test('caminho felizeu: 4 toques até o treino, e a ficha imprime com todos os ex
   const numExercicios = await linhas.count();
   expect(numExercicios).toBeGreaterThanOrEqual(3);
 
-  // Ficha: todos os exercícios no papel (cupom, não tabela A4 — task 16), rodapé CREF presente
+  // QR pro celular já aparece no resultado, antes de imprimir
+  await expect(page.getByAltText(/qr do treino/i)).toBeVisible({ timeout: 10_000 });
+
+  // Ficha: todos os exercícios no papel (cupom, não tabela A4 — task 16), rodapé de segurança presente
   await page.getByRole('button', { name: /imprimir ficha/i }).click();
-  await expect(page.getByText(/homologada por/i)).toBeVisible();
+  await expect(page.getByText(/procure o professor ou recepção/i)).toBeVisible();
 
   const linhasTela = await page.locator('.qf-sheet .ex').count();
   expect(linhasTela).toBe(numExercicios);

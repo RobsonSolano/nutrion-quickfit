@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Cta } from '../components/Cta';
 import { useHasMore } from './useHasMore';
 import { describeWorkout } from './labels';
+import { qrDataUrl, workoutUrl } from '../print/qr';
 import type { Workout } from '@quickfit/core/engine';
 
 type Props = {
@@ -10,23 +11,33 @@ type Props = {
   levelLabel: string;
   embellishTitle: string | null;
   cues?: Record<string, string>;
+  workoutId: string | null;
   onPrint: () => void;
   onRegenerate: () => void;
   onExit: () => void;
 };
 
 export function Result({
-  workout, groupsTitle, levelLabel, embellishTitle, cues, onPrint, onRegenerate, onExit,
+  workout, groupsTitle, levelLabel, embellishTitle, cues, workoutId, onPrint, onRegenerate, onExit,
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const { hasMore, below } = useHasMore(listRef);
   const d = describeWorkout(workout);
   const dense = workout.items.length > 7;
+  const [qr, setQr] = useState<string | null>(null);
 
   // Nova geração começa do topo, senão o aluno vê o meio da lista.
   useEffect(() => {
     listRef.current?.scrollTo({ top: 0 });
   }, [workout]);
+
+  // `workoutId` só existe depois que o POST em `generated_workouts`
+  // completa (§ genToken em App.tsx) — até lá o QR fica em "gerando…".
+  useEffect(() => {
+    setQr(null);
+    if (!workoutId) return;
+    qrDataUrl(workoutUrl(workoutId)).then(setQr).catch(() => setQr(null));
+  }, [workoutId]);
 
   return (
     <div className="flex h-full flex-col gap-5">
@@ -106,9 +117,25 @@ export function Result({
         {embellishTitle ? ' · nome e dicas escritos pela IA' : ''}
       </p>
 
-      <div className="flex flex-none gap-4">
-        <Cta onClick={onPrint}>🖨 &nbsp;Imprimir ficha</Cta>
-        <Cta variant="ghost" onClick={onRegenerate}>↻ &nbsp;Gerar outro</Cta>
+      <div className="flex flex-none items-center gap-6">
+        <div className="flex flex-1 flex-col items-center gap-2">
+          <p className="text-center text-qf-label text-dim">
+            Escaneie o QR code e visualize pelo celular
+          </p>
+          {qr ? (
+            <div className="rounded-xl bg-white p-3">
+              <img src={qr} alt="QR do treino" className="h-[104px] w-[104px]" />
+            </div>
+          ) : (
+            <div className="grid h-[130px] w-[130px] place-items-center rounded-xl border border-dashed border-border text-center text-qf-label text-dim">
+              gerando…
+            </div>
+          )}
+        </div>
+        <div className="flex flex-1 flex-col gap-3">
+          <Cta onClick={onPrint}>🖨 &nbsp;Imprimir ficha</Cta>
+          <Cta variant="ghost" onClick={onRegenerate}>↻ &nbsp;Gerar outro</Cta>
+        </div>
       </div>
     </div>
   );

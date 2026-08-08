@@ -104,12 +104,8 @@ export function Ficha({ workout, gym, groupsTitle, workoutId, onBack }: Props) {
             </div>
           ) : null}
           <div className="text-center text-[10px] leading-tight">
-            {gym.trainerName ? <div>{gym.trainerName}</div> : null}
-            {gym.trainerCref ? <div>{gym.trainerCref}</div> : null}
-            <div className="mt-1">
-              Prescrição homologada por profissional de educação física.
-            </div>
-            <div>Sinta dor ou tontura, pare e procure a equipe.</div>
+            <div>Em caso de dores, tonturas ou dúvidas, procure o professor ou recepção.</div>
+            <div className="mt-1 font-bold">{gym.name}</div>
           </div>
         </div>
       </div>

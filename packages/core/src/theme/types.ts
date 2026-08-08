@@ -15,6 +15,4 @@ export type Gym = {
   name: string;
   logoUrl: string | null;
   theme: GymTheme;
-  trainerName: string | null;
-  trainerCref: string | null;
 };

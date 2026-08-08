@@ -7,7 +7,7 @@ const STEPS = [
   'ordenando por padrão de movimento…',
 ];
 
-export function Generating() {
+export function Generating({ logoUrl }: { logoUrl?: string | null }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     const t = window.setInterval(() => setI((n) => Math.min(n + 1, STEPS.length - 1)), 260);
@@ -25,7 +25,7 @@ export function Generating() {
         }}
       />
       <div className="animate-pulse motion-reduce:animate-none">
-        <Mark size={96} />
+        <Mark size={96} logoUrl={logoUrl} />
       </div>
       <h2 className="font-display text-qf-title font-extrabold tracking-tight">
         Montando seu treino

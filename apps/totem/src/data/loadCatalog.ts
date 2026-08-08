@@ -74,7 +74,7 @@ export async function loadCatalog(gymSlug = 'demo'): Promise<CatalogBundle> {
       ),
       supabase
         .from('gyms')
-        .select('id, slug, name, logo_url, theme, trainer_name, trainer_cref')
+        .select('id, slug, name, logo_url, theme')
         .eq('slug', gymSlug)
         .single(),
     ]);
@@ -116,8 +116,6 @@ export async function loadCatalog(gymSlug = 'demo'): Promise<CatalogBundle> {
         name: g.name,
         logoUrl: g.logo_url,
         theme: (g.theme ?? { accent: DEFAULT_ACCENT, mode: 'dark' }) as GymTheme,
-        trainerName: g.trainer_name,
-        trainerCref: g.trainer_cref,
       },
       availableEquipment: eqRes.data.map((e) => e.equipment_id),
       fromCache: false,

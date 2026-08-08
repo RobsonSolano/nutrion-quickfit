@@ -37,7 +37,7 @@ incumbente.
 | D3 | **Catálogo autorado em arquivo, servido pelo banco** | Só banco (migrations SQL); só arquivo | Enriquecer 269 exercícios é trabalho de planilha: CSV dá diff revisável em bloco no git. O banco é fonte de runtime desde o dia 1, então não há migração-retrabalho. O painel do gestor, quando existir, escreve no mesmo banco. |
 | D4 | **Atalhos na home + fluxo completo atrás de "Montar do zero"** | Os 5 passos como caminho único; fluxo enxuto de 3 telas densas | 5 passos custa 6–8 toques e pontos de desistência, contradizendo a promessa de "menos de um minuto". Atalhos resolvem 80% em 3 toques a partir da home (nível sempre entra antes de gerar, jul/2026); os 5 passos continuam existindo para quem quer controle. |
 | D5 | **Regras montam, LLM enfeita, com degradação silenciosa** | Só regras; LLM monta tudo (como `coach-generate-plan` do app) | Motor determinístico: <100ms, R$0, offline, nunca sai do catálogo, testável. LLM só dá nome ao treino e uma dica por exercício — se falhar, o treino já está na tela. Pitch "motor próprio + IA" é literalmente verdade. |
-| D6 | **PAR-Q de 1 tela + homologação por professor CREF** | Só termo no rodapé; PAR-Q completo de 7 perguntas; nada na demo | Prescrição é ato privativo de profissional de educação física (CONFEF). Custa 1 toque (botão "nenhuma das anteriores") e responde a objeção que mais provavelmente mata a venda. PAR-Q completo mata a promessa de tempo e o aluno clica "não" em tudo sem ler, anulando a proteção. |
+| D6 | **PAR-Q de 1 tela** + ~~homologação por professor CREF no rodapé~~ (removida no 1º cliente, ago/2026 — ver risco em §11) | Só termo no rodapé; PAR-Q completo de 7 perguntas; nada na demo | Prescrição é ato privativo de profissional de educação física (CONFEF). Custa 1 toque (botão "nenhuma das anteriores") e responde a objeção que mais provavelmente mata a venda. PAR-Q completo mata a promessa de tempo e o aluno clica "não" em tudo sem ler, anulando a proteção. |
 | D7 | **269 exercícios reclassificados, revisão em duas ondas** | ~110 exercícios de cobertura; ~50 só dos atalhos | Escolha do dev: não refazer no piloto. Mitigação obrigatória: onda 1 = os ~110 que a demo exercita (libera desenvolvimento), onda 2 = a cauda. Senão o CSV vira gargalo antes de haver o que mostrar. |
 | D8 | **White-label estreito: 1 cor + logo + modo**, com validação de contraste | Tema livre para a academia | Se a academia escolher uma cor ilegível sob luz de galpão, o problema é seu, numa unidade que você nunca vai visitar. Fundo, superfícies, bordas e hierarquia de texto são fixos e testados. |
 
@@ -437,8 +437,6 @@ create table gyms (
   name         text not null,
   logo_url     text,
   theme        jsonb not null default '{"accent":"#39FF14","mode":"dark"}'::jsonb,
-  trainer_name text,
-  trainer_cref text,
   created_at   timestamptz not null default now()
 );
 
@@ -609,7 +607,8 @@ A4 (decisão do Robson, jul/2026 — impressão em cupom é prática consolidada
 academia, e a compatibilidade entre formatos é de mão única: cupom imprime
 aceitável em A4, mas A4 não cabe num cupom). Uma coluna estreita de 72mm
 (`--qf-cupom`), sem tabela: logo da academia, dados do treino, lista de
-exercícios com campo de carga em branco, QR code e rodapé de homologação CREF.
+exercícios com campo de carga em branco, QR code e rodapé com instrução de
+segurança + nome da academia.
 
 QR gerado no cliente com a lib `qrcode` — não depende de serviço externo.
 
@@ -620,7 +619,7 @@ Todas nasceram de defeito real medido, não de teoria:
 |---|---|
 | `.qf-sheet, .qf-sheet-body { overflow: visible; height: auto; max-height: none }` | A pré-visualização rola para caber na tela do totem. Se o `overflow: auto` vazar para a impressão, **exercício desaparece do papel sem aviso** — o mais perigoso dos defeitos, porque a tela mostra certo. |
 | `.ex { break-inside: avoid }` | Nenhum exercício parte no meio entre páginas (numa bobina não existe "próxima página", mas o corte pode cair em cima da linha). |
-| `.qf-sheet-footer { position: static }`, não `fixed` | O rodapé de homologação CREF é o último bloco no fluxo. Numa bobina de altura automática, `position: fixed` se comporta de forma imprevisível entre drivers — diferente de A4, o cupom não precisa repetir o rodapé em toda página porque é uma tira contínua. |
+| `.qf-sheet-footer { position: static }`, não `fixed` | O rodapé de segurança é o último bloco no fluxo. Numa bobina de altura automática, `position: fixed` se comporta de forma imprevisível entre drivers — diferente de A4, o cupom não precisa repetir o rodapé em toda página porque é uma tira contínua. |
 | `.no-print { display: none }` | Sem isso os botões "Imprimir" e "Voltar" saem impressos na ficha. |
 | `background: #fff` em toda a cadeia de ancestrais | Senão o cinza da interface vaza como um bloco no meio da folha. |
 | tudo preto (`color: #000` em `.qf-sheet *`) | Térmica é 1 bit — não existe cinza. Hierarquia sai de peso e caixa alta, não de cor. |
@@ -757,10 +756,10 @@ Pior que a colisão: não é segredo. Quem sabe o CPF de outro aluno vê o trein
 | Risco | Gravidade | Mitigação |
 |---|---|---|
 | Revisar 269 exercícios vira gargalo e o projeto morre na planilha | alta | duas ondas (D7); onda 1 libera o desenvolvimento |
-| CREF/CONFEF: PAR-Q + homologação mitiga, não elimina | alta | conversar com advogado **antes de cobrar da primeira academia** — não antes da demo |
+| CREF/CONFEF: PAR-Q mitiga, não elimina — e o rodapé de homologação por CREF foi removido no 1º cliente pagante (ago/2026, pedido do Robson) sem a conversa com advogado que este risco pedia | alta | pendente — conversar com advogado antes do 2º cliente |
 | LLM erra contraindicação na classificação e alguém se machuca | alta | contraindicação é campo de revisão humana obrigatória, sem exceção |
 | Private Network Access bloqueia impressão térmica | média | três caminhos mapeados (§7); resolver no piloto, não na instalação |
-| Aluno não confia em treino gerado por máquina | média | rodapé com nome e CREF do professor da unidade; a demo mede se o gestor deixa instalar |
+| Aluno não confia em treino gerado por máquina | média | rodapé com instrução de segurança + nome da academia no lugar do nome/CREF do professor |
 | Academia quer integração com o ERP dela | baixa | o QuickFit funciona standalone por desenho — é vantagem, não dívida |
 
 ---
