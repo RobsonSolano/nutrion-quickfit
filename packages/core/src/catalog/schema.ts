@@ -60,6 +60,7 @@ const exerciseSchema = z.object({
   kind: z.enum(['treino', 'mobilidade'], { message: 'kind precisa ser treino ou mobilidade' }),
   contraindications: z.array(z.enum(CONTRAS, { message: 'contraindicação inválida' })),
   cue: z.string().optional(),
+  imageUrl: z.string().optional(),
 });
 
 /** Parser deliberadamente ingênuo: vírgula dentro de célula deve quebrar o build. */
@@ -105,7 +106,7 @@ export function parseExercisesCsv(text: string, knownEquipment: Set<string>): Ex
   for (const { cols, line } of rows(text)) {
     const [
       id, name, primary, secondary, equipment, level, pattern, kind,
-      isCompound, avgSecPerSet, durationSec, contraindications, cue,
+      isCompound, avgSecPerSet, durationSec, contraindications, cue, imageUrl,
     ] = cols;
 
     // `isCompound === 'true'` sozinho aceita QUALQUER coisa e devolve false em
@@ -133,6 +134,7 @@ export function parseExercisesCsv(text: string, knownEquipment: Set<string>): Ex
       durationSec: durationSec === '' ? undefined : Number(durationSec),
       contraindications: list(contraindications),
       cue: cue === '' ? undefined : cue,
+      imageUrl: imageUrl === '' ? undefined : imageUrl,
     };
 
     const parsed = exerciseSchema.safeParse(candidate);

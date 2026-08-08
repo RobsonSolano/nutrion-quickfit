@@ -123,11 +123,11 @@ export function Result({
             Escaneie o QR code e visualize pelo celular
           </p>
           {qr ? (
-            <div className="rounded-xl bg-white p-3">
-              <img src={qr} alt="QR do treino" className="h-[104px] w-[104px]" />
+            <div className="rounded-xl bg-white p-4">
+              <img src={qr} alt="QR do treino" className="h-[172px] w-[172px]" />
             </div>
           ) : (
-            <div className="grid h-[130px] w-[130px] place-items-center rounded-xl border border-dashed border-border text-center text-qf-label text-dim">
+            <div className="grid h-[200px] w-[200px] place-items-center rounded-xl border border-dashed border-border text-center text-qf-label text-dim">
               gerando…
             </div>
           )}

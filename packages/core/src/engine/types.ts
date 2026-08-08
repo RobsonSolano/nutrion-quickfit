@@ -39,6 +39,8 @@ export type Exercise = {
   contraindications: Contra[];
   cue?: string;
   videoUrl?: string;
+  /** Foto de demonstração (Free Exercise DB, CC0). Nem todo exercício tem. */
+  imageUrl?: string;
 };
 
 /**

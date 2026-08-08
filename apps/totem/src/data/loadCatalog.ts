@@ -52,6 +52,7 @@ type ExerciseRow = {
   duration_sec: number | null;
   cue: string | null;
   video_url: string | null;
+  image_url: string | null;
   exercise_secondary_groups: { group_id: MuscleGroup }[];
   exercise_equipment: { equipment_id: string }[];
   exercise_contraindications: { tag: Contra }[];
@@ -67,7 +68,7 @@ export async function loadCatalog(gymSlug = 'demo'): Promise<CatalogBundle> {
     const [exRes, gymRes] = await Promise.all([
       supabase.from('exercises').select(
         `id, name, primary_group, level, pattern, kind, is_compound, avg_sec_per_set,
-         duration_sec, cue, video_url,
+         duration_sec, cue, video_url, image_url,
          exercise_secondary_groups(group_id),
          exercise_equipment(equipment_id),
          exercise_contraindications(tag)`,
@@ -103,6 +104,7 @@ export async function loadCatalog(gymSlug = 'demo'): Promise<CatalogBundle> {
       contraindications: r.exercise_contraindications.map((c) => c.tag),
       cue: r.cue ?? undefined,
       videoUrl: r.video_url ?? undefined,
+      imageUrl: r.image_url ?? undefined,
     }));
 
     if (exercises.length === 0) throw new Error('catálogo vazio no servidor');

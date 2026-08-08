@@ -45,6 +45,7 @@ die(
         avg_sec_per_set: e.avgSecPerSet,
         duration_sec: e.durationSec ?? null,
         cue: e.cue ?? null,
+        image_url: e.imageUrl ?? null,
       })),
     )
   ).error,

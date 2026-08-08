@@ -3,7 +3,14 @@ import { supabase } from '../data/supabase';
 
 type Row = {
   id: string;
-  exercises: Array<{ name: string; sets: number; reps: string; cue: string | null; equipment: string[] }>;
+  exercises: Array<{
+    name: string;
+    sets: number;
+    reps: string;
+    cue: string | null;
+    equipment: string[];
+    image_url: string | null;
+  }>;
 };
 
 /**
@@ -13,6 +20,13 @@ type Row = {
 export function SharedWorkout({ id }: { id: string }) {
   const [row, setRow] = useState<Row | null>(null);
   const [failed, setFailed] = useState(false);
+  // O Free Exercise DB sempre publica 2 fotos por exercício (posição
+  // inicial/final do movimento) no mesmo padrão de nome — `base` é a URL
+  // salva (sempre a "0.jpg"), `frame` escolhe qual das duas mostrar. Evita
+  // guardar a segunda URL: é a mesma string trocando só o nome do arquivo.
+  const [open, setOpen] = useState<{ name: string; base: string } | null>(null);
+  const [frame, setFrame] = useState<0 | 1>(0);
+  const frameUrl = (base: string, f: 0 | 1) => base.replace(/\/0\.jpg$/, `/${f}.jpg`);
 
   useEffect(() => {
     // `Promise.resolve` converte o thenable do postgrest-js num Promise de
@@ -55,6 +69,15 @@ export function SharedWorkout({ id }: { id: string }) {
             <p className="mt-1 text-sm text-dim">
               {e.cue ?? (e.equipment.length > 0 ? e.equipment.join(' · ') : 'peso corporal')}
             </p>
+            {e.image_url ? (
+              <button
+                type="button"
+                onClick={() => { setFrame(0); setOpen({ name: e.name, base: e.image_url! }); }}
+                className="mt-2 min-h-[40px] rounded-lg border border-border px-3 text-sm font-semibold text-accent"
+              >
+                🖼 Ver imagem
+              </button>
+            ) : null}
           </li>
         ))}
       </ol>
@@ -62,6 +85,51 @@ export function SharedWorkout({ id }: { id: string }) {
         Use carga que deixe 2 repetições de reserva na última série. Sentiu dor,
         tontura ou falta de ar? Interrompa e procure a recepção.
       </p>
+
+      {open ? (
+        <div
+          role="dialog"
+          aria-label={open.name}
+          onClick={() => setOpen(null)}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/85 p-6"
+        >
+          <div className="relative w-full max-w-sm" onClick={(ev) => ev.stopPropagation()}>
+            <img
+              src={frameUrl(open.base, frame)}
+              alt={`${open.name} — posição ${frame === 0 ? 'inicial' : 'final'}`}
+              className="max-h-[70vh] w-full rounded-xl bg-white object-contain"
+            />
+            <button
+              type="button"
+              aria-label="Posição anterior"
+              onClick={() => setFrame((f) => (f === 0 ? 1 : 0))}
+              className="absolute left-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-xl text-white"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              aria-label="Próxima posição"
+              onClick={() => setFrame((f) => (f === 0 ? 1 : 0))}
+              className="absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-xl text-white"
+            >
+              ›
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <span className={`h-2 w-2 rounded-full ${frame === 0 ? 'bg-accent' : 'bg-border'}`} />
+            <span className={`h-2 w-2 rounded-full ${frame === 1 ? 'bg-accent' : 'bg-border'}`} />
+          </div>
+          <p className="font-semibold text-text">{open.name}</p>
+          <button
+            type="button"
+            onClick={() => setOpen(null)}
+            className="min-h-[44px] rounded-lg border border-border px-5 text-dim"
+          >
+            ✕ Fechar
+          </button>
+        </div>
+      ) : null}
     </main>
   );
 }

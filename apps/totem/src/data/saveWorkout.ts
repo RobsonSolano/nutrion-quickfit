@@ -30,6 +30,7 @@ export async function saveWorkout(
         reps: it.reps,
         cue: it.exercise.cue ?? null,
         video_url: it.exercise.videoUrl ?? null,
+        image_url: it.exercise.imageUrl ?? null,
       })),
       parq_blocked: parqBlocked,
     });
